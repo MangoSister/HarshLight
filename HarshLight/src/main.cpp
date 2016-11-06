@@ -1,45 +1,72 @@
-#include <GLFW/glfw3.h>
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
+#include <string.h>
+#include "glm/glm.hpp"
 #include "World.h"
+#include "Camera.h"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 const char* APP_NAME = "HarshLight";
 const uint32_t DEFAULT_WIDTH = 1920;
 const uint32_t DEFAULT_HEIGHT = 1080;
 
+void InitWorld(const char* scene_path);
+
 int main(int argc, const char* argv[])
 {
+	const char* scene_path = nullptr;
+	for (int32_t i = argc - 2; i >= 0; i -= 2)
+	{
+		if (strcmp(argv[i], "-i") == 0)
+			scene_path = argv[i + 1];
+	}
+
+	if (!scene_path)
+	{
+		printf("usage:\n");
+		printf("-i <scene file name>\n");
+		exit(0);
+	}
+
     GLFWwindow* window;
 
     /* Initialize the library */
-    if (!glfwInit())
-        return -1;
+	if (!glfwInit())
+	{
+		fprintf(stderr, "Failed to initialize GLFW\n");
+		exit(1);
+	}
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, APP_NAME, NULL, NULL);
     if (!window)
     {
+		fprintf(stderr, "Failed to create window\n");
         glfwTerminate();
-        return -1;
+		exit(1);
     }
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    World::GetInst().SetWindow(window);
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK)
+	{
+		fprintf(stderr, "Failed to initialize GLEW\n");
+		glfwTerminate();
+		exit(1);
+	}
 
-    Assimp::Importer importer;
+    World::GetInst().SetWindow(window);
+	InitWorld(scene_path);
+
 
     World::GetInst().Start();
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-       // World::GetInst().Update(delta_time);
-
+		World::GetInst().Update();
+		
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -52,4 +79,21 @@ int main(int argc, const char* argv[])
 
     glfwTerminate();
     return 0;
+}
+
+void InitWorld(const char* scene_path)
+{
+	Model* sceneModel = new Model(scene_path);
+	World::GetInst().AddModel(sceneModel);
+
+	Actor* camActor = new Actor();	
+	const float fovY = glm::radians(90.0f);
+	const float aspect = 1.78f; // 16 : 9
+	const float near = 0.01f;
+	const float far = 10000.0f;
+	camActor->AddComponent(new Camera(fovY, aspect, near, far));
+
+
+
+	World::GetInst().AddActor(camActor);
 }

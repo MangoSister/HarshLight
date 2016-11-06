@@ -3,6 +3,7 @@
 class Component
 {
 public:
+	Component() { }
     virtual ~Component() { }
     virtual void Start() = 0;
     virtual void Update(float dt) = 0;

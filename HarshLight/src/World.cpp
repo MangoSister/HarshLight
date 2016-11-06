@@ -3,7 +3,7 @@
 
 World::~World()
 {
-    for (Actor* actor : m_Actors)
+    for (Actor*& actor : m_Actors)
     {
         if (actor)
         {
@@ -11,6 +11,15 @@ World::~World()
             actor = nullptr;
         }
     }
+
+	for (Model*& model : m_Models)
+	{
+		if (model)
+		{
+			delete model;
+			model = nullptr;
+		}
+	}
 }
 
 void World::SetWindow(GLFWwindow* window)
@@ -29,6 +38,17 @@ void World::AddActor(Actor* actor)
     m_Actors.push_back(actor);
 }
 
+const ModelList& World::GetModels() const
+{
+	return m_Models;
+}
+
+void World::AddModel(Model* model)
+{
+	assert(model != nullptr);
+	m_Models.push_back(model);
+}
+
 void World::Start()
 {
     for (Actor* actor : m_Actors)
@@ -36,14 +56,22 @@ void World::Start()
         assert(actor != nullptr);
         actor->Start();
     }
+
+	m_LastTime = std::chrono::system_clock::now();
+	m_CurrTime = std::chrono::system_clock::now();
 }
 
-void World::Update(float dt)
+void World::Update()
 {
+	m_CurrTime = std::chrono::system_clock::now();
+	float elapsed = static_cast<float>((std::chrono::duration<double>(m_CurrTime - m_LastTime)).count());
+	//fps: 1 / elapsed
+	m_LastTime = m_CurrTime;
+
     for (Actor* actor : m_Actors)
     {
         assert(actor != nullptr);
-        actor->Update(dt);
+        actor->Update(elapsed);
     }
 }
 

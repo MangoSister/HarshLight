@@ -6,7 +6,7 @@
 
 using namespace glm;
 
-class Camera : Component
+class Camera : public Component
 {
 public:
     explicit Camera(float fovY, float aspect, float near, float far);
@@ -27,4 +27,5 @@ private:
     float m_Near;
     float m_Far;
 
+	float m_PanningSpeed;
 };

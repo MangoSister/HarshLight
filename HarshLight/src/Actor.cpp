@@ -5,7 +5,7 @@ Actor::Actor(): m_Components() { }
 
 Actor::~Actor()
 {
-    for (Component* comp : m_Components)
+    for (Component*& comp : m_Components)
     {
         if (comp)
         {

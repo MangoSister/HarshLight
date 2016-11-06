@@ -1,9 +1,13 @@
 #include "Actor.h"
+#include "Model.h"
 #include "GLFW/glfw3.h"
+#include <chrono>
 #include <vector>
+
 #pragma once
 
 typedef std::vector<Actor*> ActorList;
+typedef std::vector<Model*> ModelList;
 
 class World
 {
@@ -14,16 +18,19 @@ public:
     int GetKey(int key);
     const ActorList& GetActors() const;
     void AddActor(Actor* actor);
-    void SetWindow(GLFWwindow* window);
+	const ModelList& GetModels() const;
+	void AddModel(Model* model);
 
+    void SetWindow(GLFWwindow* window);
+	
     static World& GetInst()
     {
-        World s_World;
+        static World s_World;
         return s_World;
     }
 
     void Start();
-    void Update(float dt);
+    void Update();
 
 private:
 
@@ -31,7 +38,10 @@ private:
     ~World();
 
     GLFWwindow* m_Window;
+	ModelList m_Models;
     ActorList m_Actors;
-
+	
+	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
+	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
 };
 
