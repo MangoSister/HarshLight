@@ -1,7 +1,7 @@
+#pragma once
+
 #include <vector>
 #include "Component.h"
-
-#pragma once
 
 typedef std::vector<Component*> ComponentList;
 

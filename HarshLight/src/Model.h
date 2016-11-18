@@ -1,9 +1,11 @@
 #pragma once
+
 #include <vector>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "Mesh.h"
+#include "Material.h"
 
 class Model
 {
@@ -13,6 +15,8 @@ public:
 	Model& operator=(const Model& other) = delete;
 
 	~Model();
+
+    void Render(const Material* shader) const;
 
 private:
 

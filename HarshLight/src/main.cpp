@@ -1,7 +1,9 @@
 #include <string.h>
 #include "glm/glm.hpp"
+#include "Material.h"
 #include "World.h"
 #include "Camera.h"
+#include "ModelRenderer.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -83,8 +85,18 @@ int main(int argc, const char* argv[])
 
 void InitWorld(const char* scene_path)
 {
+    Material* material = new Material();
+    material->AddVertShader("src/shaders/testvert.glsl");
+    material->AddFragShader("src/shaders/testfrag.glsl");
+    material->LinkProgram();
+    World::GetInst().AddMaterial(material);
+
 	Model* sceneModel = new Model(scene_path);
 	World::GetInst().AddModel(sceneModel);
+
+    Actor* sceneActor = new Actor();
+    sceneActor->AddComponent(new ModelRenderer(sceneModel, material));
+    World::GetInst().AddActor(sceneActor);
 
 	Actor* camActor = new Actor();	
 	const float fovY = glm::radians(90.0f);
@@ -92,8 +104,6 @@ void InitWorld(const char* scene_path)
 	const float near = 0.01f;
 	const float far = 10000.0f;
 	camActor->AddComponent(new Camera(fovY, aspect, near, far));
-
-
 
 	World::GetInst().AddActor(camActor);
 }

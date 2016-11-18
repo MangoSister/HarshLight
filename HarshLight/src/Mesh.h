@@ -1,18 +1,19 @@
+#pragma once
+
 #include <vector>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "glm/glm.hpp"
 #include "GL/glew.h"
-
-#pragma once
+#include "Material.h"
 
 class Mesh
 {
 public:
 	explicit Mesh(const aiMesh* aiMesh);
 	~Mesh();
-	void Render() const;
+	void Render(const Material* shader) const;
 
 private:
 	std::vector<glm::vec3> m_Positions;

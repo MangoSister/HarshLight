@@ -21,6 +21,12 @@ Model::~Model()
 	}
 }
 
+void Model::Render(const Material* shader) const
+{
+    for (Mesh* mesh : m_Meshes)
+        mesh->Render(shader);
+}
+
 void Model::LoadModel(const char* path)
 {
 	Assimp::Importer import;

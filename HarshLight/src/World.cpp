@@ -20,6 +20,15 @@ World::~World()
 			model = nullptr;
 		}
 	}
+
+    for (Material*& material : m_Materials)
+    {
+        if (material)
+        {
+            delete material;
+            material = nullptr;
+        }
+    }
 }
 
 void World::SetWindow(GLFWwindow* window)
@@ -47,6 +56,17 @@ void World::AddModel(Model* model)
 {
 	assert(model != nullptr);
 	m_Models.push_back(model);
+}
+
+const MaterialList& World::GetMaterials() const
+{
+    return m_Materials;
+}
+
+void World::AddMaterial(Material* material)
+{
+    assert(material != nullptr);
+    m_Materials.push_back(material);
 }
 
 void World::Start()

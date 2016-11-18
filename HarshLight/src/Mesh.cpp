@@ -77,7 +77,10 @@ Mesh::~Mesh()
 	glDeleteVertexArrays(1, &m_VAO);
 }
 
-void Mesh::Render() const
+void Mesh::Render(const Material* shader) const
 {
-	
+    glBindVertexArray(m_VAO);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_Indices.size()), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    
 }

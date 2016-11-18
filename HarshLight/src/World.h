@@ -1,13 +1,15 @@
+#pragma once
+
 #include "Actor.h"
 #include "Model.h"
+#include "Material.h"
 #include "GLFW/glfw3.h"
 #include <chrono>
 #include <vector>
 
-#pragma once
-
 typedef std::vector<Actor*> ActorList;
 typedef std::vector<Model*> ModelList;
+typedef std::vector<Material*> MaterialList;
 
 class World
 {
@@ -20,6 +22,9 @@ public:
     void AddActor(Actor* actor);
 	const ModelList& GetModels() const;
 	void AddModel(Model* model);
+    const MaterialList& GetMaterials() const;
+    void AddMaterial(Material* material);
+
 
     void SetWindow(GLFWwindow* window);
 	
@@ -40,7 +45,8 @@ private:
     GLFWwindow* m_Window;
 	ModelList m_Models;
     ActorList m_Actors;
-	
+    MaterialList m_Materials;
+
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
 };

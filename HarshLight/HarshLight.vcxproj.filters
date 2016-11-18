@@ -13,6 +13,12 @@
     <Filter Include="include">
       <UniqueIdentifier>{f9435dab-1563-4282-9606-a7b154f1c4d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{3dfc1b88-f8da-4677-83ce-9b52a07bf95f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\shaders">
+      <UniqueIdentifier>{f4999e60-3261-42b5-b623-60ecbcbad4a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -36,6 +42,12 @@
     <ClCompile Include="src\Model.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ModelRenderer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Material.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -56,5 +68,19 @@
     <ClInclude Include="src\Model.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ModelRenderer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Material.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shaders\testvert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\testfrag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
