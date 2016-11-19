@@ -42,20 +42,18 @@ void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 	s_LastMouseX = xpos;
 	s_LastMouseY = ypos;
 
-	const double sensitivity = 0.01;
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
+	const double SENSITIVITY = 0.01;
+	xoffset *= SENSITIVITY;
+	yoffset *= SENSITIVITY;
 
 	static double yaw = 0.0;
 	static double pitch = 0.0;
-	printf("%f %f\n", yaw, pitch);
+    const double MAX_PITCH = 89;
+	//printf("%f %f\n", yaw, pitch);
 	yaw += xoffset;
-	yaw = fmod(yaw, 360);
+	yaw = fmod(yaw, 360);  
 	pitch += yoffset;
-	if (pitch > 89)
-		pitch = 89;
-	if (pitch < -89)
-		pitch = -89;
+    pitch = std::fmin(std::fmax(pitch, -MAX_PITCH), MAX_PITCH);
 
 	Camera* main_camera = world.GetMainCamera();
 	if (main_camera)

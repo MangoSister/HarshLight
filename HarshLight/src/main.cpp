@@ -88,12 +88,12 @@ int main(int argc, const char* argv[])
 		else
 			fprintf(stderr, "fail to activate debug mode\n");
 	}
-
+    printf("------- OpenGL Info -------\n");
 	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
 	printf("GLSL version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 	printf("Vendor: %s\n", glGetString(GL_VENDOR));
 	printf("Renderer: %s\n", glGetString(GL_RENDERER));
-
+    printf("---------------------------\n");
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
@@ -149,24 +149,34 @@ void InitWorld(const char* scene_path)
     sceneActor->AddComponent(sceneRenderer);
     World::GetInst().AddActor(sceneActor);
 
-	Model* quad = new Model(Model::Primitive::kTriangle);
-	World::GetInst().AddModel(quad);
+	//Model* quad = new Model(Model::Primitive::kTriangle);
+	//World::GetInst().AddModel(quad);
 
-	Actor* quadActor = new Actor();
-	ModelRenderer* quadRenderer = new ModelRenderer(quad, material);
-	quadRenderer->MoveTo({ 0.0f, 0.0f, 2.0f });
-	quadActor->AddComponent(quadRenderer);
-	World::GetInst().AddActor(quadActor);
+	//Actor* quadActor = new Actor();
+	//ModelRenderer* quadRenderer = new ModelRenderer(quad, material);
+	//quadRenderer->MoveTo({ 0.0f, 0.0f, 2.0f });
+	//quadActor->AddComponent(quadRenderer);
+	//World::GetInst().AddActor(quadActor);
 
 	Actor* camActor = new Actor();	
-	const float fovY = glm::radians(90.0f);
+	const float fovY = glm::radians(45.0f);
 	const float aspect = 1.78f; // 16 : 9
 	const float near = 0.1f;
 	const float far = 1000.0f;
+    const float move_speed = 10.0f;
+    printf("------- Camera Info -------\n");
+    printf("fovY: %f\n", fovY);
+    printf("aspect ratio: %f\n", aspect);
+    printf("near plane z: %f\n", near);
+    printf("far plane z: %f\n", far);
+    printf("free move speed: %f\n", move_speed);
+    printf("max pitch angle: 89 degree\n");
+    printf("---------------------------\n");
 	Camera* cam = new Camera(fovY, aspect, near, far);
 	cam->MoveTo(glm::vec3(1.0f, 2.0f, 3.0f));
-	cam->LookAt(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	cam->MoveTo(glm::vec3(0.0f, 1.0f, 0.0f));
+    cam->SetFreeMoveSpeed(move_speed);
 	camActor->AddComponent(cam);
 
 	World::GetInst().AddActor(camActor);
