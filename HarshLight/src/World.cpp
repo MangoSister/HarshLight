@@ -38,7 +38,7 @@ void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_ScreenHeight);
 
 	double xoffset = xpos - s_LastMouseX;
-	double yoffset = s_LastMouseY - ypos; // Reversed since y-coordinates range from bottom to top
+	double yoffset = ypos - s_LastMouseY;
 	s_LastMouseX = xpos;
 	s_LastMouseY = ypos;
 
