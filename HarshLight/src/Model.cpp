@@ -1,10 +1,54 @@
 #include "Model.h"
+#include <utility>
 #include <cassert>
 #include <cstdio>
+#include <glm/gtc/matrix_transform.hpp>
+
+Model::Model(Primitive primitive)
+{
+#ifdef _DEBUG
+	assert(primitive < Primitive::kCount);
+#endif
+
+	m_Path = "";
+	std::vector<glm::vec3> pos
+	{
+		{0.5f, 0.5f, 0.0f},  // Top Right
+		{0.5f, -0.5f, 0.0f},  // Bottom Right
+		{-0.5f, -0.5f, 0.0f},  // Bottom Left
+		{-0.5f,  0.5f, 0.0f},   // Top Left 
+	};
+
+	std::vector<uint32_t> indices
+	{
+		0, 1, 3,   // First Triangle
+		1, 2, 3    // Second Triangle
+	};
+	std::vector<glm::vec3> normals
+	{
+		{ 0.0f, 0.0f, -1.0f },  // Top Right
+		{ 0.0f, 0.0f, -1.0f },  // Bottom Right
+		{ 0.0f, 0.0f, -1.0f },  // Bottom Left
+		{ 0.0f, 0.0f, -1.0f },   // Top Left 
+	};
+
+	std::vector<glm::vec2> uvs
+	{
+		{ 1.0f, 0.0f },  // Top Right
+		{ 1.0f, 1.0f },  // Bottom Right
+		{ 0.0f, 1.0f },  // Bottom Left
+		{ 0.0f, 0.0f },  // Top Left 
+	};
+
+	Mesh* mesh = new Mesh(std::move(pos), std::move(indices), std::move(normals), std::move(uvs));
+	m_Meshes.push_back(mesh);
+}
 
 Model::Model(const char* path)
 {
+#ifdef _DEBUG
 	assert(path != nullptr);
+#endif
 	m_Path = path;
 	LoadModel(path);
 }
@@ -21,10 +65,10 @@ Model::~Model()
 	}
 }
 
-void Model::Render(const Material* shader) const
+void Model::Render(const Material* material) const
 {
     for (Mesh* mesh : m_Meshes)
-        mesh->Render(shader);
+        mesh->Render(material);
 }
 
 void Model::LoadModel(const char* path)

@@ -190,6 +190,11 @@ void Material::LinkProgram()
     }
 }
 
+GLuint Material::GetProgram() const
+{
+	return m_ShaderProgram;
+}
+
 void Material::Use() const
 {
 #ifdef _DEBUG

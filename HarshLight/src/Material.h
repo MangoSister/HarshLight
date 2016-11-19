@@ -23,6 +23,7 @@ public:
     void AddGeomShader(const char* path);
     void AddFragShader(const char* path);
     void LinkProgram();
+	GLuint GetProgram() const;
 
     void Use() const;
 private:

@@ -27,12 +27,14 @@
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\ModelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\Util.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Component.h" />
+    <ClInclude Include="src\Util.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\ModelRenderer.h" />

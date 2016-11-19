@@ -10,13 +10,20 @@
 class Model
 {
 public:
+	enum class Primitive : uint8_t
+	{
+		kTriangle = 0,
+		kCount = 1,
+	};
+
+	explicit Model(Primitive primitive);
 	explicit Model(const char* path);
 	Model(const Model& other) = delete;
 	Model& operator=(const Model& other) = delete;
 
 	~Model();
 
-    void Render(const Material* shader) const;
+    void Render(const Material* material) const;
 
 private:
 

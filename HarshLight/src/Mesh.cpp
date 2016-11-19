@@ -1,5 +1,11 @@
 #include "Mesh.h"
 
+Mesh::Mesh(std::vector<glm::vec3>&& pos, std::vector<uint32_t>&& indices,
+	std::vector<glm::vec3>&& normals, std::vector<glm::vec2>&& uvs)
+	:m_Positions(pos), m_Indices(indices), m_Normals(normals), m_Uvs(uvs)
+{
+	CreateBuffers();
+}
 
 Mesh::Mesh(const aiMesh* aiMesh)
 {
@@ -37,35 +43,38 @@ Mesh::Mesh(const aiMesh* aiMesh)
 			m_Indices.push_back(face.mIndices[j]);
 	}
 
+	CreateBuffers();
+}
 
+void Mesh::CreateBuffers()
+{
 	glGenVertexArrays(1, &m_VAO);
-	glGenBuffers(1, &m_PosVBO);
-	glGenBuffers(1, &m_NrmVBO);
-	glGenBuffers(1, &m_UvVBO);
-	glGenBuffers(1, &m_EBO);
-
 	glBindVertexArray(m_VAO);
 
+	glGenBuffers(1, &m_PosVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_PosVBO);
 	glBufferData(GL_ARRAY_BUFFER, m_Positions.size() * sizeof(glm::vec3), &m_Positions[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
 
+	glGenBuffers(1, &m_NrmVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_NrmVBO);
 	glBufferData(GL_ARRAY_BUFFER, m_Normals.size() * sizeof(glm::vec3), &m_Normals[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, 0, nullptr);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
 
+	glGenBuffers(1, &m_UvVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_UvVBO);
 	glBufferData(GL_ARRAY_BUFFER, m_Uvs.size() * sizeof(glm::vec2), &m_Uvs[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
 
+	glGenBuffers(1, &m_EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(uint32_t), &m_Indices[0], GL_STATIC_DRAW);
 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
 }
 
 Mesh::~Mesh()
@@ -77,7 +86,7 @@ Mesh::~Mesh()
 	glDeleteVertexArrays(1, &m_VAO);
 }
 
-void Mesh::Render(const Material* shader) const
+void Mesh::Render(const Material* material) const
 {
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_Indices.size()), GL_UNSIGNED_INT, 0);

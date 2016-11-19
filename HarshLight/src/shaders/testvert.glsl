@@ -1,14 +1,22 @@
 #version 330 core
-layout (location = 0) in vec3 position; // The position variable has attribute position 0
-  
-out vec4 vertexColor; // Specify a color output to the fragment shader
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+layout (location = 2) in vec2 uv;
+
+out vec3 worldNormal;
+out vec4 vertexColor; 
+
+layout (std140) uniform CamMtx
+{
+    mat4 view;
+    mat4 proj;
+};
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
 
 void main()
 {
-    gl_Position = proj * view * model * vec4(position, 1.0); // See how we directly give a vec3 to vec4's constructor
-    vertexColor = vec4(0.5f, 0.0f, 0.0f, 1.0f); // Set the output variable to a dark-red color
+    gl_Position =  proj * view * model * vec4(position, 1.0);
+    vertexColor = vec4(0.5, 0.0, 0.0, 1.0);
+	worldNormal = normalize(mat3(model) * normal);
 }

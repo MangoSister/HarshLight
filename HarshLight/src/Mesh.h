@@ -11,11 +11,16 @@
 class Mesh
 {
 public:
+	explicit Mesh(std::vector<glm::vec3>&& pos, std::vector<uint32_t>&& indices,
+		std::vector<glm::vec3>&& normals, std::vector<glm::vec2>&& uvs);
+
 	explicit Mesh(const aiMesh* aiMesh);
 	~Mesh();
 	void Render(const Material* shader) const;
 
 private:
+	void CreateBuffers();
+	
 	std::vector<glm::vec3> m_Positions;
 	std::vector<uint32_t> m_Indices;
 	std::vector<glm::vec3> m_Normals;

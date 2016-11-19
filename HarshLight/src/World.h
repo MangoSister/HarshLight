@@ -3,6 +3,8 @@
 #include "Actor.h"
 #include "Model.h"
 #include "Material.h"
+#include "Camera.h"
+
 #include "GLFW/glfw3.h"
 #include <chrono>
 #include <vector>
@@ -24,9 +26,10 @@ public:
 	void AddModel(Model* model);
     const MaterialList& GetMaterials() const;
     void AddMaterial(Material* material);
+	void SetMainCamera(Camera* camera);
+	Camera* GetMainCamera();
 
-
-    void SetWindow(GLFWwindow* window);
+    void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
 	
     static World& GetInst()
     {
@@ -42,12 +45,19 @@ private:
     World() { }
     ~World();
 
+	static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+
     GLFWwindow* m_Window;
 	ModelList m_Models;
     ActorList m_Actors;
     MaterialList m_Materials;
 
+	Camera* m_MainCamera;
+
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
+
+	uint32_t m_ScreenWidth;
+	uint32_t m_ScreenHeight;
 };
 

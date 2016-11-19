@@ -48,6 +48,9 @@
     <ClCompile Include="src\Material.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Util.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -72,6 +75,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Material.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
