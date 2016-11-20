@@ -2,13 +2,13 @@
 
 Mesh::Mesh(std::vector<glm::vec3>&& pos, std::vector<uint32_t>&& indices,
 	std::vector<glm::vec3>&& normals, std::vector<glm::vec2>&& uvs)
-	:m_Positions(pos), m_Indices(indices), m_Normals(normals), m_Uvs(uvs)
+	:m_Positions(pos), m_Indices(indices), m_Normals(normals), m_Uvs(uvs), m_MaterialIndex(0)
 {
 	CreateBuffers();
 }
 
 Mesh::Mesh(const aiMesh* aiMesh)
-{
+{ 
 	for (uint32_t i = 0; i < aiMesh->mNumVertices; i++)
 	{
 		glm::vec3 pos;
@@ -42,6 +42,8 @@ Mesh::Mesh(const aiMesh* aiMesh)
 		for (uint32_t j = 0; j < face.mNumIndices; j++)
 			m_Indices.push_back(face.mIndices[j]);
 	}
+
+    m_MaterialIndex = aiMesh->mMaterialIndex;
 
 	CreateBuffers();
 }
@@ -92,4 +94,14 @@ void Mesh::Render(const Material* material) const
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_Indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     
+}
+
+void Mesh::SetMaterialIndex(uint32_t idx)
+{
+    m_MaterialIndex = idx;
+}
+
+uint32_t Mesh::GetMaterialIndex() const
+{
+    return m_MaterialIndex;
 }

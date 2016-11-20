@@ -22,15 +22,15 @@ public:
 	Model& operator=(const Model& other) = delete;
 
 	~Model();
-
-    void Render(const Material* material) const;
+    const char* GetRawPath() const;
+    void Render(const glm::mat4x4& transform, const std::vector<const Material*>& materials) const;
 
 private:
 
 	void LoadModel(const char* path);
 	void LoadNode(const aiNode* node, const aiScene* scene);
-
+    
 	std::vector<Mesh*> m_Meshes;
-	const char* m_Path;
+	const char* m_RawPath;
 
 };

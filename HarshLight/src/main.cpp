@@ -109,6 +109,11 @@ int main(int argc, const char* argv[])
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+#ifdef _DEBUG
+        if (debug_mode)
+            assert(glGetError() == GL_NO_ERROR);
+#endif
+
         /* Poll for and process events */
         glfwPollEvents();
 
@@ -121,10 +126,8 @@ int main(int argc, const char* argv[])
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
 
-#ifdef _DEBUG
-		if (debug_mode)
-			assert(glGetError() == GL_NO_ERROR);
-#endif
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            break;
     }
 
     glfwTerminate();
@@ -133,21 +136,24 @@ int main(int argc, const char* argv[])
 
 void InitWorld(const char* scene_path)
 {
-    Material* material = new Material();
-    material->AddVertShader("src/shaders/testvert.glsl");
-    material->AddFragShader("src/shaders/testfrag.glsl");
-    material->LinkProgram();
-    World::GetInst().AddMaterial(material);
-
+    //hardcode test world...:p
 	Model* sceneModel = new Model(scene_path);
-	World::GetInst().AddModel(sceneModel);
-
+	World::GetInst().RegisterModel(sceneModel);
+    std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
     Actor* sceneActor = new Actor();
-	ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel, material);
+	ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);
+
+    for (Material*& m : sceneMaterials)
+    {
+        m->AddVertShader("src/shaders/voxelize_vert.glsl");
+        m->AddFragShader("src/shaders/voxelize_frag.glsl");
+        m->LinkProgram();
+        sceneRenderer->AddMaterial(m);
+    }
 	sceneRenderer->MoveTo({ 0.0f, 0.0f, 0.0f });
 	sceneRenderer->ScaleTo({ 0.5f, 0.5f, 0.5f });
     sceneActor->AddComponent(sceneRenderer);
-    World::GetInst().AddActor(sceneActor);
+    World::GetInst().RegisterActor(sceneActor);
 
 	//Model* quad = new Model(Model::Primitive::kTriangle);
 	//World::GetInst().AddModel(quad);
@@ -179,6 +185,6 @@ void InitWorld(const char* scene_path)
     cam->SetFreeMoveSpeed(move_speed);
 	camActor->AddComponent(cam);
 
-	World::GetInst().AddActor(camActor);
+	World::GetInst().RegisterActor(camActor);
 	World::GetInst().SetMainCamera(cam);
 }

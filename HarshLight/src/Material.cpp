@@ -1,7 +1,10 @@
 #include "Material.h"
+#include <string>
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 Material::Material()
     : m_ShaderProgram(0), m_ShaderTypeMask(0), m_VertShader(0), m_GeomShader(0), m_FragShader(0) { }
@@ -26,6 +29,15 @@ Material::~Material()
 
     if (m_ShaderProgram)
         glDeleteProgram(m_ShaderProgram);
+}
+
+void Material::AddTexture(const Texture2d* tex2d, const char* semantic)
+{
+#ifdef _DEBUG
+    assert(tex2d!= nullptr && semantic != nullptr);
+#endif
+
+    m_Textures.push_back(Texture2dSlot(tex2d, semantic));
 }
 
 void Material::AddVertShader(const char* path)
@@ -201,4 +213,19 @@ void Material::Use() const
     assert(m_ShaderProgram);
 #endif
     glUseProgram(m_ShaderProgram);
+    const uint8_t MAX_TEXTURE_NUM = 16;
+    uint8_t tex_num = m_Textures.size() < MAX_TEXTURE_NUM ? (uint8_t)m_Textures.size() : MAX_TEXTURE_NUM;
+    for (uint8_t i = 0; i < tex_num; i++)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        Texture2dSlot tex_slot = m_Textures[i];
+        glBindTexture(GL_TEXTURE_2D, tex_slot.m_Tex2d->GetTexObj());
+        GLint loc = glGetUniformLocation(m_ShaderProgram, tex_slot.m_Semantic);
+        if (loc == -1)
+        {
+            fprintf(stderr, "WARNING: cannot find uniform variable %s\n", tex_slot.m_Semantic);
+            continue;
+        }
+        glUniform1i(loc, i);
+    }
 }
