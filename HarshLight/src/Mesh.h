@@ -18,6 +18,9 @@ public:
 	~Mesh();
 	void Render(const Material* shader) const;
 
+    void SetMaterialIndex(uint32_t idx);
+    uint32_t GetMaterialIndex() const;
+
 private:
 	void CreateBuffers();
 	
@@ -32,4 +35,5 @@ private:
 	GLuint m_UvVBO;
 	GLuint m_EBO;
 
+    uint32_t m_MaterialIndex;
 };

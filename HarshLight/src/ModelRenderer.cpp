@@ -2,10 +2,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-ModelRenderer::ModelRenderer(Model * model, Material * material)
+ModelRenderer::ModelRenderer(Model * model)
 	:Component(),
-	m_Model(model), m_Material(material), m_Transform(1.0f)
+	m_Model(model), m_Transform(1.0f)
 {
+#ifdef _DEBUG
+    assert(m_Model != nullptr);
+#endif
 }
 
 void ModelRenderer::MoveTo(const glm::vec3& pos)
@@ -30,12 +33,16 @@ void ModelRenderer::Start()
 
 void ModelRenderer::Update(float dt)
 {
-	m_Material->Use();
-	GLuint model_loc = glGetUniformLocation(m_Material->GetProgram(), "model");
-#if _DEBUG
-	if (model_loc == GL_INVALID_VALUE)
-		fprintf(stderr, "WARNING: Invalid model mtx shader program location\n");
+#ifdef _DEBUG
+    assert(m_Materials.size() > 0);
 #endif
-	glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(m_Transform));
-    m_Model->Render(m_Material);
+    m_Model->Render(m_Transform, m_Materials);
+}
+
+void ModelRenderer::AddMaterial(const Material * material)
+{
+#ifdef _DEBUG
+    assert(material != nullptr);
+#endif
+    m_Materials.push_back(material);
 }

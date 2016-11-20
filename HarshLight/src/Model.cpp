@@ -2,6 +2,7 @@
 #include <utility>
 #include <cassert>
 #include <cstdio>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 Model::Model(Primitive primitive)
@@ -10,7 +11,7 @@ Model::Model(Primitive primitive)
 	assert(primitive < Primitive::kCount);
 #endif
 
-	m_Path = "";
+	m_RawPath = "";
 	std::vector<glm::vec3> pos
 	{
 		{0.5f, 0.5f, 0.0f},  // Top Right
@@ -49,7 +50,7 @@ Model::Model(const char* path)
 #ifdef _DEBUG
 	assert(path != nullptr);
 #endif
-	m_Path = path;
+	m_RawPath = path;
 	LoadModel(path);
 }
 
@@ -65,10 +66,38 @@ Model::~Model()
 	}
 }
 
-void Model::Render(const Material* material) const
+const char* Model::GetRawPath() const
 {
-    for (Mesh* mesh : m_Meshes)
-        mesh->Render(material);
+    return m_RawPath;
+}
+
+void Model::Render(const glm::mat4x4& transform, const std::vector<const Material*>& materials) const
+{
+#if _DEBUG
+    assert(materials.size() > 0);
+#endif
+
+    for (size_t i = 0; i < m_Meshes.size(); i++)
+    {
+        uint32_t material_idx = m_Meshes[i]->GetMaterialIndex();
+        if (material_idx >= materials.size())
+        {
+            fprintf(stderr, "WARNING: mesh material idx (%u) exceed material array size\n", material_idx);
+            material_idx = (uint32_t)materials.size() - 1;
+        }
+        const Material* material = materials[material_idx];
+#if _DEBUG
+        assert(material != nullptr);
+#endif
+        material->Use();
+        GLuint model_loc = glGetUniformLocation(material->GetProgram(), "model");
+#if _DEBUG
+        if (model_loc == GL_INVALID_VALUE)
+            fprintf(stderr, "WARNING: Invalid model mtx shader program location\n");
+#endif
+        glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(transform));
+        m_Meshes[i]->Render(material);
+    }
 }
 
 void Model::LoadModel(const char* path)
