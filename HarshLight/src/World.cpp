@@ -52,9 +52,8 @@ void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 	s_LastMouseX = xpos;
 	s_LastMouseY = ypos;
 
-	const double SENSITIVITY = 0.01;
-	xoffset *= SENSITIVITY;
-	yoffset *= SENSITIVITY;
+	xoffset *= world.m_MouseSensitivity;
+	yoffset *= world.m_MouseSensitivity;
 
 	static float yaw = 0.0f;
 	static float pitch = 0.0f;
@@ -150,6 +149,11 @@ void World::SetMainCamera(Camera * camera)
 Camera* World::GetMainCamera()
 {
 	return m_MainCamera;
+}
+
+void World::SetMouseSensitivity(float sensitivity)
+{
+	m_MouseSensitivity = sensitivity;
 }
 
 void World::Start()

@@ -14,18 +14,21 @@ const uint32_t DEFAULT_HEIGHT = 1080;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
-void InitWorld(const char* scene_path);
+void InitWorld(const char* scene_path, float mouse_sensitivity);
 
 int main(int argc, const char* argv[])
 {
 	const char* scene_path = nullptr;
 	uint8_t debug_mode = 0;
+	float mouse_sensitivity = 0.01f;
 	for (int32_t i = argc - 2; i >= 0; i -= 2)
 	{
 		if (strcmp(argv[i], "-i") == 0)
 			scene_path = argv[i + 1];
 		else if (strcmp(argv[i], "-g") == 0)
 			debug_mode = 1;
+		else if (strcmp(argv[i], "-m") == 0)
+			mouse_sensitivity = atof(argv[i + 1]);
 	}
 
 	if (!scene_path)
@@ -33,6 +36,7 @@ int main(int argc, const char* argv[])
 		printf("usage:\n");
 		printf("-i <scene file name>\n");
 		printf("-g <debug mode on/off> \n");
+		printf("-m <mouse sensitivity> \n");
 		exit(0);
 	}
 
@@ -99,10 +103,10 @@ int main(int argc, const char* argv[])
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glDisable(GL_CULL_FACE);
-
+	
 	World::GetInst().SetWindow(window, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
-	InitWorld(scene_path);
+	InitWorld(scene_path, mouse_sensitivity);
 
     World::GetInst().Start();
 
@@ -134,7 +138,7 @@ int main(int argc, const char* argv[])
     return 0;
 }
 
-void InitWorld(const char* scene_path)
+void InitWorld(const char* scene_path, float mouse_sensitivity)
 {
     //hardcode test world...:p
 	Model* sceneModel = new Model(scene_path);
@@ -155,6 +159,7 @@ void InitWorld(const char* scene_path)
     sceneActor->AddComponent(sceneRenderer);
     World::GetInst().RegisterActor(sceneActor);
 
+	// test quad
 	//Model* quad = new Model(Model::Primitive::kTriangle);
 	//World::GetInst().AddModel(quad);
 
@@ -176,6 +181,7 @@ void InitWorld(const char* scene_path)
     printf("near plane z: %f\n", near);
     printf("far plane z: %f\n", far);
     printf("free move speed: %f\n", move_speed);
+	printf("fps mouse sensitivity: %f\n", mouse_sensitivity);
     printf("max pitch angle: 89 degree\n");
     printf("---------------------------\n");
 	Camera* cam = new Camera(fovY, aspect, near, far);
@@ -187,4 +193,5 @@ void InitWorld(const char* scene_path)
 
 	World::GetInst().RegisterActor(camActor);
 	World::GetInst().SetMainCamera(cam);
+	World::GetInst().SetMouseSensitivity(mouse_sensitivity);
 }

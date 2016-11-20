@@ -34,9 +34,9 @@ public:
     const Texture2dDict& GetTexture2ds() const;
     void RegisterTexture2d(const std::string& path, Texture2d* tex2d);
 
-    Camera* GetMainCamera();
 	void SetMainCamera(Camera* camera);
-
+	Camera* GetMainCamera();
+	void SetMouseSensitivity(float sensitivity);
 
     void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
 	
@@ -71,5 +71,6 @@ private:
 
 	uint32_t m_ScreenWidth;
 	uint32_t m_ScreenHeight;
+	float m_MouseSensitivity;
 };
 
