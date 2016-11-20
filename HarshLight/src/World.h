@@ -28,7 +28,7 @@ public:
     void AddMaterial(Material* material);
 	void SetMainCamera(Camera* camera);
 	Camera* GetMainCamera();
-
+	void SetMouseSensitivity(float sensitivity);
     void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
 	
     static World& GetInst()
@@ -59,5 +59,6 @@ private:
 
 	uint32_t m_ScreenWidth;
 	uint32_t m_ScreenHeight;
+	float m_MouseSensitivity;
 };
 
