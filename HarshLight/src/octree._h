@@ -1,0 +1,140 @@
+#include <iostream>
+#include <cstdlib>
+#include <string>
+#include <cstring>
+
+#include "vector3D.h"
+
+typedef struct myNodeInfo {
+public:
+	vector3D nor;
+	vector3D color;
+	
+	// light info
+	
+} NodeInfo;
+
+class Node {
+public:
+	Node() :children(NULL), info(NULL) {}
+	Node(const vector3D &min, const vector3D &max) :children(NULL), info(NULL) {
+		for (int i = 0; i < 3; ++i) {
+			float a = i ? (i == 2 ? max.x : (max.x + min.x) / 2) : min.x;
+			for (int j = 0; j < 3; ++j) {
+				float b = j ? (j == 2 ? max.y : (max.y + min.y) / 2) : min.y;
+				for (int k = 0; k < 3; ++k) {
+					float c = k ? (k == 2 ? max.z : (max.z + min.z) / 2) : min.z;
+					pos[i][j][k] = vector3D(a, b, c);
+				}
+			}	
+		}
+	}
+	
+	void SetPos(const vector3D &min, const vector3D &max) {
+		for (int i = 0; i < 3; ++i) {
+			float a = i ? (i == 2 ? max.x : (max.x + min.x) / 2) : min.x;
+			for (int j = 0; j < 3; ++j) {
+				float b = j ? (j == 2 ? max.y : (max.y + min.y) / 2) : min.y;
+				for (int k = 0; k < 3; ++k) {
+					float c = k ? (k == 2 ? max.z : (max.z + min.z) / 2) : min.z;
+					pos[i][j][k] = vector3D(a, b, c);
+				}
+			}	
+		}		
+	}
+	
+	vector3D pos[3][3][3];
+	Node *children;
+	NodeInfo *info;
+};
+
+// combine children
+inline NodeInfo	Combine(Node *children) {
+	vector3D nor(0, 0, 0), color(0, 0, 0);
+	for (int i = 0; i < 8; ++i) {
+		nor += children[i]->nor;
+		color += childer[i]->color;
+	}
+	
+	NodeInfo ans;
+	ans.nor = nor * 0.25f;
+	ans.color = nor * 0.25f;
+}
+
+// count info
+inline *NodeInfo count_info(int idx) {
+	return NULL;
+}
+
+
+
+Node* tree, tree_tail;
+
+void splite(Node *node) {
+	if (tree->children) {
+		return ;
+	}
+
+//synchronize
+{	
+	node->children = tree_tail;
+	tree_tail += 8;
+}
+
+    node->children[0].SetPos(node->pos[0][0][0], node->pos[1][1][1]);
+	node->children[1].SetPos(node->pos[0][0][1], node->pos[1][1][2]);
+	node->children[2].SetPos(node->pos[0][1][0], node->pos[1][2][1]);
+	node->children[3].SetPos(node->pos[0][1][1], node->pos[1][2][2]);
+	node->children[4].SetPos(node->pos[1][0][0], node->pos[2][1][1]);
+	node->children[5].SetPos(node->pos[1][0][1], node->pos[2][1][2]);
+	node->children[6].SetPos(node->pos[1][1][0], node->pos[2][2][1]);
+	node->children[7].SetPos(node->pos[1][1][1], node->pos[2][2][2]);
+}
+
+void create(int idx) {
+	int x[3];
+	x[0] = idx >> 18;
+	x[1] = (idx >> 9) & 512;
+	x[2] = idx & 512;
+	
+	Node* p = tree;
+	int st_x[3], step = 512;
+	st_x[0] = st_x[1] = st_x[2] = 0;
+	while (step > 1) {
+		if (!p->children) {
+			split(p);
+		}
+		
+		step /= 2;
+		int next_idx = 0;
+		for (int i = 0; i < 3; ++i) {
+			next_idx *= 2;
+			if (st_x[i] + step <= x[i]) {
+				st_x[i] += step;
+				next_idx += 1;
+			}
+		}
+		p = p->children[next_idx];
+	}
+	
+	p->info = count_info(idx);
+}
+
+void BuildTree(int *exists, int len, const vector3D &min, const vector3D &max, Node *buffer) {
+	tree = buffer;
+	tree->SetPos(min, max);
+	tree_tail = buffer + 1;
+	
+//	#pragma omp parallel for
+	for (int i = 0; i < len; ++i) {
+		create(exists[i]);
+	}
+	
+	int tree_size = (tree_tail - tree) / sizeof(Node*);
+//	#pragma omp parallel for
+	for (int i = tree_size - 1; i >= 0; --i) {
+		if (!tree[i]->info) {
+			tree[i]->info = Combine(&tree[i]);
+		}
+	}
+}
