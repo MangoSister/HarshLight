@@ -30,7 +30,7 @@ World::~World()
         }
     }
 
-    for (auto it = m_Texture2ds.begin(); it != m_Texture2ds.end(); it++)
+    for (auto it = m_Textures2d.begin(); it != m_Textures2d.end(); it++)
     {
         //tex2d
         if (it->second)
@@ -39,6 +39,24 @@ World::~World()
             it->second = nullptr;
         }
     }
+
+	for (Texture3dCompute*& tex3d : m_Textures3d)
+	{
+		if (tex3d)
+		{
+			delete tex3d;
+			tex3d = nullptr;
+		}
+	}
+
+	for (ShaderProgram*& shader : m_Shaders)
+	{
+		if (shader)
+		{
+			delete shader;
+			shader = nullptr;
+		}
+	}
 }
 
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
@@ -48,7 +66,7 @@ void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_ScreenHeight);
 
 	double xoffset = xpos - s_LastMouseX;
-	double yoffset = ypos - s_LastMouseY;
+	double yoffset = s_LastMouseY - ypos;
 	s_LastMouseX = xpos;
 	s_LastMouseY = ypos;
 
@@ -72,7 +90,10 @@ void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 		forward.y = std::sinf(glm::radians(pitch));
 		forward.x = std::cosf(glm::radians(pitch)) * std::sinf(glm::radians(yaw));
 		forward = normalize(forward);
-		main_camera->LookAtDir(forward, glm::vec3(0.0f, 1.0f, 0.0f));
+		if (std::fabsf(glm::dot(forward, glm::vec3(0.0f, 1.0f, 0.0f))) != 1.0f)
+			main_camera->LookAtDir(forward, glm::vec3(0.0f, 1.0f, 0.0f));
+		else
+			main_camera->LookAtDir(forward, glm::vec3(0.0f, 0.0f, forward.y > 0.0f ? -1.0f : 1.0f));
 	}
 }
 
@@ -95,6 +116,18 @@ void World::RegisterActor(Actor* actor)
 #ifdef _DEBUG
     assert(actor != nullptr);
 #endif
+	for (Component* comp : actor->GetAllComponents())
+	{
+		FrameBufferDisplay* fbd = dynamic_cast<FrameBufferDisplay*>(comp);
+		if (fbd)
+			m_FrameBufferDisplays.push_back(fbd);
+		else
+		{
+			ModelRenderer* mr = dynamic_cast<ModelRenderer*>(comp);
+			if (mr)
+				m_RegularRenderers.push_back(mr);
+		}
+	}
     m_Actors.push_back(actor);
 }
 
@@ -109,6 +142,19 @@ void World::RegisterModel(Model* model)
 	assert(model != nullptr);
 #endif
 	m_Models.push_back(model);
+}
+
+const ShaderList & World::GetShaders() const
+{
+	return m_Shaders;
+}
+
+void World::RegisterShader(ShaderProgram * shader)
+{
+#ifdef _DEBUG
+	assert(shader != nullptr);
+#endif
+	m_Shaders.push_back(shader);
 }
 
 const MaterialList& World::GetMaterials() const
@@ -126,16 +172,43 @@ void World::RegisterMaterial(Material* material)
 
 const Texture2dDict& World::GetTexture2ds() const
 {
-    return m_Texture2ds;
+    return m_Textures2d;
 }
 
 void World::RegisterTexture2d(const std::string& path, Texture2d* tex2d)
 {
 #ifdef _DEBUG
     assert(tex2d);
-    assert(m_Texture2ds.find(path) == m_Texture2ds.cend()); //no repeat registration!
+    assert(m_Textures2d.find(path) == m_Textures2d.cend()); //no repeat registration!
 #endif
-    m_Texture2ds.insert({ path, tex2d });
+    m_Textures2d.insert({ path, tex2d });
+}
+
+const Texture3dList& World::GetTexture3ds() const
+{
+	return m_Textures3d;
+}
+
+void World::RegisterTexture3d(Texture3dCompute* tex3d)
+{
+#ifdef _DEBUG
+	assert(tex3d);
+#endif
+
+	m_Textures3d.push_back(tex3d);
+}
+
+Camera* World::GetVoxelCamera() const
+{
+	return m_VoxelizeCamera;
+}
+
+void World::SetVoxelCamera(Camera * camera)
+{
+#ifdef _DEBUG
+	assert(camera != nullptr);
+#endif
+	m_VoxelizeCamera = camera;
 }
 
 void World::SetMainCamera(Camera * camera)
@@ -146,7 +219,7 @@ void World::SetMainCamera(Camera * camera)
 	m_MainCamera = camera;
 }
 
-Camera* World::GetMainCamera()
+Camera* World::GetMainCamera() const
 {
 	return m_MainCamera;
 }
@@ -177,6 +250,13 @@ void World::Update()
 	//fps: 1 / elapsed
 	m_LastTime = m_CurrTime;
 
+	//pass 1: regular scene
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
+
 	if (m_MainCamera)
 		m_MainCamera->UpdateCamMtx();
 	else
@@ -186,7 +266,34 @@ void World::Update()
     {
         assert(actor != nullptr);
         actor->Update(elapsed);
-    }        
+    }   
+
+	//pass 2: render to frame buffer display
+	if (m_VoxelizeCamera)
+		m_VoxelizeCamera->UpdateCamMtx();
+	else
+		fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+	for (FrameBufferDisplay* display: m_FrameBufferDisplays)
+	{
+		assert(display != nullptr);
+		display->StartRenderToFrameBuffer();
+		for (ModelRenderer* renderer : m_RegularRenderers)
+			renderer->Render();
+	}
+
+	//pass 3: display the result of pass 2 (overlay)
+	//dont really need a camera in pass 3
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
+	for (FrameBufferDisplay* display : m_FrameBufferDisplays)
+	{
+		assert(display != nullptr);
+		display->DisplayFrameBuffer();
+	}
+
 }
 
 std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
@@ -222,14 +329,21 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
                 if (albedo_path_str[i] == '\\')
                     albedo_path_str[i] = '/';
             }
-            const char* model_path = model->GetRawPath();
+			
+			const char* model_path = model->GetRawPath();
+
+			//for (size_t i = 0; model_path[i] != '\0'; i++)
+			//{
+			//	if (model_path[i] == '\\')
+			//		model_path[i] = '/';
+			//}
             const char* directory = strrchr(model_path, '/');
             if (directory)
                 albedo_path_str.insert(0, model_path, 0, directory - model_path + 1);
 
             Texture2d* curr_tex2d = nullptr;
-            auto tex_iter = m_Texture2ds.find(albedo_path_str);
-            if (tex_iter == m_Texture2ds.cend())
+            auto tex_iter = m_Textures2d.find(albedo_path_str);
+            if (tex_iter == m_Textures2d.cend())
             {
                 curr_tex2d = new Texture2d(albedo_path_str.c_str());
                 RegisterTexture2d(albedo_path_str, curr_tex2d);

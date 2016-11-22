@@ -21,6 +21,11 @@ void Actor::AddComponent(Component* comp)
     m_Components.push_back(comp);
 }
 
+const ComponentList & Actor::GetAllComponents() const
+{
+	return m_Components;
+}
+
 void Actor::Start()
 {
     for (Component* comp : m_Components)

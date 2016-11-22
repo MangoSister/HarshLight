@@ -7,28 +7,10 @@
 #include <GLFW/glfw3.h>
 
 Material::Material()
-    : m_ShaderProgram(0), m_ShaderTypeMask(0), m_VertShader(0), m_GeomShader(0), m_FragShader(0) { }
+    : m_Shader(nullptr){ }
 
 Material::~Material()
 {
-    if (m_ShaderTypeMask & VERTEX && m_VertShader)
-    {
-        glDeleteShader(m_VertShader);
-        m_VertShader = 0;
-    }
-    if (m_ShaderTypeMask & GEOMETRY && m_GeomShader)
-    {
-        glDeleteShader(m_GeomShader);
-        m_GeomShader = 0;
-    }
-    if (m_ShaderTypeMask & FRAGMENT && m_FragShader)
-    {
-        glDeleteShader(m_FragShader);
-        m_FragShader = 0;
-    }
-
-    if (m_ShaderProgram)
-        glDeleteProgram(m_ShaderProgram);
 }
 
 void Material::AddTexture(const Texture2d* tex2d, const char* semantic)
@@ -37,190 +19,57 @@ void Material::AddTexture(const Texture2d* tex2d, const char* semantic)
     assert(tex2d!= nullptr && semantic != nullptr);
 #endif
 
-    m_Textures.push_back(Texture2dSlot(tex2d, semantic));
+    m_Textures2d.push_back(Texture2dSlot(tex2d->GetTexObj(), semantic));
 }
 
-void Material::AddVertShader(const char* path)
-{
-    m_ShaderTypeMask |= VERTEX;
-    FILE* file = std::fopen(path, "r");
-    if (!file)
-    {
-        fprintf(stderr, "ERROR: fail to open vertex shader file: %s\n", path);
-        return;
-    }
-    std::fseek(file, 0, SEEK_END);
-    long fsize = ftell(file);
-    std::rewind(file);
-
-    GLchar* shader_code = (GLchar*)calloc(fsize + 1, sizeof(GLchar));
-    std::fread(shader_code, 1, fsize, file);
-    if(std::ferror(file))
-    {
-        fprintf(stderr, "ERROR: fail to read vertex shader file: %s\n", path);
-        std::fclose(file);
-        free(shader_code);
-        return;
-    }
-
-    std::fclose(file);
-
-    m_VertShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(m_VertShader, 1, &shader_code, nullptr);
-    glCompileShader(m_VertShader);
-    GLint succ;
-    glGetShaderiv(m_VertShader, GL_COMPILE_STATUS, &succ);
-    if (!succ)
-    {
-        GLchar log[512];
-        glGetShaderInfoLog(m_VertShader, 512, nullptr, log);
-        fprintf(stderr, "ERROR: vertex shader compiling error: %s\n", log);
-    }
-
-    free(shader_code);
-}
-
-void Material::AddGeomShader(const char* path)
-{
-    m_ShaderTypeMask |= GEOMETRY;
-    FILE* file = std::fopen(path, "r");
-    if (!file)
-    {
-        fprintf(stderr, "ERROR: fail to open geometry shader file: %s\n", path);
-        return;
-    }
-    std::fseek(file, 0, SEEK_END);
-    long fsize = ftell(file);
-    std::rewind(file);
-
-    GLchar* shader_code = (GLchar*)calloc(fsize + 1, sizeof(GLchar));
-    std::fread(shader_code, 1, fsize, file);
-    if (std::ferror(file))
-    {
-        fprintf(stderr, "ERROR: fail to read geometry shader file: %s\n", path);
-        std::fclose(file);
-        free(shader_code);
-        return;
-    }
-
-    std::fclose(file);
-
-    m_GeomShader = glCreateShader(GL_GEOMETRY_SHADER);
-    glShaderSource(m_GeomShader, 1, &shader_code, nullptr);
-    glCompileShader(m_GeomShader);
-    GLint succ;
-    glGetShaderiv(m_GeomShader, GL_COMPILE_STATUS, &succ);
-    if (!succ)
-    {
-        GLchar log[512];
-        glGetShaderInfoLog(m_GeomShader, 512, nullptr, log);
-        fprintf(stderr, "ERROR: geometry shader compiling error: %s\n", log);
-    }
-
-    free(shader_code);
-}
-
-void Material::AddFragShader(const char* path)
-{
-    m_ShaderTypeMask |= FRAGMENT;
-    FILE* file = std::fopen(path, "r");
-    if (!file)
-    {
-        fprintf(stderr, "ERROR: fail to open fragment shader file: %s\n", path);
-        return;
-    }
-    std::fseek(file, 0, SEEK_END);
-    long fsize = ftell(file);
-    std::rewind(file);  //same as rewind(f);
-
-    GLchar* shader_code = (GLchar*)calloc(fsize + 1, sizeof(GLchar));
-    std::fread(shader_code, 1, fsize, file);
-    if (std::ferror(file))
-    {
-        fprintf(stderr, "ERROR: fail to read fragment shader file: %s\n", path);
-        std::fclose(file);
-        free(shader_code);
-        return;
-    }
-
-    std::fclose(file);
-
-    m_FragShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(m_FragShader, 1, &shader_code, nullptr);
-    glCompileShader(m_FragShader);
-    GLint succ;
-    glGetShaderiv(m_FragShader, GL_COMPILE_STATUS, &succ);
-    if (!succ)
-    {
-        GLchar log[512];
-        glGetShaderInfoLog(m_FragShader, 512, nullptr, log);
-        fprintf(stderr, "ERROR: fragment shader compiling error: %s\n", log);
-    }
-
-    free(shader_code);
-}
-
-void Material::LinkProgram()
+void Material::AddTexture(GLuint tex2d, const char * semantic)
 {
 #ifdef _DEBUG
-    assert(!m_ShaderProgram); //no relink
-    assert(m_ShaderTypeMask); //at least one shader?
+	assert(tex2d != 0 && semantic != nullptr);
 #endif
-
-    m_ShaderProgram = glCreateProgram();
-    if (m_ShaderTypeMask & VERTEX)
-        glAttachShader(m_ShaderProgram, m_VertShader);
-    if (m_ShaderTypeMask & GEOMETRY)
-        glAttachShader(m_ShaderProgram, m_GeomShader);
-    if (m_ShaderTypeMask & FRAGMENT)
-        glAttachShader(m_ShaderProgram, m_FragShader);
-    glLinkProgram(m_ShaderProgram);
-    GLint succ;
-    glGetProgramiv(m_ShaderProgram, GL_LINK_STATUS, &succ);
-    if (!succ)
-    {
-        char log[512];
-        glGetProgramInfoLog(m_ShaderProgram, 512, nullptr, log);
-        fprintf(stderr, "ERROR: shader linking error %s\n", log);
-        return;
-    }
-
-    if (m_ShaderTypeMask & VERTEX)
-    {
-        glDeleteShader(m_VertShader);
-        m_VertShader = 0;
-    }
-    if (m_ShaderTypeMask & GEOMETRY)
-    {
-        glDeleteShader(m_GeomShader);
-        m_GeomShader = 0;
-    }
-    if (m_ShaderTypeMask & FRAGMENT)
-    {
-        glDeleteShader(m_FragShader);
-        m_FragShader = 0;
-    }
+	m_Textures2d.push_back(Texture2dSlot(tex2d, semantic));
 }
 
-GLuint Material::GetProgram() const
+void Material::AddTexture(const Texture3dCompute * tex3d, const char * semantic, TexUsage usage)
 {
-	return m_ShaderProgram;
+#ifdef _DEBUG
+	assert(tex3d != nullptr && semantic != nullptr);
+#endif
+	m_Textures3d.push_back(Texture3dSlot(tex3d->GetTexObj(), semantic, usage));
+}
+
+void Material::SetShader(ShaderProgram* shader)
+{
+#ifdef _DEBUG
+	assert(shader);
+#endif
+	m_Shader = shader;
+}
+
+const ShaderProgram * Material::GetShader() const
+{
+	return m_Shader;
 }
 
 void Material::Use() const
 {
 #ifdef _DEBUG
-    assert(m_ShaderProgram);
+    assert(m_Shader);
 #endif
-    glUseProgram(m_ShaderProgram);
-    const uint8_t MAX_TEXTURE_NUM = 16;
-    uint8_t tex_num = m_Textures.size() < MAX_TEXTURE_NUM ? (uint8_t)m_Textures.size() : MAX_TEXTURE_NUM;
-    for (uint8_t i = 0; i < tex_num; i++)
+	m_Shader->Use();
+    const uint32_t SAMPLER2D_MAX_NUM = 8;
+	uint32_t tex2d_num = (uint32_t)m_Textures2d.size();
+	if (tex2d_num > SAMPLER2D_MAX_NUM)
+	{
+		fprintf(stderr, "material tex2d number exceeds limit (%u > %u)\n", tex2d_num, SAMPLER2D_MAX_NUM);
+		tex2d_num = SAMPLER2D_MAX_NUM;
+	}
+    for (uint32_t i = 0; i < tex2d_num; i++)
     {
         glActiveTexture(GL_TEXTURE0 + i);
-        Texture2dSlot tex_slot = m_Textures[i];
-        glBindTexture(GL_TEXTURE_2D, tex_slot.m_Tex2d->GetTexObj());
-        GLint loc = glGetUniformLocation(m_ShaderProgram, tex_slot.m_Semantic);
+        Texture2dSlot tex_slot = m_Textures2d[i];
+        glBindTexture(GL_TEXTURE_2D, tex_slot.m_Tex2dObj);
+        GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
         if (loc == -1)
         {
             fprintf(stderr, "WARNING: cannot find uniform variable %s\n", tex_slot.m_Semantic);
@@ -228,4 +77,38 @@ void Material::Use() const
         }
         glUniform1i(loc, i);
     }
+
+	const uint32_t IMG3D_MAX_NUM = 4;
+	uint32_t tex3d_num = (uint32_t)m_Textures3d.size();
+	if (tex3d_num > IMG3D_MAX_NUM)
+	{
+		fprintf(stderr, "material tex3d number exceeds limit (%u > %u)\n", tex3d_num, IMG3D_MAX_NUM);
+		tex3d_num = IMG3D_MAX_NUM;
+	}
+	for (uint32_t i = 0; i < tex3d_num; i++)
+	{
+		Texture3dSlot tex_slot = m_Textures3d[i];
+		GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
+		if (loc == -1)
+		{
+			fprintf(stderr, "WARNING: cannot find uniform variable %s\n", tex_slot.m_Semantic);
+			continue;
+		}
+
+		if (tex_slot.m_Usage == TexUsage::kRegularTexture)
+		{
+			glActiveTexture(GL_TEXTURE0 + tex2d_num + i);
+			glBindTexture(GL_TEXTURE_2D, tex_slot.m_Tex3dObj);
+			glUniform1i(loc, tex2d_num + i);
+		}
+		else
+		{
+			if (tex_slot.m_Usage == TexUsage::kImageReadOnly)
+				glBindImageTexture(loc, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+			else if (tex_slot.m_Usage == TexUsage::kImageWriteOnly)
+				glBindImageTexture(loc, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+			else if (tex_slot.m_Usage == TexUsage::kImageReadWrite)
+				glBindImageTexture(loc, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+		}
+	}
 }

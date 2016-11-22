@@ -4,7 +4,9 @@
 #include "Model.h"
 #include "Material.h"
 #include "Textur2d.h"
+#include "ShaderProgram.h"
 #include "Camera.h"
+#include "FrameBufferDisplay.h"
 
 #include "GLFW/glfw3.h"
 #include <chrono>
@@ -15,8 +17,11 @@
 typedef std::vector<Actor*> ActorList;
 typedef std::vector<Model*> ModelList;
 typedef std::vector<Material*> MaterialList;
-typedef std::vector<Texture2d*> Texture2dList;
 typedef std::unordered_map<std::string, Texture2d*> Texture2dDict;
+typedef std::vector<Texture3dCompute*> Texture3dList;
+typedef std::vector<ShaderProgram*> ShaderList;
+typedef std::vector<ModelRenderer*> RgularRendererList;
+typedef std::vector<FrameBufferDisplay*> FrameBufferDisplayList;
 
 class World
 {
@@ -25,17 +30,30 @@ public:
     World& operator=(const World& other) = delete;
 
     int GetKey(int key);
-    const ActorList& GetActors() const;
+    
+	const ActorList& GetActors() const;
     void RegisterActor(Actor* actor);
+	
 	const ModelList& GetModels() const;
 	void RegisterModel(Model* model);
-    const MaterialList& GetMaterials() const;
-    void RegisterMaterial(Material* material);
+    
+	const ShaderList& GetShaders() const;
+    void RegisterShader(ShaderProgram* shader);
+	
+	const MaterialList& GetMaterials() const;
+	void RegisterMaterial(Material* material);
+
     const Texture2dDict& GetTexture2ds() const;
     void RegisterTexture2d(const std::string& path, Texture2d* tex2d);
+	
+	const Texture3dList& GetTexture3ds() const;
+	void RegisterTexture3d(Texture3dCompute* tex3d);
 
+	Camera* GetVoxelCamera() const;
+	void SetVoxelCamera(Camera* camera);
+
+	Camera* GetMainCamera() const;
 	void SetMainCamera(Camera* camera);
-	Camera* GetMainCamera();
 	void SetMouseSensitivity(float sensitivity);
 
     void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
@@ -59,12 +77,20 @@ private:
 	static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 
     GLFWwindow* m_Window;
+
+	/*----------------  Resources --------------*/
 	ModelList m_Models;
     ActorList m_Actors;
     MaterialList m_Materials;
-    Texture2dDict m_Texture2ds;
+	ShaderList m_Shaders;
+    Texture2dDict m_Textures2d;
+	Texture3dList m_Textures3d;
 
+	/*----------------  Convenience Lists --------------*/
+	RgularRendererList m_RegularRenderers;
+	FrameBufferDisplayList m_FrameBufferDisplays;
 	Camera* m_MainCamera;
+	Camera* m_VoxelizeCamera;
 
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;

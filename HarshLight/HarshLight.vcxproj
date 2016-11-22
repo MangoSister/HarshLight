@@ -22,11 +22,13 @@
     <ClCompile Include="src\Actor.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Component.cpp" />
+    <ClCompile Include="src\FrameBufferDisplay.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\ModelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\Textur2d.cpp" />
     <ClCompile Include="src\Texture2d.cpp" />
     <ClCompile Include="src\Util.cpp" />
@@ -36,6 +38,8 @@
     <ClInclude Include="src\Actor.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Component.h" />
+    <ClInclude Include="src\FrameBufferDisplay.h" />
+    <ClInclude Include="src\ShaderProgram.h" />
     <ClInclude Include="src\Textur2d.h" />
     <ClInclude Include="src\Util.h" />
     <ClInclude Include="src\Mesh.h" />
@@ -45,11 +49,15 @@
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\shaders\framebuffer_color_frag.glsl" />
+    <None Include="src\shaders\framebuffer_color_vert.glsl" />
     <None Include="src\shaders\testfrag.glsl" />
     <None Include="src\shaders\testvert.glsl" />
     <None Include="src\shaders\voxelize_frag.glsl" />
     <None Include="src\shaders\voxelize_geom.glsl" />
     <None Include="src\shaders\voxelize_vert.glsl" />
+    <None Include="src\shaders\voxel_visualize_frag.glsl" />
+    <None Include="src\shaders\voxel_visualize_vert.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E4640478-0BB1-4DA8-845C-290A22D36B23}</ProjectGuid>

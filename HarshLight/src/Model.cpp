@@ -35,10 +35,10 @@ Model::Model(Primitive primitive)
 
 	std::vector<glm::vec2> uvs
 	{
-		{ 1.0f, 0.0f },  // Top Right
-		{ 1.0f, 1.0f },  // Bottom Right
-		{ 0.0f, 1.0f },  // Bottom Left
-		{ 0.0f, 0.0f },  // Top Left 
+		{ 1.0f, 1.0f },  // Top Right
+		{ 1.0f, 0.0f },  // Bottom Right
+		{ 0.0f, 0.0f },  // Bottom Left
+		{ 0.0f, 1.0f },  // Top Left 
 	};
 
 	Mesh* mesh = new Mesh(std::move(pos), std::move(indices), std::move(normals), std::move(uvs));
@@ -90,7 +90,7 @@ void Model::Render(const glm::mat4x4& transform, const std::vector<const Materia
         assert(material != nullptr);
 #endif
         material->Use();
-        GLuint model_loc = glGetUniformLocation(material->GetProgram(), "model");
+        GLuint model_loc = glGetUniformLocation(material->GetShader()->GetProgram(), "Model");
 #if _DEBUG
         if (model_loc == GL_INVALID_VALUE)
             fprintf(stderr, "WARNING: Invalid model mtx shader program location\n");

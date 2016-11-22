@@ -1,52 +1,57 @@
 #pragma once
 
 #include "Textur2d.h"
+#include "ShaderProgram.h"
 #include "GL/glew.h"
 #include <cstdint>
 #include <vector>
+
+enum class TexUsage : uint8_t
+{
+	kRegularTexture = 0,
+	kImageReadOnly = 1,
+	kImageWriteOnly = 2,
+	kImageReadWrite = 3,
+};
 
 class Material
 {
 public:
     
-    typedef uint8_t ShaderTypeMask;
-
-    enum
-    {
-        VERTEX = 0x01,
-        GEOMETRY = 0x02,
-        FRAGMENT = 0x04,
-    };
-
     explicit Material();
     ~Material();
 
     void AddTexture(const Texture2d* tex2d, const char* semantic);
-
-    void AddVertShader(const char* path);
-    void AddGeomShader(const char* path);
-    void AddFragShader(const char* path);
-    void LinkProgram();
-	GLuint GetProgram() const;
+	void AddTexture(GLuint tex2d, const char* semantic);
+	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage);
+	void SetShader(ShaderProgram* shader);
+	const ShaderProgram* GetShader() const;
 
     void Use() const;
 
 private:
-    GLuint m_ShaderProgram;
-
-    ShaderTypeMask m_ShaderTypeMask;
-    GLuint m_VertShader;
-    GLuint m_GeomShader;
-    GLuint m_FragShader;
+	
+	ShaderProgram* m_Shader;
 
     struct Texture2dSlot
     {
     public:
-        const Texture2d* m_Tex2d;
+		GLuint m_Tex2dObj;
         const char* m_Semantic;
-        Texture2dSlot(const Texture2d* tex2d, const char* semantic) :
-            m_Tex2d(tex2d), m_Semantic(semantic) {}
+        Texture2dSlot(GLuint tex2d, const char* semantic) :
+			m_Tex2dObj(tex2d), m_Semantic(semantic) {}
     };
 
-    std::vector<Texture2dSlot> m_Textures;
+	struct Texture3dSlot
+	{
+	public:
+		GLuint m_Tex3dObj;
+		const char* m_Semantic;
+		TexUsage m_Usage;
+		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage) :
+			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage) {}
+	};
+
+    std::vector<Texture2dSlot> m_Textures2d;
+	std::vector<Texture3dSlot> m_Textures3d;
 };

@@ -4,9 +4,11 @@
 #include "World.h"
 #include "Camera.h"
 #include "ModelRenderer.h"
+#include "FrameBufferDisplay.h"
 #include "Util.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
 
 const char* APP_NAME = "HarshLight";
 const uint32_t DEFAULT_WIDTH = 1920;
@@ -16,19 +18,27 @@ const uint32_t GL_VER_MINOR = 5;
 
 void InitWorld(const char* scene_path, float mouse_sensitivity);
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
-	const char* scene_path = nullptr;
+	char* scene_path = nullptr;
 	uint8_t debug_mode = 0;
 	float mouse_sensitivity = 0.01f;
 	for (int32_t i = argc - 2; i >= 0; i -= 2)
 	{
 		if (strcmp(argv[i], "-i") == 0)
+		{
 			scene_path = argv[i + 1];
+			size_t len = strlen(scene_path);
+			for (size_t i = 0; i < len; i++)
+			{
+				if (scene_path[i] == '\\')
+					scene_path[i] = '/';
+			}
+		}
 		else if (strcmp(argv[i], "-g") == 0)
 			debug_mode = 1;
 		else if (strcmp(argv[i], "-m") == 0)
-			mouse_sensitivity = atof(argv[i + 1]);
+			mouse_sensitivity = static_cast<float>(atof(argv[i + 1]));
 	}
 
 	if (!scene_path)
@@ -102,8 +112,7 @@ int main(int argc, const char* argv[])
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glDisable(GL_CULL_FACE);
-	
+
 	World::GetInst().SetWindow(window, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
 	InitWorld(scene_path, mouse_sensitivity);
@@ -122,9 +131,6 @@ int main(int argc, const char* argv[])
         glfwPollEvents();
 
 		/* Render here */
-		glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		World::GetInst().Update();
 
 		/* Swap front and back buffers */
@@ -140,58 +146,119 @@ int main(int argc, const char* argv[])
 
 void InitWorld(const char* scene_path, float mouse_sensitivity)
 {
-    //hardcode test world...:p
+	/* --------------  Shaders  ----------- */
+	ShaderProgram* voxelize_shader = new ShaderProgram();
+	voxelize_shader->AddVertShader("src/shaders/voxelize_vert.glsl");
+	voxelize_shader->AddGeomShader("src/shaders/voxelize_geom.glsl");
+	voxelize_shader->AddFragShader("src/shaders/voxelize_frag.glsl");
+	voxelize_shader->LinkProgram();
+	World::GetInst().RegisterShader(voxelize_shader);
+
+	ShaderProgram* voxel_visualize_shader = new ShaderProgram();
+	voxelize_shader->AddVertShader("src/shaders/voxel_visualize_vert.glsl");
+	voxelize_shader->AddFragShader("src/shaders/voxel_visualize_frag.glsl");
+	voxelize_shader->LinkProgram();
+	World::GetInst().RegisterShader(voxel_visualize_shader);
+
+	ShaderProgram* framebuffer_display_shader = new ShaderProgram();
+	framebuffer_display_shader->AddVertShader("src/shaders/framebuffer_color_vert.glsl");
+	framebuffer_display_shader->AddFragShader("src/shaders/framebuffer_color_frag.glsl");
+	framebuffer_display_shader->LinkProgram();
+	World::GetInst().RegisterShader(framebuffer_display_shader);
+
+	printf("Shaders compiling success\n");
+
+	/* --------------  Cameras  ----------- */
+	const uint32_t voxelDim = 256;
+	const float aspect = (float)DEFAULT_WIDTH / (float)DEFAULT_HEIGHT;
+	{
+		Actor* voxelize_cam_actor = new Actor();
+		const float left = -1100.0f;
+		const float right = 1100.0f;
+		const float bottom = -1100.0f;
+		const float top = 1100.0f;
+		const float near = 0.0f;
+		const float far = 10000.0f;
+		Camera* cam = new Camera(left, right, bottom, top, near, far);
+		cam->MoveTo(glm::vec3(0.0f, 1000.0f, 0.0f));
+		cam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		//cam->Rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(10.0f));
+		
+		voxelize_cam_actor->AddComponent(cam);
+		World::GetInst().RegisterActor(voxelize_cam_actor);
+		World::GetInst().SetVoxelCamera(cam);
+	}
+
+	{
+		Actor* fps_cam_actor = new Actor();
+		const float fovY = glm::radians(45.0f);
+		const float near = 0.1f;
+		const float far = 10000.0f;
+		const float move_speed = 100.0f;
+		printf("------- FPS Camera Info -------\n");
+		printf("fovY: %f\n", fovY);
+		printf("aspect ratio: %f\n", aspect);
+		printf("near plane z: %f\n", near);
+		printf("far plane z: %f\n", far);
+		printf("free move speed: %f\n", move_speed);
+		printf("fps mouse sensitivity: %f\n", mouse_sensitivity);
+		printf("max pitch angle: 89 degree\n");
+		printf("---------------------------\n");
+		Camera* cam = new Camera(fovY, aspect, near, far);
+		cam->MoveTo(glm::vec3(0.0f, 0.0f, 0.0f));
+		cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		cam->SetFreeMoveSpeed(move_speed);
+		fps_cam_actor->AddComponent(cam);
+		World::GetInst().RegisterActor(fps_cam_actor);
+		World::GetInst().SetMainCamera(cam);
+	}
+
+	World::GetInst().SetMouseSensitivity(mouse_sensitivity);
+
+	/* --------------  Scene  ----------- */
+	//hardcode test world...:p
 	Model* sceneModel = new Model(scene_path);
 	World::GetInst().RegisterModel(sceneModel);
-    std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
-    Actor* sceneActor = new Actor();
+	std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
+	Actor* sceneActor = new Actor();
 	ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);
 
-    for (Material*& m : sceneMaterials)
-    {
-        m->AddVertShader("src/shaders/voxelize_vert.glsl");
-        m->AddFragShader("src/shaders/voxelize_frag.glsl");
-        m->LinkProgram();
-        sceneRenderer->AddMaterial(m);
-    }
+	//voxel grid texture3d
+
+	Texture3dCompute* voxelTex = new Texture3dCompute(voxelDim, voxelDim, voxelDim, GL_RGBA);
+	World::GetInst().RegisterTexture3d(voxelTex);
+
+	for (Material*& m : sceneMaterials)
+	{
+		m->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageWriteOnly);
+		m->SetShader(voxel_visualize_shader);
+		GLuint shader_obj = m->GetShader()->GetProgram();
+		//set voxel camera matrices
+		glm::mat4x4 voxel_view = World::GetInst().GetVoxelCamera()->GetViewMtx();
+		glm::mat4x4 voxel_proj = World::GetInst().GetVoxelCamera()->GetProjMtx();
+		glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelViewMtx"), 1, glm::value_ptr(voxel_view));
+		glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelProjMtx"), 1, glm::value_ptr(voxel_proj));
+		sceneRenderer->AddMaterial(m);
+	}
 	sceneRenderer->MoveTo({ 0.0f, 0.0f, 0.0f });
 	sceneRenderer->ScaleTo({ 0.5f, 0.5f, 0.5f });
-    sceneActor->AddComponent(sceneRenderer);
-    World::GetInst().RegisterActor(sceneActor);
+	sceneActor->AddComponent(sceneRenderer);
+	World::GetInst().RegisterActor(sceneActor);
 
-	// test quad
-	//Model* quad = new Model(Model::Primitive::kTriangle);
-	//World::GetInst().AddModel(quad);
+	/* --------------  Frame Buffer Display  ----------- */
+	// frame buffer display quad
+	Model* quad = new Model(Model::Primitive::kTriangle);
+	World::GetInst().RegisterModel(quad);
 
-	//Actor* quadActor = new Actor();
-	//ModelRenderer* quadRenderer = new ModelRenderer(quad, material);
-	//quadRenderer->MoveTo({ 0.0f, 0.0f, 2.0f });
-	//quadActor->AddComponent(quadRenderer);
-	//World::GetInst().AddActor(quadActor);
-
-	Actor* camActor = new Actor();	
-	const float fovY = glm::radians(45.0f);
-	const float aspect = 1.78f; // 16 : 9
-	const float near = 0.1f;
-	const float far = 1000.0f;
-    const float move_speed = 10.0f;
-    printf("------- Camera Info -------\n");
-    printf("fovY: %f\n", fovY);
-    printf("aspect ratio: %f\n", aspect);
-    printf("near plane z: %f\n", near);
-    printf("far plane z: %f\n", far);
-    printf("free move speed: %f\n", move_speed);
-	printf("fps mouse sensitivity: %f\n", mouse_sensitivity);
-    printf("max pitch angle: 89 degree\n");
-    printf("---------------------------\n");
-	Camera* cam = new Camera(fovY, aspect, near, far);
-	cam->MoveTo(glm::vec3(1.0f, 2.0f, 3.0f));
-	cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	cam->MoveTo(glm::vec3(0.0f, 1.0f, 0.0f));
-    cam->SetFreeMoveSpeed(move_speed);
-	camActor->AddComponent(cam);
-
-	World::GetInst().RegisterActor(camActor);
-	World::GetInst().SetMainCamera(cam);
-	World::GetInst().SetMouseSensitivity(mouse_sensitivity);
+	Actor* quadActor = new Actor();
+	FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxelDim);
+	Material* quad_mat = new Material();
+	quad_mat->SetShader(framebuffer_display_shader);
+	quad_mat->AddTexture(voxelViewDisplay->GetColorBuffer(), "TexScreen");
+	voxelViewDisplay->AddMaterial(quad_mat);
+	World::GetInst().RegisterMaterial(quad_mat);
+	voxelViewDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
+	voxelViewDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+	quadActor->AddComponent(voxelViewDisplay);
+	World::GetInst().RegisterActor(quadActor);
 }

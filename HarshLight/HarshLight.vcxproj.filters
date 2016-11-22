@@ -55,6 +55,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Textur2d.cpp" />
+    <ClCompile Include="src\ShaderProgram.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FrameBufferDisplay.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -87,6 +93,12 @@
     <ClInclude Include="src\Textur2d.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ShaderProgram.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FrameBufferDisplay.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\testvert.glsl">
@@ -102,6 +114,18 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\voxelize_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\framebuffer_color_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\framebuffer_color_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\voxel_visualize_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\voxel_visualize_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

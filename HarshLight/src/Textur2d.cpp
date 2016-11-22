@@ -44,3 +44,54 @@ GLuint Texture2d::GetTexObj() const
 {
     return m_TexObject;
 }
+
+Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint format)
+	:m_DimX(dim_x), m_DimY(dim_y), m_DimZ(dim_z), m_Format(format), m_TexObject(0), m_UtilFBO(0)
+{
+#ifdef _DEBUG
+	assert(m_DimX && m_DimY && m_DimZ);
+#endif
+	glGenTextures(1, &m_TexObject);
+	glBindTexture(GL_TEXTURE_3D, m_TexObject);
+	glTexImage3D(GL_TEXTURE_3D, 0, format, m_DimX, m_DimY, m_DimZ, 0, format, GL_UNSIGNED_BYTE, nullptr);
+	//no mipmap
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //no lerp
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //no lerp
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+	glBindTexture(GL_TEXTURE_3D, 0);
+
+	glGenFramebuffers(1, &m_UtilFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
+	//GL_COLOR_ATTACHMENT0
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_TexObject, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+Texture3dCompute::~Texture3dCompute()
+{
+	if (m_UtilFBO)
+	{
+		glDeleteFramebuffers(1, &m_UtilFBO);
+		m_UtilFBO = 0;
+	}
+	if (m_TexObject)
+	{
+		glDeleteTextures(1, &m_TexObject);
+		m_TexObject = 0;
+	}
+}
+
+void Texture3dCompute::CleanContent()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint Texture3dCompute::GetTexObj() const
+{
+	return m_TexObject;
+}

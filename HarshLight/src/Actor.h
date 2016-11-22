@@ -18,6 +18,8 @@ public:
     void Update(float dt);
 
     void AddComponent(Component* comp);
+	const ComponentList& GetAllComponents() const;
+
 
 private:
     ComponentList m_Components;

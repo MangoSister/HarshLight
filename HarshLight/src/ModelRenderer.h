@@ -11,16 +11,17 @@ class ModelRenderer : public Component
 {
 public:
     explicit ModelRenderer(Model* model);
-
+	virtual ~ModelRenderer() { }
 	void MoveTo(const glm::vec3& pos);
 	void ScaleTo(const glm::vec3& scale);
 
     void Start() override;
-    void Update(float dt) override;
+	void Render();
+	virtual void Update(float dt) override;
 
     void AddMaterial(const Material* material);
 
-private:
+protected:
 
     Model* m_Model;
     std::vector<const Material*> m_Materials;
