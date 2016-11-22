@@ -160,6 +160,12 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
 	voxelize_shader->LinkProgram();
 	World::GetInst().RegisterShader(voxel_visualize_shader);
 
+	ShaderProgram* diffuse_shader = new ShaderProgram();
+	diffuse_shader->AddVertShader("src/shaders/diffuse_vert.glsl");
+	diffuse_shader->AddFragShader("src/shaders/diffuse_frag.glsl");
+	diffuse_shader->LinkProgram();
+	World::GetInst().RegisterShader(diffuse_shader);
+
 	ShaderProgram* framebuffer_display_shader = new ShaderProgram();
 	framebuffer_display_shader->AddVertShader("src/shaders/framebuffer_color_vert.glsl");
 	framebuffer_display_shader->AddFragShader("src/shaders/framebuffer_color_frag.glsl");
@@ -221,7 +227,6 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
 	World::GetInst().RegisterModel(sceneModel);
 	std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
 	Actor* sceneActor = new Actor();
-	ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);
 
 	//voxel grid texture3d
 
@@ -230,6 +235,26 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
 
 	for (Material*& m : sceneMaterials)
 	{
+		m->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageWriteOnly);
+		m->SetShader(voxel_visualize_shader);
+		GLuint shader_obj = m->GetShader()->GetProgram();
+		//set voxel camera matrices
+		glm::mat4x4 voxel_view = World::GetInst().GetVoxelCamera()->GetViewMtx();
+		glm::mat4x4 voxel_proj = World::GetInst().GetVoxelCamera()->GetProjMtx();
+		glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelViewMtx"), 1, glm::value_ptr(voxel_view));
+		glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelProjMtx"), 1, glm::value_ptr(voxel_proj));
+		sceneRenderer->AddMaterial(m);
+
+		m->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture);
+		m->SetShader(voxel_visualize_shader);
+		GLuint shader_obj = m->GetShader()->GetProgram();
+		//set voxel camera matrices
+		glm::mat4x4 voxel_view = World::GetInst().GetVoxelCamera()->GetViewMtx();
+		glm::mat4x4 voxel_proj = World::GetInst().GetVoxelCamera()->GetProjMtx();
+		glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelViewMtx"), 1, glm::value_ptr(voxel_view));
+		glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelProjMtx"), 1, glm::value_ptr(voxel_proj));
+		sceneRenderer->AddMaterial(m);
+
 		m->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageWriteOnly);
 		m->SetShader(voxel_visualize_shader);
 		GLuint shader_obj = m->GetShader()->GetProgram();
