@@ -116,19 +116,13 @@ void World::RegisterActor(Actor* actor)
 #ifdef _DEBUG
     assert(actor != nullptr);
 #endif
-	for (Component* comp : actor->GetAllComponents())
-	{
-		FrameBufferDisplay* fbd = dynamic_cast<FrameBufferDisplay*>(comp);
-		if (fbd)
-			m_FrameBufferDisplays.push_back(fbd);
-		else
-		{
-			ModelRenderer* mr = dynamic_cast<ModelRenderer*>(comp);
-			if (mr)
-				m_RegularRenderers.push_back(mr);
-		}
-	}
+
     m_Actors.push_back(actor);
+    ModelRenderer* renderer = actor->GetRenderer();
+    m_Renderers.push_back(renderer);
+    FrameBufferDisplay* display = dynamic_cast<FrameBufferDisplay*>(renderer);
+    if (display)
+        m_FrameBufferDisplays.push_back(display);
 }
 
 const ModelList& World::GetModels() const
@@ -251,54 +245,61 @@ void World::Update()
 	m_LastTime = m_CurrTime;
 
 	/*--------- pass 1: voxelize scene ---------*/
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
+    if (m_VoxelizeCamera)
+        m_VoxelizeCamera->UpdateCamMtx();
+    else
+        fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+    for (ModelRenderer* renderer : m_Renderers)
+        renderer->Render(RenderPassFlag::kVoxelize);
+
 	/*--------- pass 2: regular render to default frame buffer ---------*/
+    if (m_MainCamera)
+        m_MainCamera->UpdateCamMtx();
+    else
+        fprintf(stderr, "WARNING: MainCamera is null\n");
+
+    for (ModelRenderer* renderer : m_Renderers)
+        renderer->Render(RenderPassFlag::kRegular);
+
 	/*--------- pass 3: regular render to frame buffer displays ---------*/
+    if (m_VoxelizeCamera)
+        m_VoxelizeCamera->UpdateCamMtx();
+    else
+        fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+    for (FrameBufferDisplay* display : m_FrameBufferDisplays)
+    {
+        assert(display != nullptr);
+        display->StartRenderToFrameBuffer();
+        for (ModelRenderer* renderer : m_Renderers)
+            renderer->Render(RenderPassFlag::kRegular);
+    }
+
 	/*--------- pass 4: render frame buffer displays as overlay ---------*/
+    if (m_MainCamera)
+        m_MainCamera->UpdateCamMtx();
+    else
+        fprintf(stderr, "WARNING: MainCamera is null\n");
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
+    for (FrameBufferDisplay* display : m_FrameBufferDisplays)
+    {
+        assert(display != nullptr);
+        display->DisplayFrameBuffer();
+    }
 
-	/*pass 1: regular scene*/
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
-
-	if (m_MainCamera)
-		m_MainCamera->UpdateCamMtx();
-	else
-		fprintf(stderr, "WARNING: MainCamera is null\n");
-
+    /*--------- CPU update ---------*/
     for (Actor* actor : m_Actors)
     {
         assert(actor != nullptr);
         actor->Update(elapsed);
     }   
-
-	//pass 2: render to frame buffer display
-	if (m_VoxelizeCamera)
-		m_VoxelizeCamera->UpdateCamMtx();
-	else
-		fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
-	for (FrameBufferDisplay* display: m_FrameBufferDisplays)
-	{
-		assert(display != nullptr);
-		display->StartRenderToFrameBuffer();
-		for (ModelRenderer* renderer : m_RegularRenderers)
-			renderer->Render();
-	}
-
-	//pass 3: display the result of pass 2 (overlay)
-	//dont really need a camera in pass 3
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
-	for (FrameBufferDisplay* display : m_FrameBufferDisplays)
-	{
-		assert(display != nullptr);
-		display->DisplayFrameBuffer();
-	}
-
 }
 
 std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
