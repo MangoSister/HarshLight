@@ -250,7 +250,12 @@ void World::Update()
 	//fps: 1 / elapsed
 	m_LastTime = m_CurrTime;
 
-	//pass 1: regular scene
+	/*--------- pass 1: voxelize scene ---------*/
+	/*--------- pass 2: regular render to default frame buffer ---------*/
+	/*--------- pass 3: regular render to frame buffer displays ---------*/
+	/*--------- pass 4: render frame buffer displays as overlay ---------*/
+
+	/*pass 1: regular scene*/
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

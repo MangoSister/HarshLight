@@ -3,8 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 ModelRenderer::ModelRenderer(Model * model)
-	:Component(),
-	m_Model(model), m_Transform(1.0f)
+	:m_Model(model), m_Transform(1.0f), m_RenderPassFlag(RenderPassFlag::kNone)
 {
 #ifdef _DEBUG
     assert(m_Model != nullptr);
@@ -26,28 +25,34 @@ void ModelRenderer::ScaleTo(const glm::vec3& scale)
 	m_Transform[2] *= inv_len2 * scale.z;
 }
 
-void ModelRenderer::Start()
-{
 
+void ModelRenderer::Render(RenderPassFlag pass)
+{
+	switch (pass)
+	{
+	case RenderPassFlag::kVoxelize:m_Model->Render(m_Transform, m_VoxelizeMaterials); break;
+	case RenderPassFlag::kRegular:m_Model->Render(m_Transform, m_Materials); break;
+	case RenderPassFlag::kPost:m_Model->Render(m_Transform, m_PostMaterials); break;
+	default:case RenderPassFlag::kNone:
+		break;
+	}
 }
 
-void ModelRenderer::Render()
-{
-#ifdef _DEBUG
-	assert(m_Materials.size() > 0);
-#endif
-	m_Model->Render(m_Transform, m_Materials);
-}
 
-void ModelRenderer::Update(float dt)
-{
-	Render();
-}
-
-void ModelRenderer::AddMaterial(const Material * material)
+void ModelRenderer::AddMaterial(RenderPassFlag pass, const Material* material)
 {
 #ifdef _DEBUG
     assert(material != nullptr);
 #endif
     m_Materials.push_back(material);
+}
+
+void ModelRenderer::SetRenderPass(RenderPassFlag flag)
+{
+	m_RenderPassFlag = flag;
+}
+
+RenderPassFlag ModelRenderer::GetRenderPass() const
+{
+	return m_RenderPassFlag;
 }

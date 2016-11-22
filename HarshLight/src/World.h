@@ -20,7 +20,7 @@ typedef std::vector<Material*> MaterialList;
 typedef std::unordered_map<std::string, Texture2d*> Texture2dDict;
 typedef std::vector<Texture3dCompute*> Texture3dList;
 typedef std::vector<ShaderProgram*> ShaderList;
-typedef std::vector<ModelRenderer*> RgularRendererList;
+typedef std::vector<ModelRenderer*> RendererList;
 typedef std::vector<FrameBufferDisplay*> FrameBufferDisplayList;
 
 class World
@@ -87,7 +87,7 @@ private:
 	Texture3dList m_Textures3d;
 
 	/*----------------  Convenience Lists --------------*/
-	RgularRendererList m_RegularRenderers;
+	RendererList m_RegularRenderers;
 	FrameBufferDisplayList m_FrameBufferDisplays;
 	Camera* m_MainCamera;
 	Camera* m_VoxelizeCamera;

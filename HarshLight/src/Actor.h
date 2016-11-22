@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Component.h"
+#include "ModelRenderer.h"
 
 typedef std::vector<Component*> ComponentList;
 
@@ -20,7 +21,9 @@ public:
     void AddComponent(Component* comp);
 	const ComponentList& GetAllComponents() const;
 
+	ModelRenderer* GetRenderer();
 
 private:
     ComponentList m_Components;
+	ModelRenderer m_Renderer;
 };

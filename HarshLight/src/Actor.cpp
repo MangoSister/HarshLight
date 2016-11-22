@@ -26,6 +26,11 @@ const ComponentList & Actor::GetAllComponents() const
 	return m_Components;
 }
 
+ModelRenderer* Actor::GetRenderer()
+{
+	return &m_Renderer;
+}
+
 void Actor::Start()
 {
     for (Component* comp : m_Components)

@@ -1,13 +1,22 @@
 #pragma once
 
-#include "Component.h"
 #include "Model.h"
 #include "Material.h"
 #include <vector>
 
 using namespace glm;
 
-class ModelRenderer : public Component
+enum class RenderPassFlag : uint8_t
+{
+	kNone = 0x00,
+	kVoxelize = 0x01,
+	kRegular = 0x02,
+	kPost = 0x04,
+	kCount = 3,
+};
+
+
+class ModelRenderer
 {
 public:
     explicit ModelRenderer(Model* model);
@@ -15,15 +24,21 @@ public:
 	void MoveTo(const glm::vec3& pos);
 	void ScaleTo(const glm::vec3& scale);
 
-    void Start() override;
-	void Render();
-	virtual void Update(float dt) override;
+	void Render(RenderPassFlag pass);
 
-    void AddMaterial(const Material* material);
+    void AddMaterial(RenderPassFlag pass, const Material* material);
+
+	void SetRenderPass(RenderPassFlag flag);
+	RenderPassFlag GetRenderPass() const;
 
 protected:
 
+	mat4x4 m_Transform;
     Model* m_Model;
+
+	RenderPassFlag m_RenderPassFlag;
     std::vector<const Material*> m_Materials;
-    mat4x4 m_Transform;
+	std::vector<const Material*> m_VoxelizeMaterials;
+	std::vector<const Material*> m_PostMaterials;
+
 };
