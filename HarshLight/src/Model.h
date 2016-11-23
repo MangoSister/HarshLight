@@ -12,7 +12,7 @@ class Model
 public:
 	enum class Primitive : uint8_t
 	{
-		kTriangle = 0,
+		kQuad = 0,
 		kCount = 1,
 	};
 

@@ -9,10 +9,7 @@ public:
 
 	virtual ~FrameBufferDisplay();
 
-	void Update(float dt) override { return; /* HACK! */ }
-
 	void StartRenderToFrameBuffer();
-	void DisplayFrameBuffer();
 
 	GLuint GetColorBuffer() const;
 private:

@@ -38,6 +38,29 @@ void Material::AddTexture(const Texture3dCompute * tex3d, const char * semantic,
 	m_Textures3d.push_back(Texture3dSlot(tex3d->GetTexObj(), semantic, usage));
 }
 
+void Material::DeleteTexture(const char * semantic)
+{
+    for (auto iter = m_Textures2d.begin(); iter != m_Textures2d.end();)
+    {
+        if (strcmp(semantic, iter->m_Semantic) == 0)
+            iter = m_Textures2d.erase(iter);
+        else ++iter;
+    }
+
+    for (auto iter = m_Textures3d.begin(); iter != m_Textures3d.end();)
+    {
+        if (strcmp(semantic, iter->m_Semantic) == 0)
+            iter = m_Textures3d.erase(iter);
+        else ++iter;
+    }
+}
+
+void Material::DeleteAllTextures()
+{
+    m_Textures2d.clear();
+    m_Textures3d.clear();
+}
+
 void Material::SetShader(ShaderProgram* shader)
 {
 #ifdef _DEBUG

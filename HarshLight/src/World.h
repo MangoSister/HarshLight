@@ -87,6 +87,7 @@ private:
 	Texture3dList m_Textures3d;
 
 	/*----------------  Convenience Lists --------------*/
+    ComponentList m_Components;
 	RendererList m_Renderers;
 	FrameBufferDisplayList m_FrameBufferDisplays;
 	Camera* m_MainCamera;

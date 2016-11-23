@@ -49,10 +49,10 @@
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\shaders\diffuse_frag.glsl" />
+    <None Include="src\shaders\diffuse_vert.glsl" />
     <None Include="src\shaders\framebuffer_color_frag.glsl" />
     <None Include="src\shaders\framebuffer_color_vert.glsl" />
-    <None Include="src\shaders\testfrag.glsl" />
-    <None Include="src\shaders\testvert.glsl" />
     <None Include="src\shaders\voxelize_frag.glsl" />
     <None Include="src\shaders\voxelize_geom.glsl" />
     <None Include="src\shaders\voxelize_vert.glsl" />

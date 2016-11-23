@@ -6,15 +6,18 @@
 
 using namespace glm;
 
-enum class RenderPassFlag : uint8_t
+typedef uint8_t RenderPassFlag;
+namespace RenderPass
 {
-	kNone = 0x00,
-	kVoxelize = 0x01,
-	kRegular = 0x02,
-	kPost = 0x04,
-	kCount = 3,
-};
-
+    enum
+    {
+        kNone = 0x00,
+        kVoxelize = 0x01,
+        kRegular = 0x02,
+        kPost = 0x04,
+        kCount = 3,
+    };
+}
 
 class ModelRenderer
 {

@@ -101,12 +101,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\testvert.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
-    <None Include="src\shaders\testfrag.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
     <None Include="src\shaders\voxelize_vert.glsl">
       <Filter>src\shaders</Filter>
     </None>
@@ -126,6 +120,12 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\voxel_visualize_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\diffuse_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\diffuse_vert.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

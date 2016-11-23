@@ -11,13 +11,13 @@ layout (rgba8) coherent uniform image3D TexVoxel;
 
 uniform mat4 CamVoxelViewMtx;
 uniform mat4 CamVoxelProjMtx;
-uniform float VoxelDim
+uniform float VoxelDim;
 
 void main()
 {
-	vec4 voxel_space_pos = CamVoxelProjMtx * CamVoxelViewMtx * vs_WorldPosition;
+	vec4 voxel_space_pos = CamVoxelProjMtx * CamVoxelViewMtx * vec4(vs_WorldPosition, 1.0);
 	voxel_space_pos /= voxel_space_pos.w;
-	voxel_space_pos *= VoxelDim;
-	ivec3 voxel_idx = floor(voxel_space_pos);
-	fragColor = imageLoad(TexVoxel?, voxel_idx);
+	voxel_space_pos *= vec4(VoxelDim);
+	ivec3 voxel_idx = ivec3(floor(voxel_space_pos.xyz));
+	fragColor = imageLoad(TexVoxel, voxel_idx);
 }

@@ -117,12 +117,23 @@ void World::RegisterActor(Actor* actor)
     assert(actor != nullptr);
 #endif
 
+    auto comps = actor->GetAllComponents();
+    for (Component* comp : comps)
+    {
+        m_Components.push_back(comp);
+    }
+    auto renderers = actor->GetAllRenderers();
+    for (ModelRenderer* renderer : renderers)
+    {
+        m_Renderers.push_back(renderer);
+        FrameBufferDisplay* display = dynamic_cast<FrameBufferDisplay*>(renderer);
+        if (display)
+            m_FrameBufferDisplays.push_back(display);
+    }
+
+
     m_Actors.push_back(actor);
-    ModelRenderer* renderer = actor->GetRenderer();
-    m_Renderers.push_back(renderer);
-    FrameBufferDisplay* display = dynamic_cast<FrameBufferDisplay*>(renderer);
-    if (display)
-        m_FrameBufferDisplays.push_back(display);
+
 }
 
 const ModelList& World::GetModels() const
@@ -225,12 +236,12 @@ void World::SetMouseSensitivity(float sensitivity)
 
 void World::Start()
 {
-    for (Actor* actor : m_Actors)
+    for (Component* comp : m_Components)
     {
 #ifdef _DEBUG
-        assert(actor != nullptr);
+        assert(comp != nullptr);
 #endif
-        actor->Start();
+        comp->Start();
     }
 
 	m_LastTime = std::chrono::system_clock::now();
@@ -256,7 +267,7 @@ void World::Update()
         fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
     for (ModelRenderer* renderer : m_Renderers)
-        renderer->Render(RenderPassFlag::kVoxelize);
+        renderer->Render(RenderPass::kVoxelize);
 
 	/*--------- pass 2: regular render to default frame buffer ---------*/
     if (m_MainCamera)
@@ -265,7 +276,7 @@ void World::Update()
         fprintf(stderr, "WARNING: MainCamera is null\n");
 
     for (ModelRenderer* renderer : m_Renderers)
-        renderer->Render(RenderPassFlag::kRegular);
+        renderer->Render(RenderPass::kRegular);
 
 	/*--------- pass 3: regular render to frame buffer displays ---------*/
     if (m_VoxelizeCamera)
@@ -277,7 +288,7 @@ void World::Update()
         assert(display != nullptr);
         display->StartRenderToFrameBuffer();
         for (ModelRenderer* renderer : m_Renderers)
-            renderer->Render(RenderPassFlag::kRegular);
+            renderer->Render(RenderPass::kRegular);
     }
 
 	/*--------- pass 4: render frame buffer displays as overlay ---------*/
@@ -291,14 +302,14 @@ void World::Update()
     for (FrameBufferDisplay* display : m_FrameBufferDisplays)
     {
         assert(display != nullptr);
-        display->DisplayFrameBuffer();
+        display->Render(RenderPass::kPost);
     }
 
     /*--------- CPU update ---------*/
-    for (Actor* actor : m_Actors)
+    for (Component* comp : m_Components)
     {
-        assert(actor != nullptr);
-        actor->Update(elapsed);
+        assert(comp != nullptr);
+        comp->Update(elapsed);
     }   
 }
 

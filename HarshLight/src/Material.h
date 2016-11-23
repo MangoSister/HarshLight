@@ -24,6 +24,8 @@ public:
     void AddTexture(const Texture2d* tex2d, const char* semantic);
 	void AddTexture(GLuint tex2d, const char* semantic);
 	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage);
+    void DeleteTexture(const char* semantic);
+    void DeleteAllTextures();
 	void SetShader(ShaderProgram* shader);
 	const ShaderProgram* GetShader() const;
 

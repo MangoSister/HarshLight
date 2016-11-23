@@ -17,7 +17,9 @@ Actor::~Actor()
 
 void Actor::AddComponent(Component* comp)
 {
+#ifdef _DEBUG
     assert(comp != nullptr);
+#endif
     m_Components.push_back(comp);
 }
 
@@ -26,31 +28,15 @@ const ComponentList & Actor::GetAllComponents() const
 	return m_Components;
 }
 
-ModelRenderer* Actor::GetRenderer()
+void Actor::AddRenderer(ModelRenderer* renderer)
 {
-	return &m_Renderer;
+#ifdef _DEBUG
+    assert(renderer != nullptr);
+#endif
+    m_Renderers.push_back(renderer);
 }
 
-void Actor::Start()
+const RendererList& Actor::GetAllRenderers() const
 {
-    for (Component* comp : m_Components)
-    {
-        assert(comp != nullptr);
-        comp->Start();
-        comp->MarkStarted();
-    }
-}
-
-void Actor::Update(float dt)
-{
-    for (Component* comp : m_Components)
-    {
-        assert(comp != nullptr);
-        if (!comp->IsStarted())
-        {
-            comp->Start();
-            comp->MarkStarted();
-        }
-        comp->Update(dt);
-    }
+    return m_Renderers;
 }

@@ -63,14 +63,6 @@ void FrameBufferDisplay::StartRenderToFrameBuffer()
 	glViewport(0, 0, m_Dim, m_Dim);
 }
 
-void FrameBufferDisplay::DisplayFrameBuffer()
-{
-#ifdef _DEBUG
-	assert(m_Materials.size() > 0);
-#endif
-	m_Model->Render(m_Transform, m_Materials);
-}
-
 GLuint FrameBufferDisplay::GetColorBuffer() const
 {
 	return m_ColorBuffer;

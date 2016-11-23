@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 ModelRenderer::ModelRenderer(Model * model)
-	:m_Model(model), m_Transform(1.0f), m_RenderPassFlag(RenderPassFlag::kNone)
+	:m_Model(model), m_Transform(1.0f), m_RenderPassFlag(RenderPass::kNone)
 {
 #ifdef _DEBUG
     assert(m_Model != nullptr);
@@ -30,10 +30,16 @@ void ModelRenderer::Render(RenderPassFlag pass)
 {
 	switch (pass)
 	{
-	case RenderPassFlag::kVoxelize:m_Model->Render(m_Transform, m_VoxelizeMaterials); break;
-	case RenderPassFlag::kRegular:m_Model->Render(m_Transform, m_Materials); break;
-	case RenderPassFlag::kPost:m_Model->Render(m_Transform, m_PostMaterials); break;
-	default:case RenderPassFlag::kNone:
+    case RenderPass::kVoxelize:
+        if(m_RenderPassFlag & pass) 
+            m_Model->Render(m_Transform, m_VoxelizeMaterials); break;
+    case RenderPass::kRegular:
+        if(m_RenderPassFlag & pass) 
+            m_Model->Render(m_Transform, m_Materials); break;
+    case RenderPass::kPost:
+        if(m_RenderPassFlag & pass) 
+            m_Model->Render(m_Transform, m_PostMaterials); break;
+    default:case RenderPass::kNone:
 		break;
 	}
 }
@@ -44,7 +50,14 @@ void ModelRenderer::AddMaterial(RenderPassFlag pass, const Material* material)
 #ifdef _DEBUG
     assert(material != nullptr);
 #endif
-    m_Materials.push_back(material);
+    switch (pass)
+    {
+    case RenderPass::kVoxelize: m_VoxelizeMaterials.push_back(material); break;
+    case RenderPass::kRegular: m_Materials.push_back(material); break;
+    case RenderPass::kPost: m_PostMaterials.push_back(material); break;
+    default:case RenderPass::kNone:
+        break;
+    }
 }
 
 void ModelRenderer::SetRenderPass(RenderPassFlag flag)

@@ -5,6 +5,7 @@
 #include "ModelRenderer.h"
 
 typedef std::vector<Component*> ComponentList;
+typedef std::vector<ModelRenderer*> RendererList;
 
 class Actor
 {
@@ -15,15 +16,14 @@ public:
     Actor(const Actor& other) = delete;
     Actor& operator=(const Actor& other) = delete;
 
-    void Start();
-    void Update(float dt);
-
     void AddComponent(Component* comp);
 	const ComponentList& GetAllComponents() const;
 
-	ModelRenderer* GetRenderer();
+    void AddRenderer(ModelRenderer* renderer);
+    const RendererList& GetAllRenderers() const;
 
 private:
+
     ComponentList m_Components;
-	ModelRenderer m_Renderer;
+    RendererList m_Renderers;
 };
