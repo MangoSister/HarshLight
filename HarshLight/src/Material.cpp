@@ -95,7 +95,7 @@ void Material::Use() const
         GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
         if (loc == -1)
         {
-            fprintf(stderr, "WARNING: cannot find uniform variable %s\n", tex_slot.m_Semantic);
+            //fprintf(stderr, "WARNING: cannot find tex2d %s\n", tex_slot.m_Semantic);
             continue;
         }
         glUniform1i(loc, i);
@@ -114,7 +114,7 @@ void Material::Use() const
 		GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
 		if (loc == -1)
 		{
-			fprintf(stderr, "WARNING: cannot find uniform variable %s\n", tex_slot.m_Semantic);
+			//fprintf(stderr, "WARNING: cannot find tex3d variable %s\n", tex_slot.m_Semantic);
 			continue;
 		}
 

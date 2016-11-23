@@ -53,11 +53,6 @@ void main()
 	screen_pos[1] /= screen_pos[1].w;
 	screen_pos[2] /= screen_pos[2].w;
 
-	gs_BBox.xy = min(screen_pos[0].xy, min(screen_pos[1].xy, screen_pos[2].xy));
-    gs_BBox.zw = max(screen_pos[0].xy, max(screen_pos[1].xy, screen_pos[2].xy));
-    gs_BBox.xy -= vec2(PixelDiagonal);
-    gs_BBox.zw += vec2(PixelDiagonal);
-
 	gs_Texcoord = vs_Texcoord[0];
 	gs_WorldPosition = vs_WorldPosition[0];
 	gs_WorldNormal = vs_WorldNormal[0];

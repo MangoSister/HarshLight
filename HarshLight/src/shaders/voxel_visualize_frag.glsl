@@ -7,7 +7,7 @@ in vec3 vs_WorldNormal;
 out vec4 fragColor;
 
 uniform sampler2D TexAlbedo;
-layout (rgba8) coherent uniform image3D TexVoxel;
+uniform sampler3D TexVoxel;
 
 uniform mat4 CamVoxelViewMtx;
 uniform mat4 CamVoxelProjMtx;
@@ -19,5 +19,6 @@ void main()
 	voxel_space_pos /= voxel_space_pos.w;
 	voxel_space_pos *= vec4(VoxelDim);
 	ivec3 voxel_idx = ivec3(floor(voxel_space_pos.xyz));
-	fragColor = imageLoad(TexVoxel, voxel_idx);
+	fragColor = texture(TexVoxel, vec3(0,0,0));
+	//fragColor = vec4(0.5, 0.5, 0.5, 1);
 }

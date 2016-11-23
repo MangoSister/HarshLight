@@ -197,6 +197,10 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
         cam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         //cam->Rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(10.0f));
 
+        glm::vec4 a = glm::vec4(0, -4000, 0, 1);
+        a = cam->GetViewMtx() * a;
+        a = cam->GetProjMtx() * a;
+
         voxelize_cam_actor->AddComponent(cam);
         World::GetInst().RegisterActor(voxelize_cam_actor);
         World::GetInst().SetVoxelCamera(cam);
@@ -255,10 +259,14 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-            mat_voxel_visual->DeleteTexture("TexVoxel");
-            //mat_voxel_visual->DeleteTexture("TexAlbedo");
+
+            mat_voxel_visual->DeleteTexture("TexAlbedo");
             //mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture);
-            mat_voxel_visual->SetShader(diffuse_shader);
+            mat_voxel_visual->SetShader(voxel_visualize_shader);
+
+            //mat_voxel_visual->DeleteTexture("TexVoxel");
+            //mat_voxel_visual->SetShader(diffuse_shader);
+            
             GLuint shader_obj = mat_voxel_visual->GetShader()->GetProgram();
             //set voxel camera matrices
             glm::mat4x4 voxel_view = World::GetInst().GetVoxelCamera()->GetViewMtx();

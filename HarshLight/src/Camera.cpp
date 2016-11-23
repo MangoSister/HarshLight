@@ -25,7 +25,7 @@ Camera::Camera(float left, float right, float bottom, float top, float near, flo
 	m_Left(left), m_Right(right), m_Top(top), m_Bottom(bottom)
 {
 	m_ProjMtx = glm::ortho(left, right, bottom, top, near, far);
-	
+
 	//create camera unifrom buffer
 	glGenBuffers(1, &m_CamUniformBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, m_CamUniformBuffer);

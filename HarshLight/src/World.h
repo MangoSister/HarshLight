@@ -99,5 +99,7 @@ private:
 	uint32_t m_ScreenWidth;
 	uint32_t m_ScreenHeight;
 	float m_MouseSensitivity;
+
+    uint8_t m_RenderPassSwitch[3] = { 1, 1, 1 };
 };
 
