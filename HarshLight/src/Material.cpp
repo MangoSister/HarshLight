@@ -121,7 +121,7 @@ void Material::Use() const
 		if (tex_slot.m_Usage == TexUsage::kRegularTexture)
 		{
 			glActiveTexture(GL_TEXTURE0 + tex2d_num + i);
-			glBindTexture(GL_TEXTURE_2D, tex_slot.m_Tex3dObj);
+			glBindTexture(GL_TEXTURE_3D, tex_slot.m_Tex3dObj);
 			glUniform1i(loc, tex2d_num + i);
 		}
 		else

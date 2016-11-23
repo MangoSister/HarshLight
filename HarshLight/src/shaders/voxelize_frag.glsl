@@ -1,5 +1,4 @@
 #version 450 core
-#extension GL_ARB_shader_image_size : enable
 
 in vec2 gs_Texcoord;
 in vec3 gs_WorldPosition;
@@ -30,6 +29,6 @@ void main()
 	mat3 swizzle = mat3(identity[gs_ProjDir[0]], identity[gs_ProjDir[1]], identity[gs_ProjDir[2]]);
     vec3 coords = swizzle * vec3(gl_FragCoord.xy, gl_FragCoord.z * viewportSize.x);
     //imageStore(TexVoxel, ivec3(coords), fragColor);
-	imageStore(TexVoxel, ivec3(0,0,0), vec4(0,1,0,1));
+	imageStore(TexVoxel, ivec3(gl_FragCoord.x,gl_FragCoord.y,0), vec4(1,1,1,1));
     
 }

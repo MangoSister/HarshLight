@@ -262,6 +262,7 @@ void World::Update()
     glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
 
 	/*--------- pass 1: voxelize scene ---------*/
+	wtf_voxel->CleanContent();
     if (m_RenderPassSwitch[0])
     {
         glDisable(GL_DEPTH_TEST);
@@ -284,8 +285,31 @@ void World::Update()
         glDepthMask(GL_TRUE);
         glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
     }
+	
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	uint8_t* fk = (uint8_t*)calloc(256 * 256 * 256 * 4, 1);
+	for (uint32_t i = 0; i < 256 * 256 * 256 * 4; i++)
+	{
+		if (fk[i] != 0)
+			printf("w");
+	}
+	glBindTexture(GL_TEXTURE_3D, wtf_voxel->GetTexObj());
 
 
+	int w, h, d;
+	glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &w);
+	glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_HEIGHT, &h);
+	glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_DEPTH, &d);
+	int internal_format;
+	glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internal_format);
+
+	glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, fk);
+	for (uint32_t i = 0; i < 256 * 256 * 256 * 4; i++)
+	{
+		if (fk[i] != 0)
+			printf("e");
+	}
+	free(fk);
 	/*--------- pass 2: regular render to default frame buffer ---------*/
     if (m_RenderPassSwitch[1])
     {

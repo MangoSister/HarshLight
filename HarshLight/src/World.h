@@ -69,6 +69,8 @@ public:
 
     std::vector<Material*> LoadDefaultMaterialsForModel(Model * model);
 
+	Texture3dCompute* wtf_voxel;
+
 private:
 
     World() { }

@@ -2,6 +2,7 @@
 #include "SOIL/SOIL.h"
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 
 Texture2d::Texture2d(const char * path)
 {
@@ -53,13 +54,19 @@ Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_
 #endif
 	glGenTextures(1, &m_TexObject);
 	glBindTexture(GL_TEXTURE_3D, m_TexObject);
-	glTexImage3D(GL_TEXTURE_3D, 0, format, m_DimX, m_DimY, m_DimZ, 0, format, GL_UNSIGNED_BYTE, nullptr);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, m_DimX, m_DimY, m_DimZ, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	//no mipmap
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //no lerp
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //no lerp
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+
+	//uint8_t* fk = (uint8_t*)calloc(256 * 256 * 256 * 4, 1);
+	//glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, fk);
+	//free(fk);
+
 	glBindTexture(GL_TEXTURE_3D, 0);
 
 	glGenFramebuffers(1, &m_UtilFBO);

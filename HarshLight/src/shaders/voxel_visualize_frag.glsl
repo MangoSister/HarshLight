@@ -20,5 +20,6 @@ void main()
 	voxel_space_pos *= vec4(VoxelDim);
 	ivec3 voxel_idx = ivec3(floor(voxel_space_pos.xyz));
 	fragColor = texture(TexVoxel, vec3(0,0,0));
+	//fragColor = imageLoad(TexVoxel, ivec3(0,0,0));
 	//fragColor = vec4(0.5, 0.5, 0.5, 1);
 }

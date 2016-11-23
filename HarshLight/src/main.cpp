@@ -241,6 +241,7 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
 
     //voxel grid texture3d
     Texture3dCompute* voxelTex = new Texture3dCompute(voxelDim, voxelDim, voxelDim, GL_RGBA);
+	World::GetInst().wtf_voxel = voxelTex;
     World::GetInst().RegisterTexture3d(voxelTex);
 
     ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);
@@ -271,8 +272,8 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
             //set voxel camera matrices
             glm::mat4x4 voxel_view = World::GetInst().GetVoxelCamera()->GetViewMtx();
             glm::mat4x4 voxel_proj = World::GetInst().GetVoxelCamera()->GetProjMtx();
-            glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelViewMtx"), 1, glm::value_ptr(voxel_view));
-            glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelProjMtx"), 1, glm::value_ptr(voxel_proj));
+           // glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelViewMtx"), 1, glm::value_ptr(voxel_view));
+           // glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelProjMtx"), 1, glm::value_ptr(voxel_proj));
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
         }
     }
