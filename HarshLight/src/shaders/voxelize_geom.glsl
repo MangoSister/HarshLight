@@ -3,7 +3,7 @@
 layout(triangles, invocations = 1) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout (std140) uniform CamMtx
+layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
@@ -17,6 +17,7 @@ in vec3 vs_WorldNormal[];
 
 out vec2 gs_Texcoord;
 out vec3 gs_WorldPosition;
+out float gs_NDCLinearDepth;
 out vec3 gs_WorldNormal;
 out vec4 gs_BBox;
 out flat ivec3 gs_ProjDir;
@@ -52,19 +53,22 @@ void main()
 	screen_pos[0] /= screen_pos[0].w;
 	screen_pos[1] /= screen_pos[1].w;
 	screen_pos[2] /= screen_pos[2].w;
-
+	
+	gs_NDCLinearDepth = screen_pos[0].z;
 	gs_Texcoord = vs_Texcoord[0];
 	gs_WorldPosition = vs_WorldPosition[0];
 	gs_WorldNormal = vs_WorldNormal[0];
 	gl_Position = screen_pos[0];
 	EmitVertex();
 
+	gs_NDCLinearDepth = screen_pos[1].z;
 	gs_Texcoord = vs_Texcoord[1];
 	gs_WorldPosition = vs_WorldPosition[1];
 	gs_WorldNormal = vs_WorldNormal[1];
 	gl_Position = screen_pos[1];
 	EmitVertex();
 
+	gs_NDCLinearDepth = screen_pos[2].z;
 	gs_Texcoord = vs_Texcoord[2];
 	gs_WorldPosition = vs_WorldPosition[2];
 	gs_WorldNormal = vs_WorldNormal[2];

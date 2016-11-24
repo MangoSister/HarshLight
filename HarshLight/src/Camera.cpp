@@ -49,6 +49,9 @@ void Camera::Start()
 
 void Camera::Update(float dt)
 {
+    if (World::GetInst().GetMainCamera() != this)
+        return;
+
 	if (World::GetInst().GetKey(GLFW_KEY_W) == GLFW_PRESS)
 	{
         m_Transform = glm::translate(m_Transform, vec3(0.0f, 0.0f, m_FreeMoveSpeed * -dt));
@@ -80,9 +83,9 @@ void Camera::Update(float dt)
 	}
 }
 
-void Camera::UpdateCamMtx() const
+void Camera::UpdateCamMtx(CameraUBufferBinding binding) const
 {
-	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING_POINT_CAMMTX, m_CamUniformBuffer, 0, 2 * sizeof(glm::mat4));
+	glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)binding, m_CamUniformBuffer, 0, 2 * sizeof(glm::mat4));
 	glBindBuffer(GL_UNIFORM_BUFFER, m_CamUniformBuffer);
     mat4x4 view_mtx(1.0f);
     view_mtx[0][0] = m_Transform[0][0];  view_mtx[0][1] = m_Transform[1][0];  view_mtx[0][2] = m_Transform[2][0];

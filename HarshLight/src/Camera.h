@@ -12,6 +12,12 @@ enum class CameraType : uint8_t
 	kOrtho = 1,
 };
 
+enum class CameraUBufferBinding : uint8_t
+{
+    kMainCam = 0,
+    kVoxelSpaceReconstruct = 1,
+};
+
 class Camera : public Component
 {
 public:
@@ -25,7 +31,7 @@ public:
     void Start() override;
     void Update(float dt) override;
 
-	void UpdateCamMtx() const;
+	void UpdateCamMtx(CameraUBufferBinding binding) const;
 
 	glm::vec3 GetRight() const;
 	glm::vec3 GetUp() const;

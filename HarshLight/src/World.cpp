@@ -257,7 +257,7 @@ void World::Start()
     glViewport(0, 0, 256, 256);
 
     if (m_VoxelizeCamera)
-        m_VoxelizeCamera->UpdateCamMtx();
+        m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
     else
         fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
@@ -291,9 +291,15 @@ void World::MainLoop()
     if (m_RenderPassSwitch[0])
     {
         if (m_MainCamera)
-            m_MainCamera->UpdateCamMtx();
+            m_MainCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
         else
             fprintf(stderr, "WARNING: MainCamera is null\n");
+        
+        //reconstruct voxelize space
+        if (m_VoxelizeCamera)
+            m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kVoxelSpaceReconstruct);
+        else
+            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
         for (ModelRenderer* renderer : m_Renderers)
             renderer->Render(RenderPass::kRegular);
@@ -303,9 +309,16 @@ void World::MainLoop()
     {
         /*--------- pass 2: regular render to frame buffer displays ---------*/
         if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx();
+            m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
         else
             fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+        //reconstruct voxelize space
+        if (m_VoxelizeCamera)
+            m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kVoxelSpaceReconstruct);
+        else
+            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
         for (FrameBufferDisplay* display : m_FrameBufferDisplays)
         {
             assert(display != nullptr);
@@ -316,7 +329,7 @@ void World::MainLoop()
 
         /*--------- pass 3: render frame buffer displays as overlay ---------*/
         if (m_MainCamera)
-            m_MainCamera->UpdateCamMtx();
+            m_MainCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
         else
             fprintf(stderr, "WARNING: MainCamera is null\n");
 

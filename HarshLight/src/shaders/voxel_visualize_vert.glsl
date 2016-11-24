@@ -8,7 +8,7 @@ out vec2 vs_Texcoord;
 out vec3 vs_WorldPosition;
 out vec3 vs_WorldNormal;
 
-layout (std140) uniform CamMtx
+layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
