@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #define BINDING_POINT_CAMMTX 0
-
+#define BINDING_POINT_VOXEL_IMG 1
 
 void APIENTRY glDebugOutput(GLenum source,
 	GLenum type,

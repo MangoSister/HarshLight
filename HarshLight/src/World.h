@@ -65,11 +65,11 @@ public:
     }
 
     void Start();
-    void Update();
+    void MainLoop();
 
     std::vector<Material*> LoadDefaultMaterialsForModel(Model * model);
 
-	Texture3dCompute* wtf_voxel;
+	Texture3dCompute* m_VoxelizeTex;
 
 private:
 
@@ -102,6 +102,6 @@ private:
 	uint32_t m_ScreenHeight;
 	float m_MouseSensitivity;
 
-    uint8_t m_RenderPassSwitch[3] = { 1, 1, 1 };
+    uint8_t m_RenderPassSwitch[2] = { 1, 1 };
 };
 

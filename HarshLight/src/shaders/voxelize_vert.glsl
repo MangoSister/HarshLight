@@ -15,6 +15,7 @@ layout (std140) uniform CamMtx
 };
 
 uniform mat4 Model;
+layout (binding = 1, rgba8) coherent uniform image3D TexVoxel;
 
 void main()
 {
@@ -22,4 +23,5 @@ void main()
 	vs_Texcoord = app_Uv;
 	vs_WorldPosition = vec3(Model * vec4(app_Position, 1.0));
 	vs_WorldNormal = normalize(mat3(Model) * app_Normal);
+	imageStore(TexVoxel, ivec3(0, 0, 0), vec4(0.5,0.5,0.5,0.5));
 }

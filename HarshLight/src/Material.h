@@ -23,7 +23,7 @@ public:
 
     void AddTexture(const Texture2d* tex2d, const char* semantic);
 	void AddTexture(GLuint tex2d, const char* semantic);
-	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage);
+	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage, GLuint binding);
     void DeleteTexture(const char* semantic);
     void DeleteAllTextures();
 	void SetShader(ShaderProgram* shader);
@@ -50,8 +50,9 @@ private:
 		GLuint m_Tex3dObj;
 		const char* m_Semantic;
 		TexUsage m_Usage;
-		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage) :
-			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage) {}
+        GLuint m_BindingPoint;
+		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage, GLuint binding) :
+			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage), m_BindingPoint(binding) {}
 	};
 
     std::vector<Texture2dSlot> m_Textures2d;

@@ -16,7 +16,7 @@ const uint32_t DEFAULT_HEIGHT = 1080;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
-void InitWorld(const char* scene_path, float mouse_sensitivity);
+void EditWorld(const char* scene_path, float mouse_sensitivity);
 
 int main(int argc, char* argv[])
 {
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
 	World::GetInst().SetWindow(window, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
-	InitWorld(scene_path, mouse_sensitivity);
+	EditWorld(scene_path, mouse_sensitivity);
 
     World::GetInst().Start();
 
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
         glfwPollEvents();
 
 		/* Render here */
-		World::GetInst().Update();
+		World::GetInst().MainLoop();
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void InitWorld(const char* scene_path, float mouse_sensitivity)
+void EditWorld(const char* scene_path, float mouse_sensitivity)
 {
     /* --------------  Shaders  ----------- */
 
@@ -240,8 +240,8 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
     Actor* sceneActor = new Actor(); 
 
     //voxel grid texture3d
-    Texture3dCompute* voxelTex = new Texture3dCompute(voxelDim, voxelDim, voxelDim, GL_RGBA);
-	World::GetInst().wtf_voxel = voxelTex;
+    Texture3dCompute* voxelTex = new Texture3dCompute(voxelDim, voxelDim, voxelDim);
+	World::GetInst().m_VoxelizeTex = voxelTex;
     World::GetInst().RegisterTexture3d(voxelTex);
 
     ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);
@@ -252,7 +252,7 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
-            mat_voxelize->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageWriteOnly);
+            mat_voxelize->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageWriteOnly, BINDING_POINT_VOXEL_IMG);
             mat_voxelize->SetShader(voxelize_shader);
             GLuint shader_obj = mat_voxelize->GetShader()->GetProgram();
             sceneRenderer->AddMaterial(RenderPass::kVoxelize, mat_voxelize);
@@ -260,9 +260,9 @@ void InitWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-
-            mat_voxel_visual->DeleteTexture("TexAlbedo");
-            //mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture);
+            mat_voxel_visual->DeleteAllTextures();
+            //mat_voxel_visual->DeleteTexture("TexAlbedo");
+            mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture, 0);
             mat_voxel_visual->SetShader(voxel_visualize_shader);
 
             //mat_voxel_visual->DeleteTexture("TexVoxel");
