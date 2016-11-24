@@ -322,6 +322,7 @@ void World::MainLoop()
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
         glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
         for (FrameBufferDisplay* display : m_FrameBufferDisplays)
         {

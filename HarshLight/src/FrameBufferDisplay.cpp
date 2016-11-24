@@ -59,7 +59,8 @@ void FrameBufferDisplay::StartRenderToFrameBuffer()
 	glClearColor(0.5f, 0.3f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //not using stencil buffer?
 
-	glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 	glViewport(0, 0, m_Dim, m_Dim);
 }
 
