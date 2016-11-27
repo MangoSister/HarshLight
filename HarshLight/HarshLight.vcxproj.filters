@@ -61,6 +61,9 @@
     <ClCompile Include="src\FrameBufferDisplay.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\VoxelizeController.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -99,6 +102,9 @@
     <ClInclude Include="src\FrameBufferDisplay.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\VoxelizeController.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\voxelize_vert.glsl">
@@ -126,6 +132,21 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\diffuse_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\cr_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\cr_geom.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\cr_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\sr_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\sr_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

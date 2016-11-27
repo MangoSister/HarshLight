@@ -300,8 +300,8 @@ void World::MainLoop()
     glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
    // glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glViewport(0, 0, m_RenderWidth, m_RenderHeight);
    
 
@@ -344,7 +344,6 @@ void World::MainLoop()
             for (ModelRenderer* renderer : m_Renderers)
                 renderer->Render(RenderPass::kRegular);
         }
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         /*--------- pass 3: render frame buffer displays as overlay ---------*/
         if (m_MainCamera)
@@ -355,6 +354,7 @@ void World::MainLoop()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glViewport(0, 0, m_RenderWidth, m_RenderHeight);
         for (FrameBufferDisplay* display : m_FrameBufferDisplays)
         {

@@ -1,7 +1,8 @@
 #include "FrameBufferDisplay.h"
 
-FrameBufferDisplay::FrameBufferDisplay(Model * model, uint32_t res, GLuint poly_mode)
-	:ModelRenderer(model), m_FBO(0), m_RBO(0), m_ColorBuffer(0), m_Dim(res), m_PolygonMode(poly_mode)
+FrameBufferDisplay::FrameBufferDisplay(Model* model, uint32_t res, uint8_t depth_test, uint8_t culling, GLuint poly_mode)
+	:ModelRenderer(model), m_FBO(0), m_RBO(0), m_ColorBuffer(0), m_Dim(res), 
+    m_EnableDepthTest(depth_test), m_EnableCulling(culling), m_PolygonMode(poly_mode)
 {
 	//now model should only be quad!!!
 
@@ -59,8 +60,14 @@ void FrameBufferDisplay::StartRenderToFrameBuffer()
 	glClearColor(0.5f, 0.3f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //not using stencil buffer?
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    if (m_EnableDepthTest)
+        glEnable(GL_DEPTH_TEST);
+    else glDisable(GL_DEPTH_TEST);
+
+    if (m_EnableCulling)
+        glEnable(GL_CULL_FACE);
+    else glDisable(GL_CULL_FACE);
+
     glPolygonMode(GL_FRONT_AND_BACK, m_PolygonMode);
 	glViewport(0, 0, m_Dim, m_Dim);
 }

@@ -114,11 +114,10 @@ int main(int argc, char* argv[])
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    World::GetInst().SetWindow(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-    //World::GetInst().SetWindow(window, 1024, 1024);
-    CreateCRTestScene();
     
-	//CreateWorld(scene_path, mouse_sensitivity);
+    World::GetInst().SetWindow(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+    //CreateCRTestScene();    
+	CreateWorld(scene_path, mouse_sensitivity);
 
     World::GetInst().Start();
 
@@ -149,6 +148,7 @@ int main(int argc, char* argv[])
 
 void CreateCRTestScene()
 {
+    const uint32_t test_dim = 16;
     /* --------------  Shaders  ----------- */
     ShaderProgram* cr_shader = new ShaderProgram();
     cr_shader->AddVertShader("src/shaders/cr_vert.glsl");
@@ -199,7 +199,7 @@ void CreateCRTestScene()
     Actor* cr_triActor = new Actor();
 
     ModelRenderer* cr_renderer = new ModelRenderer(tri);
-   // cr_renderer->ScaleTo(glm::vec3(0.1, 1.0, 1.0));
+    //cr_renderer->ScaleTo(glm::vec3(1.0, 0.5, 1.0));
     cr_triActor->AddRenderer(cr_renderer);
     cr_renderer->SetRenderPass(RenderPass::kRegular);
     Material* cr_mat = new Material();
@@ -208,7 +208,7 @@ void CreateCRTestScene()
 
 
     /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(16);
+    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim);
     cr_triActor->AddComponent(voxel_ctrl);
 
     World::GetInst().RegisterActor(cr_triActor);
@@ -221,7 +221,7 @@ void CreateCRTestScene()
     Actor* sr_triActor = new Actor();
 
     ModelRenderer* sr_renderer = new ModelRenderer(tri);
-   // sr_renderer->ScaleTo(glm::vec3(0.1, 1.0, 1.0));
+    //sr_renderer->ScaleTo(glm::vec3(1.0, 0.5, 1.0));
     sr_triActor->AddRenderer(sr_renderer);
     sr_renderer->SetRenderPass(RenderPass::kRegular);
     Material* sr_mat = new Material();
@@ -236,10 +236,9 @@ void CreateCRTestScene()
     World::GetInst().RegisterModel(quad);
     
     {
-        const uint32_t dim = 16;
         Actor* rasterTriDisplay = new Actor();
 
-        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, dim, GL_FILL);
+        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, test_dim, false, false, GL_FILL);
         rasterTriDisplay->AddRenderer(framBufDisplay);
         framBufDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
         framBufDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
@@ -253,10 +252,10 @@ void CreateCRTestScene()
     }
 
     {
-        const uint32_t dim = 256;
+        const uint32_t ref_dim = 256;
         Actor* lineTriDisplay = new Actor();
 
-        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, dim, GL_LINE);
+        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, ref_dim, false, false, GL_LINE);
         lineTriDisplay->AddRenderer(framBufDisplay);
         framBufDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
         framBufDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
@@ -413,7 +412,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     Actor* frameDisplayActor = new Actor();
   
-    FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxelDim, GL_FILL);
+    FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxelDim, true, true, GL_FILL);
     frameDisplayActor->AddRenderer(voxelViewDisplay);
     voxelViewDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
     voxelViewDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
