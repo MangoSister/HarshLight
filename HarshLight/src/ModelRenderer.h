@@ -29,10 +29,12 @@ public:
 
 	void Render(RenderPassFlag pass);
 
-    void AddMaterial(RenderPassFlag pass, const Material* material);
-
+    void AddMaterial(RenderPassFlag pass, Material* material);
+    const std::vector<Material*>& GetMaterial(RenderPassFlag pass) const;
 	void SetRenderPass(RenderPassFlag flag);
 	RenderPassFlag GetRenderPass() const;
+
+    const mat4x4& GetTransform() const;
 
 protected:
 
@@ -40,8 +42,8 @@ protected:
     Model* m_Model;
 
 	RenderPassFlag m_RenderPassFlag;
-    std::vector<const Material*> m_Materials;
-	std::vector<const Material*> m_VoxelizeMaterials;
-	std::vector<const Material*> m_PostMaterials;
+    std::vector<Material*> m_Materials;
+	std::vector<Material*> m_VoxelizeMaterials;
+	std::vector<Material*> m_PostMaterials;
 
 };

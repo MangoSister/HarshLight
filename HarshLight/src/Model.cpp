@@ -12,37 +12,78 @@ Model::Model(Primitive primitive)
 #endif
 
 	m_RawPath = "";
-	std::vector<glm::vec3> pos
-	{
-		{0.5f, 0.5f, 0.0f},  // Top Right
-		{0.5f, -0.5f, 0.0f},  // Bottom Right
-		{-0.5f, -0.5f, 0.0f},  // Bottom Left
-		{-0.5f,  0.5f, 0.0f},   // Top Left 
-	};
 
-	std::vector<uint32_t> indices
-	{
-		0, 1, 3,   // First Triangle
-		1, 2, 3    // Second Triangle
-	};
-	std::vector<glm::vec3> normals
-	{
-		{ 0.0f, 0.0f, -1.0f },  // Top Right
-		{ 0.0f, 0.0f, -1.0f },  // Bottom Right
-		{ 0.0f, 0.0f, -1.0f },  // Bottom Left
-		{ 0.0f, 0.0f, -1.0f },   // Top Left 
-	};
+    switch (primitive)
+    {
+    case Model::Primitive::kTriangle:
+    {
+        std::vector<glm::vec3> pos
+        {
+            {-0.8f, -0.5f, 0.0f}, // Left  
+            {0.8f, -0.5f, 0.0f}, // Right 
+            {0.0f, 0.5f, 0.0f }  // Top  
+        };
 
-	std::vector<glm::vec2> uvs
-	{
-		{ 1.0f, 1.0f },  // Top Right
-		{ 1.0f, 0.0f },  // Bottom Right
-		{ 0.0f, 0.0f },  // Bottom Left
-		{ 0.0f, 1.0f },  // Top Left 
-	};
+        std::vector<uint32_t> indices
+        {
+            0, 1, 2,   // First Triangle
+        };
+        std::vector<glm::vec3> normals
+        {
+            { 0.0f, 0.0f, -1.0f },  // Left  
+            { 0.0f, 0.0f, -1.0f },  // Right 
+            { 0.0f, 0.0f, -1.0f },  // Top  
+        };
 
-	Mesh* mesh = new Mesh(std::move(pos), std::move(indices), std::move(normals), std::move(uvs));
-	m_Meshes.push_back(mesh);
+        std::vector<glm::vec2> uvs
+        {
+            { 0.0f, 0.0f },  // Left  
+            { 0.0f, 1.0f },  // Right 
+            { 1.0f, 0.5f },  // Top  
+        };
+
+        Mesh* mesh = new Mesh(std::move(pos), std::move(indices), std::move(normals), std::move(uvs));
+        m_Meshes.push_back(mesh);
+    }
+        break;
+    case Model::Primitive::kQuad:
+    {
+        std::vector<glm::vec3> pos
+        {
+            { 0.5f, 0.5f, 0.0f },  // Top Right
+            { 0.5f, -0.5f, 0.0f },  // Bottom Right
+            { -0.5f, -0.5f, 0.0f },  // Bottom Left
+            { -0.5f,  0.5f, 0.0f },   // Top Left 
+        };
+
+        std::vector<uint32_t> indices
+        {
+            0, 3, 1,   // First Triangle
+            1, 3, 2    // Second Triangle
+        };
+        std::vector<glm::vec3> normals
+        {
+            { 0.0f, 0.0f, -1.0f },  // Top Right
+            { 0.0f, 0.0f, -1.0f },  // Bottom Right
+            { 0.0f, 0.0f, -1.0f },  // Bottom Left
+            { 0.0f, 0.0f, -1.0f },   // Top Left 
+        };
+
+        std::vector<glm::vec2> uvs
+        {
+            { 1.0f, 1.0f },  // Top Right
+            { 1.0f, 0.0f },  // Bottom Right
+            { 0.0f, 0.0f },  // Bottom Left
+            { 0.0f, 1.0f },  // Top Left 
+        };
+
+        Mesh* mesh = new Mesh(std::move(pos), std::move(indices), std::move(normals), std::move(uvs));
+        m_Meshes.push_back(mesh);
+    }
+        break;
+    default:
+        break;
+    }
 }
 
 Model::Model(const char* path)
@@ -71,7 +112,7 @@ const char* Model::GetRawPath() const
     return m_RawPath;
 }
 
-void Model::Render(const glm::mat4x4& transform, const std::vector<const Material*>& materials) const
+void Model::Render(const glm::mat4x4& transform, const std::vector<Material*>& materials) const
 {
 #if _DEBUG
     assert(materials.size() > 0);

@@ -2,6 +2,9 @@
 
 class Component
 {
+
+    friend class Actor;
+
 public:
 	Component() { }
     virtual ~Component() { }
@@ -14,6 +17,11 @@ public:
     inline bool IsStarted()
     { return m_Started; }
 
-private:
+    inline Actor* GetActor() const
+    { return m_Actor; }
+
+protected:
     bool m_Started = false;
+    Actor* m_Actor;
 };
+

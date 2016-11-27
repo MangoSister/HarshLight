@@ -21,6 +21,7 @@ void Actor::AddComponent(Component* comp)
     assert(comp != nullptr);
 #endif
     m_Components.push_back(comp);
+    comp->m_Actor = this;
 }
 
 const ComponentList & Actor::GetAllComponents() const

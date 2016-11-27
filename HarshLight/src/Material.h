@@ -5,6 +5,7 @@
 #include "GL/glew.h"
 #include <cstdint>
 #include <vector>
+#include <glm/glm.hpp>
 
 enum class TexUsage : uint8_t
 {
@@ -29,7 +30,13 @@ public:
 	void SetShader(ShaderProgram* shader);
 	const ShaderProgram* GetShader() const;
 
+    void SetFloatParam(const char* semantic, float param);
+    void SetVec2Param(const char* semantic, const glm::vec2& param);
+    void SetVec3Param(const char* semantic, const glm::vec3& param);
+    void SetVec4Param(const char* semantic, const glm::vec4& param);
+
     void Use() const;
+   
 
 private:
 	

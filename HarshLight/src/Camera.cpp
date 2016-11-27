@@ -11,6 +11,8 @@ Camera::Camera(float fovY, float aspect, float near, float far)
 {
    m_ProjMtx = glm::perspective(fovY, aspect, near, far);   
    
+   
+
    //create camera unifrom buffer
    glGenBuffers(1, &m_CamUniformBuffer);
    glBindBuffer(GL_UNIFORM_BUFFER, m_CamUniformBuffer);
@@ -83,7 +85,7 @@ void Camera::Update(float dt)
 	}
 }
 
-void Camera::UpdateCamMtx(CameraUBufferBinding binding) const
+void Camera::UpdateCamMtx(UniformBufferBinding binding) const
 {
 	glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)binding, m_CamUniformBuffer, 0, 2 * sizeof(glm::mat4));
 	glBindBuffer(GL_UNIFORM_BUFFER, m_CamUniformBuffer);

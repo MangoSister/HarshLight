@@ -13,7 +13,8 @@ public:
 	enum class Primitive : uint8_t
 	{
 		kQuad = 0,
-		kCount = 1,
+        kTriangle = 1,
+		kCount = 2,
 	};
 
 	explicit Model(Primitive primitive);
@@ -23,7 +24,7 @@ public:
 
 	~Model();
     const char* GetRawPath() const;
-    void Render(const glm::mat4x4& transform, const std::vector<const Material*>& materials) const;
+    void Render(const glm::mat4x4& transform, const std::vector<Material*>& materials) const;
 
 private:
 

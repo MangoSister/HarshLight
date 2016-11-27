@@ -45,7 +45,7 @@ void ModelRenderer::Render(RenderPassFlag pass)
 }
 
 
-void ModelRenderer::AddMaterial(RenderPassFlag pass, const Material* material)
+void ModelRenderer::AddMaterial(RenderPassFlag pass, Material* material)
 {
 #ifdef _DEBUG
     assert(material != nullptr);
@@ -60,6 +60,16 @@ void ModelRenderer::AddMaterial(RenderPassFlag pass, const Material* material)
     }
 }
 
+const std::vector<Material*>& ModelRenderer::GetMaterial(RenderPassFlag pass) const
+{
+    switch (pass)
+    {
+    case RenderPass::kVoxelize: return m_VoxelizeMaterials;
+    case RenderPass::kRegular:default: return m_Materials;
+    case RenderPass::kPost: return m_PostMaterials;
+    }
+}
+
 void ModelRenderer::SetRenderPass(RenderPassFlag flag)
 {
 	m_RenderPassFlag = flag;
@@ -68,4 +78,9 @@ void ModelRenderer::SetRenderPass(RenderPassFlag flag)
 RenderPassFlag ModelRenderer::GetRenderPass() const
 {
 	return m_RenderPassFlag;
+}
+
+const mat4x4 & ModelRenderer::GetTransform() const
+{
+    return m_Transform;
 }

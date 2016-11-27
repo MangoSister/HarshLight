@@ -28,4 +28,5 @@ void main()
 	//voxel_space_pos.xyz is in [0,1]^3 space now
 
 	fragColor = texture(TexVoxel, voxel_space_pos.xyz);
+	//fragColor = texture(TexVoxel, vec3(0,0,0));
 }

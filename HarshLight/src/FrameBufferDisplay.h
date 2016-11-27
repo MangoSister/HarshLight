@@ -4,7 +4,7 @@
 class FrameBufferDisplay : public ModelRenderer
 {
 public:
-	explicit FrameBufferDisplay(Model* model, uint32_t res);
+	explicit FrameBufferDisplay(Model* model, uint32_t res, GLuint poly_mode);
 	FrameBufferDisplay(const FrameBufferDisplay& other) = delete;
 
 	virtual ~FrameBufferDisplay();
@@ -18,4 +18,6 @@ private:
 	GLuint m_FBO;
 	GLuint m_ColorBuffer;
 	GLuint m_RBO;
+
+    GLuint m_PolygonMode;
 };

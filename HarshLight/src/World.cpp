@@ -62,8 +62,8 @@ World::~World()
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 {
 	World& world = World::GetInst();
-	static double s_LastMouseX = 0.5 * static_cast<double>(world.m_ScreenWidth);
-	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_ScreenHeight);
+	static double s_LastMouseX = 0.5 * static_cast<double>(world.m_RenderWidth);
+	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_RenderHeight);
 
 	double xoffset = xpos - s_LastMouseX;
 	double yoffset = s_LastMouseY - ypos;
@@ -102,8 +102,8 @@ void World::SetWindow(GLFWwindow* window, uint32_t width, uint32_t height)
     m_Window = window;
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, MouseCallback);
-	m_ScreenWidth = width;
-	m_ScreenHeight = height;
+	m_RenderWidth = width;
+	m_RenderHeight = height;
 }
 
 const ActorList& World::GetActors() const
@@ -248,29 +248,33 @@ void World::Start()
     m_CurrTime = std::chrono::system_clock::now();
 
     /*--------- pass 0: voxelize scene ---------*/
-    m_VoxelizeTex->CleanContent();
+    if (m_VoxelizeTex)
+    {
+        m_VoxelizeTex->CleanContent();
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glDepthMask(GL_FALSE);
-    glViewport(0, 0, 256, 256);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        glDepthMask(GL_FALSE);
+        glViewport(0, 0, 256, 256);
 
-    if (m_VoxelizeCamera)
-        m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
-    else
-        fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+        if (m_VoxelizeCamera)
+            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
+        else
+            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
-    for (ModelRenderer* renderer : m_Renderers)
-        renderer->Render(RenderPass::kVoxelize);
+        for (ModelRenderer* renderer : m_Renderers)
+            renderer->Render(RenderPass::kVoxelize);
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthMask(GL_TRUE);
-    glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthMask(GL_TRUE);
+        glViewport(0, 0, m_RenderWidth, m_RenderHeight);
 
-
+        //glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 
 void World::MainLoop()
@@ -280,24 +284,38 @@ void World::MainLoop()
 	//fps: 1 / elapsed
 	m_LastTime = m_CurrTime;
 
+    /*--------- CPU update ---------*/
+    for (Component* comp : m_Components)
+    {
+        assert(comp != nullptr);
+        comp->Update(elapsed);
+    }
+
+    if (GetKey(GLFW_KEY_Z) == GLFW_PRESS)
+        m_RenderPassSwitch[0] = !m_RenderPassSwitch[0];
+    if (GetKey(GLFW_KEY_X) == GLFW_PRESS)
+        m_RenderPassSwitch[1] = !m_RenderPassSwitch[1];
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+   // glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
-	
-	/*--------- pass 1: regular render to default frame buffer ---------*/
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glViewport(0, 0, m_RenderWidth, m_RenderHeight);
+   
+
+    /*--------- pass 1: regular render to default frame buffer ---------*/
     if (m_RenderPassSwitch[0])
     {
         if (m_MainCamera)
-            m_MainCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
+            m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
         else
             fprintf(stderr, "WARNING: MainCamera is null\n");
         
         //reconstruct voxelize space
         if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kVoxelSpaceReconstruct);
+            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
         else
             fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
@@ -309,13 +327,13 @@ void World::MainLoop()
     {
         /*--------- pass 2: regular render to frame buffer displays ---------*/
         if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
+            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
         else
             fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
         //reconstruct voxelize space
         if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(CameraUBufferBinding::kVoxelSpaceReconstruct);
+            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
         else
             fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
@@ -326,35 +344,24 @@ void World::MainLoop()
             for (ModelRenderer* renderer : m_Renderers)
                 renderer->Render(RenderPass::kRegular);
         }
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         /*--------- pass 3: render frame buffer displays as overlay ---------*/
         if (m_MainCamera)
-            m_MainCamera->UpdateCamMtx(CameraUBufferBinding::kMainCam);
+            m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
         else
             fprintf(stderr, "WARNING: MainCamera is null\n");
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
-        glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
+        glViewport(0, 0, m_RenderWidth, m_RenderHeight);
         for (FrameBufferDisplay* display : m_FrameBufferDisplays)
         {
             assert(display != nullptr);
             display->Render(RenderPass::kPost);
         }
     }
-
-    /*--------- CPU update ---------*/
-    for (Component* comp : m_Components)
-    {
-        assert(comp != nullptr);
-        comp->Update(elapsed);
-    }   
-
-    if (GetKey(GLFW_KEY_Z) == GLFW_PRESS)
-        m_RenderPassSwitch[0] = !m_RenderPassSwitch[0];
-    if (GetKey(GLFW_KEY_X) == GLFW_PRESS)
-        m_RenderPassSwitch[1] = !m_RenderPassSwitch[1];
 }
 
 std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)

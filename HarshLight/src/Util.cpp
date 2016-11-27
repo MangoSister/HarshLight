@@ -49,3 +49,52 @@ void APIENTRY glDebugOutput(GLenum source,
 	}
 	fprintf(stderr, "\n\n");
 }
+
+
+void DrawTestTriangle()
+{
+    glBegin(GL_TRIANGLES);
+    glColor3f(1, 0, 0);
+    glVertex2f(-1.0f, -1.0f);
+    glVertex2f(1.5f, -0.5f);
+    glVertex2f(0.0f, 1.0f);
+    glEnd();
+}
+
+void DrawPixelGrid(uint32_t mWidth, uint32_t mHeight)
+{
+    static uint32_t mZoom = 16;
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glOrtho(0.0, mWidth, 0.0, mHeight, -1.0, 1.0);
+
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glBegin(GL_LINES);
+    for (uint32_t x = 0; x <= mWidth; x += mZoom) {
+        glVertex2i(x, 0);
+        glVertex2i(x, mHeight);
+    }
+    for (uint32_t y = 0; y <= mHeight; y += mZoom) {
+        glVertex2i(0, y);
+        glVertex2i(mWidth, y);
+    }
+    glEnd();
+
+    // draw sample points
+    glBegin(GL_POINTS);
+    for (uint32_t x = 0; x <= mWidth; x += mZoom) {
+        for (uint32_t y = 0; y <= mHeight; y += mZoom) {
+            glVertex2f(x + mZoom*0.5f, y + mZoom*0.5f);
+        }
+    }
+    glEnd();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+}

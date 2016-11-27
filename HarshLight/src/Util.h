@@ -4,6 +4,12 @@
 
 #define BINDING_POINT_VOXEL_IMG 1
 
+enum class UniformBufferBinding : uint8_t
+{
+    kMainCam = 0,
+    kVoxelSpaceReconstruct = 1,
+};
+
 void APIENTRY glDebugOutput(GLenum source,
 	GLenum type,
 	GLuint id,
@@ -11,3 +17,7 @@ void APIENTRY glDebugOutput(GLenum source,
 	GLsizei length,
 	const GLchar* message,
 	const GLvoid* userParam);
+
+void DrawTestTriangle();
+
+void DrawPixelGrid(uint32_t mWidth, uint32_t mHeight);

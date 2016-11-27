@@ -8,4 +8,5 @@ uniform sampler2D TexScreen;
 void main()
 { 
     fragColor = texture(TexScreen, vs_Texcoord);
+	fragColor.w = 0.5;
 }

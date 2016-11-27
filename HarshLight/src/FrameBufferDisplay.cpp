@@ -1,7 +1,7 @@
 #include "FrameBufferDisplay.h"
 
-FrameBufferDisplay::FrameBufferDisplay(Model * model, uint32_t res)
-	:ModelRenderer(model), m_FBO(0), m_RBO(0), m_ColorBuffer(0), m_Dim(res)
+FrameBufferDisplay::FrameBufferDisplay(Model * model, uint32_t res, GLuint poly_mode)
+	:ModelRenderer(model), m_FBO(0), m_RBO(0), m_ColorBuffer(0), m_Dim(res), m_PolygonMode(poly_mode)
 {
 	//now model should only be quad!!!
 
@@ -11,8 +11,8 @@ FrameBufferDisplay::FrameBufferDisplay(Model * model, uint32_t res)
 	glGenTextures(1, &m_ColorBuffer);
 	glBindTexture(GL_TEXTURE_2D, m_ColorBuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, res, res, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorBuffer, 0);
@@ -59,8 +59,9 @@ void FrameBufferDisplay::StartRenderToFrameBuffer()
 	glClearColor(0.5f, 0.3f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //not using stencil buffer?
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, m_PolygonMode);
 	glViewport(0, 0, m_Dim, m_Dim);
 }
 

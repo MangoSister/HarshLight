@@ -3,6 +3,7 @@
 #include "Material.h"
 #include "World.h"
 #include "Camera.h"
+#include "VoxelizeController.h"
 #include "ModelRenderer.h"
 #include "FrameBufferDisplay.h"
 #include "Util.h"
@@ -11,12 +12,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 const char* APP_NAME = "HarshLight";
-const uint32_t DEFAULT_WIDTH = 1920;
-const uint32_t DEFAULT_HEIGHT = 1080;
+const uint32_t DEFAULT_WINDOW_WIDTH = 1920;
+const uint32_t DEFAULT_WINDOW_HEIGHT = 1080;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
-void EditWorld(const char* scene_path, float mouse_sensitivity);
+void CreateCRTestScene();
+void CreateWorld(const char* scene_path, float mouse_sensitivity);
 
 int main(int argc, char* argv[])
 {
@@ -68,7 +70,7 @@ int main(int argc, char* argv[])
 
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, APP_NAME, NULL, NULL);
+    window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, APP_NAME, NULL, NULL);
     if (!window)
     {
 		fprintf(stderr, "Failed to create window\n");
@@ -112,10 +114,11 @@ int main(int argc, char* argv[])
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	World::GetInst().SetWindow(window, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-
-	EditWorld(scene_path, mouse_sensitivity);
+    World::GetInst().SetWindow(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+    //World::GetInst().SetWindow(window, 1024, 1024);
+    CreateCRTestScene();
+    
+	//CreateWorld(scene_path, mouse_sensitivity);
 
     World::GetInst().Start();
 
@@ -144,7 +147,130 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void EditWorld(const char* scene_path, float mouse_sensitivity)
+void CreateCRTestScene()
+{
+    /* --------------  Shaders  ----------- */
+    ShaderProgram* cr_shader = new ShaderProgram();
+    cr_shader->AddVertShader("src/shaders/cr_vert.glsl");
+    cr_shader->AddGeomShader("src/shaders/cr_geom.glsl");
+    cr_shader->AddFragShader("src/shaders/cr_frag.glsl");
+    cr_shader->LinkProgram();
+    World::GetInst().RegisterShader(cr_shader);
+
+    ShaderProgram* sr_shader = new ShaderProgram();
+    sr_shader->AddVertShader("src/shaders/sr_vert.glsl");
+    sr_shader->AddFragShader("src/shaders/sr_frag.glsl");
+    sr_shader->LinkProgram();
+    World::GetInst().RegisterShader(sr_shader);
+
+    ShaderProgram* framebuffer_display_shader = new ShaderProgram();
+    framebuffer_display_shader->AddVertShader("src/shaders/framebuffer_color_vert.glsl");
+    framebuffer_display_shader->AddFragShader("src/shaders/framebuffer_color_frag.glsl");
+    framebuffer_display_shader->LinkProgram();
+    World::GetInst().RegisterShader(framebuffer_display_shader);
+
+    printf("Shaders compiling success\n");
+
+    /* --------------  Cameras  ----------- */
+    const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
+    {
+        Actor* cam_actor = new Actor();
+        const float left = -1.0f;
+        const float right = 1.0f;
+        const float bottom = -1.0f;
+        const float top = 1.0f;
+        const float near = -1.0f;
+        const float far = 1.0f;
+        Camera* cam = new Camera(left, right, bottom, top, near, far);
+        cam->MoveTo(glm::vec3(0.0f, 0.0f, 0.0f));
+        cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        cam_actor->AddComponent(cam);
+        World::GetInst().RegisterActor(cam_actor);
+        World::GetInst().SetMainCamera(cam);
+        World::GetInst().SetVoxelCamera(cam);
+    }
+
+    
+    /* --------------  Test Shape  ----------- */
+    Model* tri = new Model(Model::Primitive::kTriangle);
+    World::GetInst().RegisterModel(tri);
+
+    Actor* cr_triActor = new Actor();
+
+    ModelRenderer* cr_renderer = new ModelRenderer(tri);
+   // cr_renderer->ScaleTo(glm::vec3(0.1, 1.0, 1.0));
+    cr_triActor->AddRenderer(cr_renderer);
+    cr_renderer->SetRenderPass(RenderPass::kRegular);
+    Material* cr_mat = new Material();
+    cr_mat->SetShader(cr_shader);
+    cr_renderer->AddMaterial(RenderPass::kRegular, cr_mat);
+
+
+    /* --------------  Controller  ----------- */
+    VoxelizeController* voxel_ctrl = new VoxelizeController(16);
+    cr_triActor->AddComponent(voxel_ctrl);
+
+    World::GetInst().RegisterActor(cr_triActor);
+
+    glm::vec4 a(0.0, 0.5, 0, 1);
+    a = cr_renderer->GetTransform() * a;
+    a = World::GetInst().GetMainCamera()->GetViewMtx() * a;
+    a = World::GetInst().GetMainCamera()->GetProjMtx() * a;
+
+    Actor* sr_triActor = new Actor();
+
+    ModelRenderer* sr_renderer = new ModelRenderer(tri);
+   // sr_renderer->ScaleTo(glm::vec3(0.1, 1.0, 1.0));
+    sr_triActor->AddRenderer(sr_renderer);
+    sr_renderer->SetRenderPass(RenderPass::kRegular);
+    Material* sr_mat = new Material();
+    sr_mat->SetShader(sr_shader);
+    sr_renderer->AddMaterial(RenderPass::kRegular, sr_mat);
+
+    World::GetInst().RegisterActor(sr_triActor);
+
+
+    /* --------------  Frame Buffer Display  ----------- */
+    Model* quad = new Model(Model::Primitive::kQuad);
+    World::GetInst().RegisterModel(quad);
+    
+    {
+        const uint32_t dim = 16;
+        Actor* rasterTriDisplay = new Actor();
+
+        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, dim, GL_FILL);
+        rasterTriDisplay->AddRenderer(framBufDisplay);
+        framBufDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
+        framBufDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+        framBufDisplay->SetRenderPass(RenderPass::kPost);
+        Material* frame_display_mat = new Material();
+        frame_display_mat->SetShader(framebuffer_display_shader);
+        frame_display_mat->AddTexture(framBufDisplay->GetColorBuffer(), "TexScreen");
+        framBufDisplay->AddMaterial(RenderPass::kPost, frame_display_mat);
+
+        World::GetInst().RegisterActor(rasterTriDisplay);
+    }
+
+    {
+        const uint32_t dim = 256;
+        Actor* lineTriDisplay = new Actor();
+
+        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, dim, GL_LINE);
+        lineTriDisplay->AddRenderer(framBufDisplay);
+        framBufDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
+        framBufDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+        framBufDisplay->SetRenderPass(RenderPass::kPost);
+        Material* frame_display_mat = new Material();
+        frame_display_mat->SetShader(framebuffer_display_shader);
+        frame_display_mat->AddTexture(framBufDisplay->GetColorBuffer(), "TexScreen");
+        framBufDisplay->AddMaterial(RenderPass::kPost, frame_display_mat);
+
+        World::GetInst().RegisterActor(lineTriDisplay);
+    }
+}
+
+void CreateWorld(const char* scene_path, float mouse_sensitivity)
 {
     /* --------------  Shaders  ----------- */
 
@@ -183,7 +309,7 @@ void EditWorld(const char* scene_path, float mouse_sensitivity)
 
     /* --------------  Cameras  ----------- */
     const uint32_t voxelDim = 256;
-    const float aspect = (float)DEFAULT_WIDTH / (float)DEFAULT_HEIGHT;
+    const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
         Actor* voxelize_cam_actor = new Actor();
         const float left = -1100.0f;
@@ -197,7 +323,7 @@ void EditWorld(const char* scene_path, float mouse_sensitivity)
         cam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         //cam->Rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(10.0f));
 
-        glm::vec4 a = glm::vec4(0, -4000, 0, 1);
+        glm::vec4 a = glm::vec4(1000, -4000, -1000, 1);
         a = cam->GetViewMtx() * a;
         a = cam->GetProjMtx() * a;
 
@@ -225,6 +351,7 @@ void EditWorld(const char* scene_path, float mouse_sensitivity)
         cam->MoveTo(glm::vec3(0.0f, 0.0f, 0.0f));
         cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         cam->SetFreeMoveSpeed(move_speed);
+
         fps_cam_actor->AddComponent(cam);
         World::GetInst().RegisterActor(fps_cam_actor);
         World::GetInst().SetMainCamera(cam);
@@ -284,10 +411,10 @@ void EditWorld(const char* scene_path, float mouse_sensitivity)
     Model* quad = new Model(Model::Primitive::kQuad);
     World::GetInst().RegisterModel(quad);
 
-    Actor* quadActor = new Actor();
+    Actor* frameDisplayActor = new Actor();
   
-    FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxelDim);
-    quadActor->AddRenderer(voxelViewDisplay);
+    FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxelDim, GL_FILL);
+    frameDisplayActor->AddRenderer(voxelViewDisplay);
     voxelViewDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
     voxelViewDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
     voxelViewDisplay->SetRenderPass(RenderPass::kPost);
@@ -296,5 +423,5 @@ void EditWorld(const char* scene_path, float mouse_sensitivity)
     quad_mat->AddTexture(voxelViewDisplay->GetColorBuffer(), "TexScreen");
     voxelViewDisplay->AddMaterial(RenderPass::kPost, quad_mat);
 
-    World::GetInst().RegisterActor(quadActor);
+    World::GetInst().RegisterActor(frameDisplayActor);
 }

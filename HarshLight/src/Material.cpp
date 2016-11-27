@@ -74,6 +74,34 @@ const ShaderProgram * Material::GetShader() const
 	return m_Shader;
 }
 
+void Material::SetFloatParam(const char * semantic, float param)
+{
+    GLuint loc = glGetUniformLocation(m_Shader->GetProgram(), semantic);
+    if (loc != -1)
+        glProgramUniform1f(m_Shader->GetProgram(), loc, param);
+}
+
+void Material::SetVec2Param(const char * semantic, const glm::vec2 & param)
+{
+    GLuint loc = glGetUniformLocation(m_Shader->GetProgram(), semantic);
+    if (loc != -1)
+        glProgramUniform2f(m_Shader->GetProgram(), loc, param.x, param.y);
+}
+
+void Material::SetVec3Param(const char * semantic, const glm::vec3 & param)
+{
+    GLuint loc = glGetUniformLocation(m_Shader->GetProgram(), semantic);
+    if (loc != -1)
+        glProgramUniform3f(m_Shader->GetProgram(), loc, param.x, param.y, param.z);
+}
+
+void Material::SetVec4Param(const char * semantic, const glm::vec4 & param)
+{
+    GLuint loc = glGetUniformLocation(m_Shader->GetProgram(), semantic);
+    if (loc != -1)
+        glProgramUniform4f(m_Shader->GetProgram(), loc, param.x, param.y, param.z, param.w);
+}
+
 void Material::Use() const
 {
 #ifdef _DEBUG
