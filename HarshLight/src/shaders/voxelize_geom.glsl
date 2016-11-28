@@ -62,27 +62,30 @@ void main()
 	vec3 view_normal = abs(cross(view_e01, view_e02));
 	float dominant_axis = max(view_normal.x, max(view_normal.y, view_normal.z));
 	ivec3 proj_dir;
-	mat3 swizzleMatrix;
+	mat4 swizzleMatrix;
 	if(dominant_axis == view_normal.x)
 	{
 		proj_dir = ivec3(2, 1, 0);
-		swizzleMatrix = mat3(vec3(0.0, 0.0, 1.0),
-							 vec3(0.0, 1.0, 0.0),
-							 vec3(1.0, 0.0, 0.0));
+		swizzleMatrix = mat4(vec4(0.0, 0.0, 1.0, 0.0),
+							 vec4(0.0, 1.0, 0.0, 0.0),
+							 vec4(1.0, 0.0, 0.0, 0.0),
+							 vec4(0.0, 0.0, 0.0, 1.0));
 	}
 	else if(dominant_axis == view_normal.y)
 	{
 		proj_dir = ivec3(0, 2, 1);
-		swizzleMatrix = mat3(vec3(1.0, 0.0, 0.0),
-						 	 vec3(0.0, 0.0, 1.0),
-							 vec3(0.0, 1.0, 0.0));
+		swizzleMatrix = mat4(vec4(1.0, 0.0, 0.0, 0.0),
+						 	 vec4(0.0, 0.0, 1.0, 0.0),
+							 vec4(0.0, 1.0, 0.0, 0.0),
+							 vec4(0.0, 0.0, 0.0, 1.0));
 	}
 	else
 	{
 		proj_dir = ivec3(0, 1, 2);
-		swizzleMatrix = mat3(vec3(1.0, 0.0, 0.0),
-							 vec3(0.0, 1.0, 0.0),
-							 vec3(0.0, 0.0, 1.0));
+		swizzleMatrix = mat4(vec4(1.0, 0.0, 0.0, 0.0),
+							 vec4(0.0, 1.0, 0.0, 0.0),
+							 vec4(0.0, 0.0, 1.0, 0.0),
+							 vec4(0.0, 0.0, 0.0, 1.0));
 	}
 
 	const mat3 identity = mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
@@ -92,9 +95,9 @@ void main()
 	//ONLY CORRECT FOR ORTHOGONAL PROJECTION!!
 	//do perspective division here
 	//ensure all w components to be 1
-	screen_pos[0] = Proj * mat4(swizzleMatrix) * gl_in[0].gl_Position;
-	screen_pos[1] = Proj * mat4(swizzleMatrix) * gl_in[1].gl_Position;
-	screen_pos[2] = Proj * mat4(swizzleMatrix) * gl_in[2].gl_Position;
+	screen_pos[0] = Proj * swizzleMatrix * gl_in[0].gl_Position;
+	screen_pos[1] = Proj * swizzleMatrix * gl_in[1].gl_Position;
+	screen_pos[2] = Proj * swizzleMatrix * gl_in[2].gl_Position;
 	screen_pos[0] /= screen_pos[0].w;
 	screen_pos[1] /= screen_pos[1].w;
 	screen_pos[2] /= screen_pos[2].w;
