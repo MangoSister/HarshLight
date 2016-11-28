@@ -19,7 +19,7 @@ uniform mat4 Model;
 
 void main()
 {
-    gl_Position =  /*Proj * */ View * Model * vec4(app_Position, 1.0);
+    gl_Position = View * Model * vec4(app_Position, 1.0);
 	vs_Texcoord = app_Uv;
 	vs_WorldPosition = vec3(Model * vec4(app_Position, 1.0));
 	vs_WorldNormal = normalize(mat3(Model) * app_Normal);

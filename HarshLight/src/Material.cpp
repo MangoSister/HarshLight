@@ -5,6 +5,7 @@
 #include <cassert>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
 
 Material::Material()
     : m_Shader(nullptr){ }
@@ -100,6 +101,13 @@ void Material::SetVec4Param(const char * semantic, const glm::vec4 & param)
     GLuint loc = glGetUniformLocation(m_Shader->GetProgram(), semantic);
     if (loc != -1)
         glProgramUniform4f(m_Shader->GetProgram(), loc, param.x, param.y, param.z, param.w);
+}
+
+void Material::SetMat4x4Param(const char * semantic, const glm::mat4x4 & param)
+{
+    GLuint loc = glGetUniformLocation(m_Shader->GetProgram(), semantic);
+    if (loc != -1)
+        glProgramUniformMatrix4fv(m_Shader->GetProgram(), loc, 1, false, glm::value_ptr(param));
 }
 
 void Material::Use() const

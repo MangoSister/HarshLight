@@ -208,7 +208,7 @@ void CreateCRTestScene()
 
 
     /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim);
+    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, 0.0f, World::GetInst().GetVoxelCamera());
     cr_triActor->AddComponent(voxel_ctrl);
 
     World::GetInst().RegisterActor(cr_triActor);
@@ -308,24 +308,26 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     /* --------------  Cameras  ----------- */
     const uint32_t voxelDim = 256;
+    const float voxelize_extent = 1100.0f;
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
         Actor* voxelize_cam_actor = new Actor();
-		const float extent = 1100.0f;
-        const float left = -1.0f * extent;
-        const float right = 1.0f * extent;
-        const float bottom = -1.0f * extent;
-        const float top = 1.0f * extent;
+		
+        const float left = -1.0f * voxelize_extent;
+        const float right = 1.0f * voxelize_extent;
+        const float bottom = -1.0f * voxelize_extent;
+        const float top = 1.0f * voxelize_extent;
         const float near = 0.0f;
-        const float far = 2.0f * extent;
+        const float far = 2.0f * voxelize_extent;
         Camera* cam = new Camera(left, right, bottom, top, near, far);
-        cam->MoveTo(glm::vec3(0.0f, 1000.0f, 0.0f));
+        cam->MoveTo(glm::vec3(0.0, voxelize_extent, 0.0));
         cam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //cam->Rotate(glm::vec3(0.0f, 1.0f, 0.0f), glm::radians(10.0f));
 
         glm::vec4 a = glm::vec4(1000, -4000, -1000, 1);
-        a = cam->GetViewMtx() * a;
-        a = cam->GetProjMtx() * a;
+        auto view = cam->GetViewMtx();
+        auto proj = cam->GetProjMtx();
+        a = view * a;
+        a = proj * a;
 
         voxelize_cam_actor->AddComponent(cam);
         World::GetInst().RegisterActor(voxelize_cam_actor);
@@ -372,7 +374,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     World::GetInst().RegisterTexture3d(voxelTex);
 
 	//voxelization controller
-	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim);
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim, voxelize_extent, World::GetInst().GetVoxelCamera());
 	sceneActor->AddComponent(voxel_ctrl);
 
     ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);

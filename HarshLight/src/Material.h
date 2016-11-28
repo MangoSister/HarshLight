@@ -35,6 +35,8 @@ public:
     void SetVec3Param(const char* semantic, const glm::vec3& param);
     void SetVec4Param(const char* semantic, const glm::vec4& param);
 
+    void SetMat4x4Param(const char* semantic, const glm::mat4x4& param);
+
     void Use() const;
    
 

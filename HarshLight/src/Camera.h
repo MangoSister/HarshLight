@@ -1,8 +1,9 @@
+#pragma once
 #include <glm/vec3.hpp>
 #include <glm/mat4x3.hpp>
 #include <glm/mat4x4.hpp>
+#include "Util.h"
 #include "Component.h"
-#pragma once
 
 using namespace glm;
 
@@ -26,6 +27,9 @@ public:
     void Update(float dt) override;
 
 	void UpdateCamMtx(UniformBufferBinding binding) const;
+
+    void SetTransform(const mat4x4& transform);
+    glm::mat4x4 GetTransform() const;
 
 	glm::vec3 GetRight() const;
 	glm::vec3 GetUp() const;

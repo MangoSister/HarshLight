@@ -10,6 +10,9 @@ layout (std140, binding = 0) uniform MainCamMtx
 };
 
 uniform vec2 VoxelDim;
+uniform mat4 ViewMtxToDown;
+uniform mat4 ViewMtxToLeft;
+uniform mat4 ViewMtxToForward;
 //uniform float PixelDiagonal;
 
 in vec2 vs_Texcoord[];
@@ -57,50 +60,32 @@ void ExpandTri(inout vec4 screen_pos[3])
 void main()
 {
 	//view space face normal
-	vec3 view_e01 = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
-	vec3 view_e02 = gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz;
-	vec3 view_normal = abs(cross(view_e01, view_e02));
-	float dominant_axis = max(view_normal.x, max(view_normal.y, view_normal.z));
-	ivec3 proj_dir;
-	mat4 swizzleMatrix;
-	if(dominant_axis == view_normal.x)
+	vec3 world_e01 = vs_WorldPosition[1] - vs_WorldPosition[0];
+	vec3 world_e02 = vs_WorldPosition[2] - vs_WorldPosition[0];
+	vec3 world_face_normal = abs(normalize(cross(world_e01, world_e02)));
+	float dominant_axis = max(world_face_normal.x, max(world_face_normal.y, world_face_normal.z));
+	mat4 swizzle_view_mtx = ViewMtxToDown;
+
+	if(dominant_axis == world_face_normal.x)
 	{
-		proj_dir = ivec3(2, 1, 0);
-		swizzleMatrix = mat4(vec4(0.0, 0.0, 1.0, 0.0),
-							 vec4(0.0, 1.0, 0.0, 0.0),
-							 vec4(1.0, 0.0, 0.0, 0.0),
-							 vec4(0.0, 0.0, 0.0, 1.0));
+		swizzle_view_mtx = ViewMtxToLeft;
 	}
-	else if(dominant_axis == view_normal.y)
+	else if(dominant_axis == world_face_normal.z)
 	{
-		proj_dir = ivec3(0, 2, 1);
-		swizzleMatrix = mat4(vec4(1.0, 0.0, 0.0, 0.0),
-						 	 vec4(0.0, 0.0, 1.0, 0.0),
-							 vec4(0.0, 1.0, 0.0, 0.0),
-							 vec4(0.0, 0.0, 0.0, 1.0));
-	}
-	else
-	{
-		proj_dir = ivec3(0, 1, 2);
-		swizzleMatrix = mat4(vec4(1.0, 0.0, 0.0, 0.0),
-							 vec4(0.0, 1.0, 0.0, 0.0),
-							 vec4(0.0, 0.0, 1.0, 0.0),
-							 vec4(0.0, 0.0, 0.0, 1.0));
+		swizzle_view_mtx = ViewMtxToForward;
 	}
 
-	const mat3 identity = mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
-	mat3 swizzle = mat3(identity[proj_dir.x], identity[proj_dir.y], identity[proj_dir.z]);
-
+	const mat4 proj_swizzle_view = Proj * swizzle_view_mtx;
 	vec4 screen_pos[3];
 	//ONLY CORRECT FOR ORTHOGONAL PROJECTION!!
 	//do perspective division here
 	//ensure all w components to be 1
-	screen_pos[0] = Proj * swizzleMatrix * gl_in[0].gl_Position;
-	screen_pos[1] = Proj * swizzleMatrix * gl_in[1].gl_Position;
-	screen_pos[2] = Proj * swizzleMatrix * gl_in[2].gl_Position;
-	screen_pos[0] /= screen_pos[0].w;
-	screen_pos[1] /= screen_pos[1].w;
-	screen_pos[2] /= screen_pos[2].w;
+	screen_pos[0] = proj_swizzle_view * vec4(vs_WorldPosition[0], 1.0);
+	screen_pos[1] = proj_swizzle_view * vec4(vs_WorldPosition[1], 1.0);
+	screen_pos[2] = proj_swizzle_view * vec4(vs_WorldPosition[2], 1.0);
+	//screen_pos[0] /= screen_pos[0].w;
+	//screen_pos[1] /= screen_pos[1].w;
+	//screen_pos[2] /= screen_pos[2].w;
 	//screen_pos are in NDC now
 
 	gs_BBox.x = min(screen_pos[0].x, min(screen_pos[1].x, screen_pos[2].x));

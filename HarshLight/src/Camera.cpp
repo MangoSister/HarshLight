@@ -102,6 +102,16 @@ void Camera::UpdateCamMtx(UniformBufferBinding binding) const
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
+void Camera::SetTransform(const mat4x4 & transform)
+{
+    m_Transform = transform;
+}
+
+glm::mat4x4 Camera::GetTransform() const
+{
+    return m_Transform;
+}
+
 glm::vec3 Camera::GetRight() const
 {
     return m_Transform[0];
