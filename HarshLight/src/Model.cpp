@@ -144,7 +144,16 @@ void Model::Render(const glm::mat4x4& transform, const std::vector<Material*>& m
 void Model::LoadModel(const char* path)
 {
 	Assimp::Importer import;
-	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = import.ReadFile(path,
+		aiProcess_FlipUVs | aiProcess_PreTransformVertices |
+		aiProcess_FlipWindingOrder | // seems like models we use are all CW order...
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_CalcTangentSpace |
+		aiProcess_GenSmoothNormals |
+		aiProcess_Triangulate |
+		aiProcess_FixInfacingNormals |
+		aiProcess_FindInvalidData |
+		aiProcess_ValidateDataStructure);
 
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{

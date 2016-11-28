@@ -17,14 +17,13 @@ layout (std140, binding = 1) uniform VoxelCamMtx
 
 //uniform mat4 CamVoxelViewMtx;
 //uniform mat4 CamVoxelProjMtx;
-uniform float VoxelDim;
 
 void main()
 {
 	vec4 voxel_space_pos = CamVoxelProjMtx * CamVoxelViewMtx * vec4(vs_WorldPosition, 1.0);
 	voxel_space_pos /= voxel_space_pos.w;
 	//voxel_space_pos.xyz is in NDC space now
-	voxel_space_pos.xyz = (voxel_space_pos.xyz + 1) * 0.5; 
+	voxel_space_pos.xyz = (voxel_space_pos.xyz + vec3(1.0, 1.0, 1.0)) * 0.5; 
 	//voxel_space_pos.xyz is in [0,1]^3 space now
 
 	fragColor = texture(TexVoxel, voxel_space_pos.xyz);

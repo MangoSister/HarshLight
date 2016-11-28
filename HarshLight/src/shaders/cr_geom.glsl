@@ -55,17 +55,14 @@ void ExpandTri(inout vec4 screen_pos[3])
 
 void main()
 {
+	//ONLY CORRECT FOR ORTHOGONAL PROJECTION!!
 	vec4 screen_pos[3];
-	screen_pos[0] = gl_in[0].gl_Position;
-	screen_pos[1] = gl_in[1].gl_Position;
-	screen_pos[2] = gl_in[2].gl_Position;
-
 	//do perspective division here
-	//ensure all w components to be 1
-	screen_pos[0] /= screen_pos[0].w;
-	screen_pos[1] /= screen_pos[1].w;
-	screen_pos[2] /= screen_pos[2].w;
-
+	//ensure all w components to be 1	
+	screen_pos[0] = gl_in[0].gl_Position / gl_in[0].gl_Position.w;
+	screen_pos[1] = gl_in[1].gl_Position / gl_in[1].gl_Position.w;
+	screen_pos[2] = gl_in[2].gl_Position / gl_in[2].gl_Position.w;
+	//screen_pos are in NDC now
 
 	gs_BBox.x = min(screen_pos[0].x, min(screen_pos[1].x, screen_pos[2].x));
 	gs_BBox.y = min(screen_pos[0].y, min(screen_pos[1].y, screen_pos[2].y));

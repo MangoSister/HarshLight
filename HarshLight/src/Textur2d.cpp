@@ -89,8 +89,8 @@ Texture3dCompute::~Texture3dCompute()
 void Texture3dCompute::CleanContent()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

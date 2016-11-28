@@ -254,6 +254,7 @@ void World::Start()
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glDepthMask(GL_FALSE);
         glViewport(0, 0, 256, 256);
@@ -301,7 +302,7 @@ void World::MainLoop()
    // glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
     glViewport(0, 0, m_RenderWidth, m_RenderHeight);
    
 
@@ -368,7 +369,17 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
 {
     std::vector<Material*> out;
     Assimp::Importer import;
-    const aiScene* scene = import.ReadFile(model->GetRawPath(), aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = import.ReadFile(model->GetRawPath(),
+		aiProcess_FlipUVs | aiProcess_PreTransformVertices |
+		aiProcess_FlipWindingOrder | // seems like models we use are all CW order...
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_CalcTangentSpace |
+		aiProcess_GenSmoothNormals |
+		aiProcess_Triangulate |
+		aiProcess_FixInfacingNormals |
+		aiProcess_FindInvalidData |
+		aiProcess_ValidateDataStructure);
+
     if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         fprintf(stderr, "assimp error: %s\n", import.GetErrorString());
@@ -428,7 +439,13 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
         out.push_back(curr_material);
     }
 
-    
+	if (!scene->mNumMaterials)
+	{
+		Material* empty_material = new Material();
+		RegisterMaterial(empty_material);
+		out.push_back(empty_material);
+	}
+
     return out;
 }
 

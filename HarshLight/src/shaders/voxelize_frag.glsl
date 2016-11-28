@@ -2,11 +2,19 @@
 
 in vec2 gs_Texcoord;
 in vec3 gs_WorldPosition;
-in float gs_NDCLinearDepth;
+in vec3 gs_ViewPosition;
 in vec3 gs_WorldNormal;
-in vec4 gs_BBox;
-in flat ivec3 gs_ProjDir;
+in vec2 gs_ExpandedNDCPos;
 
+in flat vec4 gs_BBox;
+
+layout (std140, binding = 0) uniform MainCamMtx
+{
+    mat4 View;
+    mat4 Proj;
+};
+
+uniform vec2 VoxelDim;
 uniform sampler2D TexAlbedo;
 layout (binding = 1, rgba8) coherent uniform image3D TexVoxel;
 
@@ -15,21 +23,14 @@ out vec4 fragColor;
 
 void main()
 {
-	//random test
-    //   vec4 c = texture(TexAlbedo, gs_Texcoord);
-	   //imageStore(TexVoxel, ivec3(0,0,0), vec4(1, 0, 0, 1));
-	   //fragColor = c;
+	if ( (all(greaterThanEqual(gs_ExpandedNDCPos, gs_BBox.xy)) && all(lessThanEqual(gs_ExpandedNDCPos, gs_BBox.zw))) )
+	{
+		fragColor = texture(TexAlbedo, gs_Texcoord);
 
-	//assume viewportSize.xy = voxelization dim
-    ivec2 viewportSize = imageSize(TexVoxel).xy;
-	vec2 bboxMin = floor((gs_BBox.xy * 0.5 + 0.5) * viewportSize);
-	vec2 bboxMax = ceil((gs_BBox.zw * 0.5 + 0.5) * viewportSize);
-    fragColor = texture(TexAlbedo, gs_Texcoord);
-
-	const mat3 identity = mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
-	mat3 swizzle = mat3(identity[gs_ProjDir[0]], identity[gs_ProjDir[1]], identity[gs_ProjDir[2]]);
-    vec3 coords = swizzle * vec3(gl_FragCoord.xy, 0.5 * (gs_NDCLinearDepth + 1) * viewportSize.x);
-    imageStore(TexVoxel, ivec3(coords), fragColor);
+		vec3 coords = (Proj * vec4(gs_ViewPosition, 1.0)).xyz;
+		coords = VoxelDim.xyy * 0.5 * (coords + vec3(1.0, 1.0, 1.0));
+		imageStore(TexVoxel, ivec3(floor(coords)), fragColor);
+	}
+	else discard;
 	//imageStore(TexVoxel, ivec3(0, 0, 0), vec4(0.5,1,0.5,1));
-    
 }

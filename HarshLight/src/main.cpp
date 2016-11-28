@@ -311,12 +311,13 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
         Actor* voxelize_cam_actor = new Actor();
-        const float left = -1100.0f;
-        const float right = 1100.0f;
-        const float bottom = -1100.0f;
-        const float top = 1100.0f;
+		const float extent = 1100.0f;
+        const float left = -1.0f * extent;
+        const float right = 1.0f * extent;
+        const float bottom = -1.0f * extent;
+        const float top = 1.0f * extent;
         const float near = 0.0f;
-        const float far = 10000.0f;
+        const float far = 2.0f * extent;
         Camera* cam = new Camera(left, right, bottom, top, near, far);
         cam->MoveTo(glm::vec3(0.0f, 1000.0f, 0.0f));
         cam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -370,6 +371,10 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 	World::GetInst().m_VoxelizeTex = voxelTex;
     World::GetInst().RegisterTexture3d(voxelTex);
 
+	//voxelization controller
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim);
+	sceneActor->AddComponent(voxel_ctrl);
+
     ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);
     sceneActor->AddRenderer(sceneRenderer);
     sceneRenderer->MoveTo({ 0.0f, 0.0f, 0.0f });
@@ -387,12 +392,12 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
             mat_voxel_visual->DeleteAllTextures();
-            //mat_voxel_visual->DeleteTexture("TexAlbedo");
             mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture, 0);
             mat_voxel_visual->SetShader(voxel_visualize_shader);
 
-            //mat_voxel_visual->DeleteTexture("TexVoxel");
-            //mat_voxel_visual->SetShader(diffuse_shader);
+			//mat_voxel_visual->DeleteTexture("TexVoxel");
+			//mat_voxel_visual->SetShader(diffuse_shader);
+
             
             GLuint shader_obj = mat_voxel_visual->GetShader()->GetProgram();
             //set voxel camera matrices
