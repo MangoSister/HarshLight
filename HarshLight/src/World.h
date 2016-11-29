@@ -99,8 +99,8 @@ private:
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
 
-	uint32_t m_RenderWidth;
-	uint32_t m_RenderHeight;
+	uint32_t m_ViewportWidth;
+	uint32_t m_ViewportHeight;
 	float m_MouseSensitivity;
 
     uint8_t m_RenderPassSwitch[2] = { 1, 1 };

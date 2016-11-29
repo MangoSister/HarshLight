@@ -169,7 +169,9 @@ void CreateCRTestScene()
     framebuffer_display_shader->LinkProgram();
     World::GetInst().RegisterShader(framebuffer_display_shader);
 
-    printf("Shaders compiling success\n");
+    printf("Shaders compiling ended\n");
+
+    printf("Loading scene started\n");
 
     /* --------------  Cameras  ----------- */
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
@@ -271,6 +273,9 @@ void CreateCRTestScene()
 
         World::GetInst().RegisterActor(lineTriDisplay);
     }
+
+    printf("Loading scene ended\n");
+
 }
 
 void CreateWorld(const char* scene_path, float mouse_sensitivity)
@@ -308,7 +313,9 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     framebuffer_display_shader->LinkProgram();
     World::GetInst().RegisterShader(framebuffer_display_shader);
 
-    printf("Shaders compiling success\n");
+    printf("Shaders compiling ended\n");
+
+    printf("Loading scene started\n");
 
     /* --------------  Cameras  ----------- */
     const uint32_t voxelDim = 256;
@@ -435,4 +442,6 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     voxelViewDisplay->AddMaterial(RenderPass::kPost, quad_mat);
 
     World::GetInst().RegisterActor(frameDisplayActor);
+
+    printf("Loading scene ended\n");
 }

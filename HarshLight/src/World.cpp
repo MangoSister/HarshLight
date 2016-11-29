@@ -62,8 +62,8 @@ World::~World()
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 {
 	World& world = World::GetInst();
-	static double s_LastMouseX = 0.5 * static_cast<double>(world.m_RenderWidth);
-	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_RenderHeight);
+	static double s_LastMouseX = 0.5 * static_cast<double>(world.m_ViewportWidth);
+	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_ViewportHeight);
 
 	double xoffset = xpos - s_LastMouseX;
 	double yoffset = s_LastMouseY - ypos;
@@ -102,8 +102,8 @@ void World::SetWindow(GLFWwindow* window, uint32_t width, uint32_t height)
     m_Window = window;
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, MouseCallback);
-	m_RenderWidth = width;
-	m_RenderHeight = height;
+	m_ViewportWidth = width;
+	m_ViewportHeight = height;
 }
 
 const ActorList& World::GetActors() const
@@ -274,7 +274,7 @@ void World::Start()
         glEnable(GL_CULL_FACE);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glDepthMask(GL_TRUE);
-        glViewport(0, 0, m_RenderWidth, m_RenderHeight);
+        glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
 
 		
     }
@@ -305,7 +305,7 @@ void World::MainLoop()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-    glViewport(0, 0, m_RenderWidth, m_RenderHeight);
+    glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
    
 
     /*--------- pass 1: regular render to default frame buffer ---------*/
@@ -358,7 +358,7 @@ void World::MainLoop()
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glViewport(0, 0, m_RenderWidth, m_RenderHeight);
+        glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
         for (FrameBufferDisplay* display : m_FrameBufferDisplays)
         {
             assert(display != nullptr);

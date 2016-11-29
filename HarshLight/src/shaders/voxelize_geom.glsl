@@ -27,7 +27,7 @@ out vec2 gs_ExpandedNDCPos;
 
 out flat vec4 gs_BBox;
 
-void ExpandTri(inout vec4 screen_pos[3])
+void ExpandTri(inout vec4 screen_pos[3], in float ccw)
 {
 	vec3 plane[3];
 
@@ -38,10 +38,10 @@ void ExpandTri(inout vec4 screen_pos[3])
 	plane[1] = cross(e12, screen_pos[1].xyw);
 	plane[2] = cross(screen_pos[0].xyw - screen_pos[2].xyw, screen_pos[2].xyw);
 
-	const vec2 hPixel = 2.0 * vec2(1.0, 1.0) / VoxelDim;
+	const vec2 hPixel = 1.0 * vec2(1.0, 1.0) / VoxelDim;
 
 	// flip if not CCW
-	const float ccw = sign(cross(e01, e12).z);
+	//const float ccw = sign(cross(e01, e12).z);
 	
 	plane[0].z -= dot(hPixel.xy, abs(plane[0].xy)) * ccw;
 	plane[1].z -= dot(hPixel.xy, abs(plane[1].xy)) * ccw;
@@ -101,20 +101,20 @@ void main()
 	gs_BBox.z = max(screen_pos[0].x, max(screen_pos[1].x, screen_pos[2].x));
 	gs_BBox.w = max(screen_pos[0].y, max(screen_pos[1].y, screen_pos[2].y));
 
-	const vec2 padding = 2.0 * vec2(1.0, 1.0) / VoxelDim;
+	const vec2 padding = 1.0 * vec2(1.0, 1.0) / VoxelDim;
 	gs_BBox.xy -= padding;
 	gs_BBox.zw += padding;
 
-	vec3 proj_normal0 = normalize((it_proj_swizzle_view * vec4(world_face_normal, 0)).xyz);
-	float d0 = dot(screen_pos[0].xyz, proj_normal0);
+	vec3 proj_normal = normalize((it_proj_swizzle_view * vec4(world_face_normal, 0)).xyz);
+	float d0 = dot(screen_pos[0].xyz, proj_normal);
 
 	//screen_pos should be in CCW order, if not then flipped in the function
-	ExpandTri(screen_pos);
+	ExpandTri(screen_pos, sign(proj_normal.z));
 	//screen_pos z components should remain unchanged
 	
-	screen_pos[0].z = (d0 - dot(screen_pos[0].xy, proj_normal0.xy) ) / proj_normal0.z;
-	screen_pos[1].z = (d0 - dot(screen_pos[1].xy, proj_normal0.xy) ) / proj_normal0.z;
-	screen_pos[2].z = (d0 - dot(screen_pos[2].xy, proj_normal0.xy) ) / proj_normal0.z;
+	screen_pos[0].z = (d0 - dot(screen_pos[0].xy, proj_normal.xy) ) / proj_normal.z;
+	screen_pos[1].z = (d0 - dot(screen_pos[1].xy, proj_normal.xy) ) / proj_normal.z;
+	screen_pos[2].z = (d0 - dot(screen_pos[2].xy, proj_normal.xy) ) / proj_normal.z;
 
 	gs_VoxelCoord.xyz = (Proj * View * inv_proj_swizzle_view * screen_pos[0]).xyz;
 	gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));

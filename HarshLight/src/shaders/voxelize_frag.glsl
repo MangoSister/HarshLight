@@ -35,7 +35,7 @@ void main()
 	//for(int i = -1; i <= 1; i++)
 	//	for(int j = -1; j <= 1; j++)
 	//		for(int k = -1; k <= 1; k++)
-	//imageStore(TexVoxel, ivec3(floor(coords)) + ivec3(i,j,k), fragColor);
+	//imageStore(TexVoxel, ivec3(gs_VoxelCoord) + ivec3(i,j,k), fragColor);
 	
 	imageStore(TexVoxel, ivec3(gs_VoxelCoord), fragColor);
 
