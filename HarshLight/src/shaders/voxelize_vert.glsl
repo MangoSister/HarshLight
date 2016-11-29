@@ -15,13 +15,12 @@ layout (std140, binding = 0) uniform MainCamMtx
 };
 
 uniform mat4 Model;
-//layout (binding = 1, rgba8) coherent uniform image3D TexVoxel;
 
 void main()
 {
     gl_Position = View * Model * vec4(app_Position, 1.0);
 	vs_Texcoord = app_Uv;
 	vs_WorldPosition = vec3(Model * vec4(app_Position, 1.0));
-	vs_WorldNormal = normalize(mat3(Model) * app_Normal);
-	//imageStore(TexVoxel, ivec3(0, 0, 0), vec4(0.5,0.5,0.5,0.5));
+	vs_WorldNormal = (transpose(inverse(Model)) * vec4(app_Normal, 0.0)).xyz;
+	vs_WorldNormal = normalize(vs_WorldNormal);
 }

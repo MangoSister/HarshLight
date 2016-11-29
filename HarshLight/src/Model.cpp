@@ -147,6 +147,9 @@ void Model::LoadModel(const char* path)
 	const aiScene* scene = import.ReadFile(path,
 		aiProcess_FlipUVs | aiProcess_PreTransformVertices |
 		aiProcess_FlipWindingOrder | // seems like models we use are all CW order...
+		aiProcess_FindDegenerates |
+		aiProcess_OptimizeMeshes |
+		aiProcess_OptimizeGraph |
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_CalcTangentSpace |
 		aiProcess_GenSmoothNormals |

@@ -264,8 +264,11 @@ void World::Start()
         else
             fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
-        for (ModelRenderer* renderer : m_Renderers)
-            renderer->Render(RenderPass::kVoxelize);
+		for (ModelRenderer* renderer : m_Renderers)
+		{
+			renderer->Render(RenderPass::kVoxelize);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		}
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -273,8 +276,7 @@ void World::Start()
         glDepthMask(GL_TRUE);
         glViewport(0, 0, m_RenderWidth, m_RenderHeight);
 
-        //glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		
     }
 }
 
@@ -372,6 +374,9 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
     const aiScene* scene = import.ReadFile(model->GetRawPath(),
 		aiProcess_FlipUVs | aiProcess_PreTransformVertices |
 		aiProcess_FlipWindingOrder | // seems like models we use are all CW order...
+		aiProcess_FindDegenerates |
+		aiProcess_OptimizeMeshes |
+		aiProcess_OptimizeGraph |
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_CalcTangentSpace |
 		aiProcess_GenSmoothNormals |

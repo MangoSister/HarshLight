@@ -193,13 +193,16 @@ void CreateCRTestScene()
 
     
     /* --------------  Test Shape  ----------- */
+	glm::vec3 scale(-0.0001, -0.0001, -1.0);
+	glm::vec3 pos(0.125f, 0.0f, 0.0f);
     Model* tri = new Model(Model::Primitive::kTriangle);
     World::GetInst().RegisterModel(tri);
 
     Actor* cr_triActor = new Actor();
 
     ModelRenderer* cr_renderer = new ModelRenderer(tri);
-    //cr_renderer->ScaleTo(glm::vec3(1.0, 0.5, 1.0));
+    cr_renderer->ScaleTo(scale);
+	cr_renderer->MoveTo(pos);
     cr_triActor->AddRenderer(cr_renderer);
     cr_renderer->SetRenderPass(RenderPass::kRegular);
     Material* cr_mat = new Material();
@@ -221,9 +224,10 @@ void CreateCRTestScene()
     Actor* sr_triActor = new Actor();
 
     ModelRenderer* sr_renderer = new ModelRenderer(tri);
-    //sr_renderer->ScaleTo(glm::vec3(1.0, 0.5, 1.0));
+    sr_renderer->ScaleTo(scale);
+	sr_renderer->MoveTo(pos);
     sr_triActor->AddRenderer(sr_renderer);
-    sr_renderer->SetRenderPass(RenderPass::kRegular);
+    sr_renderer->SetRenderPass(RenderPass::kRegular);	
     Material* sr_mat = new Material();
     sr_mat->SetShader(sr_shader);
     sr_renderer->AddMaterial(RenderPass::kRegular, sr_mat);
@@ -308,7 +312,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     /* --------------  Cameras  ----------- */
     const uint32_t voxelDim = 256;
-    const float voxelize_extent = 1100.0f;
+    const float voxelize_extent = 1000.0f;
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
         Actor* voxelize_cam_actor = new Actor();
@@ -394,7 +398,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
             mat_voxel_visual->DeleteAllTextures();
-            mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture, 0);
+			mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture, 0);
+            //mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_VOXEL_IMG);
             mat_voxel_visual->SetShader(voxel_visualize_shader);
 
 			//mat_voxel_visual->DeleteTexture("TexVoxel");
