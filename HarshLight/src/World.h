@@ -4,7 +4,7 @@
 #include "Actor.h"
 #include "Model.h"
 #include "Material.h"
-#include "Textur2d.h"
+#include "Texture.h"
 #include "ShaderProgram.h"
 #include "Camera.h"
 #include "FrameBufferDisplay.h"

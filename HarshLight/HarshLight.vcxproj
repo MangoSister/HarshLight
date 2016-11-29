@@ -29,8 +29,7 @@
     <ClCompile Include="src\ModelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
-    <ClCompile Include="src\Textur2d.cpp" />
-    <ClCompile Include="src\Texture2d.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\Util.cpp" />
     <ClCompile Include="src\VoxelizeController.cpp" />
     <ClCompile Include="src\World.cpp" />
@@ -41,7 +40,7 @@
     <ClInclude Include="src\Component.h" />
     <ClInclude Include="src\FrameBufferDisplay.h" />
     <ClInclude Include="src\ShaderProgram.h" />
-    <ClInclude Include="src\Textur2d.h" />
+    <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\Util.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />

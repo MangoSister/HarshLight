@@ -1,4 +1,4 @@
-#include "Textur2d.h"
+#include "Texture.h"
 #include "SOIL/SOIL.h"
 #include <cassert>
 #include <cstdio>

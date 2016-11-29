@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Textur2d.h"
+#include "Texture.h"
 #include "ShaderProgram.h"
 #include "GL/glew.h"
 #include <cstdint>

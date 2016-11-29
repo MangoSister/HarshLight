@@ -51,10 +51,6 @@
     <ClCompile Include="src\Util.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Texture2d.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Textur2d.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -62,6 +58,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\VoxelizeController.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Texture.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -93,9 +92,6 @@
     <ClInclude Include="src\Util.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Textur2d.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\ShaderProgram.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -103,6 +99,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\VoxelizeController.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Texture.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
