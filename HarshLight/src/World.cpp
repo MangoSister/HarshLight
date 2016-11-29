@@ -307,6 +307,7 @@ void World::MainLoop()
 	glEnable(GL_CULL_FACE);
     glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
    
+	//glGetTexImage(m_TexObject, 0, )
 
     /*--------- pass 1: regular render to default frame buffer ---------*/
     if (m_RenderPassSwitch[0])

@@ -26,6 +26,8 @@ out vec3 gs_WorldNormal;
 out vec2 gs_ExpandedNDCPos;
 
 out flat vec4 gs_BBox;
+out flat vec3 gs_VoxelSpaceTri[3];
+out flat ivec3 gs_ProjDir;
 
 void ExpandTri(inout vec4 screen_pos[3], in float ccw)
 {
@@ -70,15 +72,20 @@ void main()
 	const vec3 world_face_normal = normalize(cross(world_e01, world_e02));
 	const vec3 abs_world_face_normal = abs(world_face_normal);
 	float dominant_axis = max(abs_world_face_normal.x, max(abs_world_face_normal.y, abs_world_face_normal.z));
+	
+	//!!!the camera is top-down orthographic
 	mat4 swizzle_view_mtx = ViewMtxToDown;
+	gs_ProjDir = ivec3(0, 0, 1);
 
 	if(dominant_axis == abs_world_face_normal.x)
 	{
 		swizzle_view_mtx = ViewMtxToLeft;
+		gs_ProjDir = ivec3(1, 0, 0);
 	}
 	else if(dominant_axis == abs_world_face_normal.z)
 	{
 		swizzle_view_mtx = ViewMtxToForward;
+		gs_ProjDir = ivec3(0, 1, 0);
 	}
 
 	const mat4 proj_swizzle_view = Proj * swizzle_view_mtx;
@@ -116,37 +123,49 @@ void main()
 	screen_pos[1].z = (d0 - dot(screen_pos[1].xy, proj_normal.xy) ) / proj_normal.z;
 	screen_pos[2].z = (d0 - dot(screen_pos[2].xy, proj_normal.xy) ) / proj_normal.z;
 
-	gs_VoxelCoord.xyz = (Proj * View * inv_proj_swizzle_view * screen_pos[0]).xyz;
-	gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));
+	vec3 voxel_coords[3];
+	voxel_coords[0] =  (Proj * View * inv_proj_swizzle_view * screen_pos[0]).xyz;
+	voxel_coords[0] =  VoxelDim.xxx * 0.5 * (voxel_coords[0] + vec3(1.0, 1.0, 1.0));
+
+	voxel_coords[1] =  (Proj * View * inv_proj_swizzle_view * screen_pos[1]).xyz;
+	voxel_coords[1] =  VoxelDim.xxx * 0.5 * (voxel_coords[1] + vec3(1.0, 1.0, 1.0));
+
+	voxel_coords[2] =  (Proj * View * inv_proj_swizzle_view * screen_pos[2]).xyz;
+	voxel_coords[2] =  VoxelDim.xxx * 0.5 * (voxel_coords[2] + vec3(1.0, 1.0, 1.0));
+	gs_VoxelSpaceTri[0] = voxel_coords[0];
+	gs_VoxelSpaceTri[1] = voxel_coords[1];
+	gs_VoxelSpaceTri[2] = voxel_coords[2];
+
+	gs_VoxelCoord.xyz = voxel_coords[0];
+	//gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));
 	//gs_VoxelCoord.xyz = gl_in[0].gl_Position.xyz;
 	gs_Texcoord = vs_Texcoord[0];
 	gs_WorldPosition = vs_WorldPosition[0];
 	gs_WorldNormal = vs_WorldNormal[0];
 	gs_ExpandedNDCPos = screen_pos[0].xy;
 	gl_Position = screen_pos[0];
-	//gl_Position.z =  (-screen_pos[0].x * proj_normal0.x - screen_pos[0].y * proj_normal0.y + d0) / proj_normal0.z;
 	EmitVertex();
 
-	gs_VoxelCoord.xyz = (Proj * View * inv_proj_swizzle_view * screen_pos[1]).xyz;
-	gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));
+	gs_VoxelCoord.xyz = voxel_coords[1];
+	//gs_VoxelCoord.xyz = (Proj * View * inv_proj_swizzle_view * screen_pos[1]).xyz;
+	//gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));
 	//gs_VoxelCoord.xyz = gl_in[1].gl_Position.xyz;
 	gs_Texcoord = vs_Texcoord[1];
 	gs_WorldPosition = vs_WorldPosition[1];
 	gs_WorldNormal = vs_WorldNormal[1];
 	gs_ExpandedNDCPos = screen_pos[1].xy;
 	gl_Position = screen_pos[1];
-	//gl_Position.z =  (-screen_pos[1].x * proj_normal0.x - screen_pos[1].y * proj_normal0.y + d0) / proj_normal0.z;
 	EmitVertex();
 
-	gs_VoxelCoord.xyz = (Proj * View * inv_proj_swizzle_view * screen_pos[2]).xyz;
-	gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));
+	gs_VoxelCoord.xyz = voxel_coords[2];
+	//gs_VoxelCoord.xyz = (Proj * View * inv_proj_swizzle_view * screen_pos[2]).xyz;
+	//gs_VoxelCoord.xyz = VoxelDim.xxx * 0.5 * (gs_VoxelCoord.xyz + vec3(1.0, 1.0, 1.0));
 	//gs_VoxelCoord.xyz = gl_in[2].gl_Position.xyz;
 	gs_Texcoord = vs_Texcoord[2];
 	gs_WorldPosition = vs_WorldPosition[2];
 	gs_WorldNormal = vs_WorldNormal[2];
 	gs_ExpandedNDCPos = screen_pos[2].xy;
 	gl_Position = screen_pos[2];
-	//gl_Position.z =  (-screen_pos[2].x * proj_normal0.x - screen_pos[2].y * proj_normal0.y + d0) / proj_normal0.z;
 	EmitVertex();
 
 	EndPrimitive();
