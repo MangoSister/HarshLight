@@ -10,7 +10,7 @@
 class VoxelizeController : public Component
 {
 public: 
-    explicit VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam, Texture3dCompute* voxel_tex);
+    explicit VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam);
 	virtual ~VoxelizeController();
 
     void Start() override;

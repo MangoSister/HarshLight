@@ -214,7 +214,7 @@ void CreateCRTestScene()
 
 
     /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, 0.0f, World::GetInst().GetVoxelCamera(), nullptr);
+    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, 0.0f, World::GetInst().GetVoxelCamera());
     cr_triActor->AddComponent(voxel_ctrl);
 
     World::GetInst().RegisterActor(cr_triActor);
@@ -380,14 +380,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
     Actor* sceneActor = new Actor(); 
 
-    //voxel grid texture3d
-    Texture3dCompute* voxelTex = new Texture3dCompute(voxelDim, voxelDim, voxelDim);
-	
-	//(HACK:) DO NOT REGISTER TO WORLD, handled by voxelize controller
-    //World::GetInst().RegisterTexture3d(voxelTex);
-
 	//voxelization controller
-	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim, voxelize_extent, World::GetInst().GetVoxelCamera(), voxelTex);
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim, voxelize_extent, World::GetInst().GetVoxelCamera());
 	World::GetInst().m_VoxelizeController = voxel_ctrl;
 	sceneActor->AddComponent(voxel_ctrl);
 
@@ -399,7 +393,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
-            mat_voxelize->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageWriteOnly, BINDING_POINT_VOXEL_IMG);
+            mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex() , "TexVoxel", TexUsage::kImageWriteOnly, BINDING_POINT_VOXEL_IMG);
             mat_voxelize->SetShader(voxelize_shader);
             GLuint shader_obj = mat_voxelize->GetShader()->GetProgram();
             sceneRenderer->AddMaterial(RenderPass::kVoxelize, mat_voxelize);
@@ -408,7 +402,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
             mat_voxel_visual->DeleteAllTextures();
-			mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kRegularTexture, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(), "TexVoxel", TexUsage::kRegularTexture, 0);
             //mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_VOXEL_IMG);
             mat_voxel_visual->SetShader(voxel_visualize_shader);
 

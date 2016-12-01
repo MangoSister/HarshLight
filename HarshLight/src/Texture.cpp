@@ -47,7 +47,7 @@ GLuint Texture2d::GetTexObj() const
     return m_TexObject;
 }
 
-Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z)
+Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format)
 	:m_DimX(dim_x), m_DimY(dim_y), m_DimZ(dim_z), m_TexObject(0), m_UtilFBO(0)
 {
 #ifdef _DEBUG
@@ -62,7 +62,7 @@ Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, m_DimX, m_DimY, m_DimZ, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage3D(GL_TEXTURE_3D, 0, internal_format, m_DimX, m_DimY, m_DimZ, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
 	glBindTexture(GL_TEXTURE_3D, 0);
 
 	glGenFramebuffers(1, &m_UtilFBO);

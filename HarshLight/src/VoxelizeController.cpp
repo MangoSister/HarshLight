@@ -8,9 +8,11 @@ const char* VoxelizeController::s_ViewMtxToDownName = "ViewMtxToDown";
 const char* VoxelizeController::s_ViewMtxToLeftName = "ViewMtxToLeft";
 const char* VoxelizeController::s_ViewMtxToForwardName = "ViewMtxToForward";
 
-VoxelizeController::VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam, Texture3dCompute* voxel_tex)
-    :Component(), m_VoxelDim(dim), m_Extent(extent), m_VoxelCam(voxel_cam), m_VoxelizeTex(voxel_tex)
-{ }
+VoxelizeController::VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam)
+    :Component(), m_VoxelDim(dim), m_Extent(extent), m_VoxelCam(voxel_cam)
+{
+    m_VoxelizeTex = new Texture3dCompute(dim, dim, dim, GL_R32UI);
+}
 
 VoxelizeController::~VoxelizeController()
 {
