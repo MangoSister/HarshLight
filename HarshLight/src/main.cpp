@@ -142,6 +142,7 @@ int main(int argc, char* argv[])
             break;
     }
 
+	World::GetInst().Destroy();
     glfwTerminate();
     return 0;
 }
@@ -213,7 +214,7 @@ void CreateCRTestScene()
 
 
     /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, 0.0f, World::GetInst().GetVoxelCamera());
+    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, 0.0f, World::GetInst().GetVoxelCamera(), nullptr);
     cr_triActor->AddComponent(voxel_ctrl);
 
     World::GetInst().RegisterActor(cr_triActor);
@@ -381,11 +382,13 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     //voxel grid texture3d
     Texture3dCompute* voxelTex = new Texture3dCompute(voxelDim, voxelDim, voxelDim);
-	World::GetInst().m_VoxelizeTex = voxelTex;
-    World::GetInst().RegisterTexture3d(voxelTex);
+	
+	//(HACK:) DO NOT REGISTER TO WORLD, handled by voxelize controller
+    //World::GetInst().RegisterTexture3d(voxelTex);
 
 	//voxelization controller
-	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim, voxelize_extent, World::GetInst().GetVoxelCamera());
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim, voxelize_extent, World::GetInst().GetVoxelCamera(), voxelTex);
+	World::GetInst().m_VoxelizeController = voxel_ctrl;
 	sceneActor->AddComponent(voxel_ctrl);
 
     ModelRenderer* sceneRenderer = new ModelRenderer(sceneModel);

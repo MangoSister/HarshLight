@@ -8,6 +8,7 @@
 #include "ShaderProgram.h"
 #include "Camera.h"
 #include "FrameBufferDisplay.h"
+#include "VoxelizeController.h"
 
 #include "GLFW/glfw3.h"
 #include <chrono>
@@ -29,6 +30,8 @@ class World
 public:
     World(const World& other) = delete;
     World& operator=(const World& other) = delete;
+
+	void Destroy();
 
     int GetKey(int key);
     
@@ -57,6 +60,10 @@ public:
 	void SetMainCamera(Camera* camera);
 	void SetMouseSensitivity(float sensitivity);
 
+	const RendererList& GetRenderers() const;
+
+	const void GetViewportSize(uint32_t& width, uint32_t& height) const;
+
     void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
 	
     static World& GetInst()
@@ -70,12 +77,11 @@ public:
 
     std::vector<Material*> LoadDefaultMaterialsForModel(Model * model);
 
-	Texture3dCompute* m_VoxelizeTex;
-
+	VoxelizeController* m_VoxelizeController;
 private:
 
     World() { }
-    ~World();
+	~World() { }
 
 	static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 

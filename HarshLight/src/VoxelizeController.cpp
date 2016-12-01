@@ -1,15 +1,28 @@
 #include "VoxelizeController.h"
 #include "ModelRenderer.h"
 #include "Actor.h"
+#include "World.h"
 
 const char* VoxelizeController::s_VoxelDimName = "VoxelDim";
 const char* VoxelizeController::s_ViewMtxToDownName = "ViewMtxToDown";
 const char* VoxelizeController::s_ViewMtxToLeftName = "ViewMtxToLeft";
 const char* VoxelizeController::s_ViewMtxToForwardName = "ViewMtxToForward";
 
-VoxelizeController::VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam)
-    :Component(), m_VoxelDim(dim), m_Extent(extent), m_VoxelCam(voxel_cam)
+VoxelizeController::VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam, Texture3dCompute* voxel_tex)
+    :Component(), m_VoxelDim(dim), m_Extent(extent), m_VoxelCam(voxel_cam), m_VoxelizeTex(voxel_tex)
 { }
+
+VoxelizeController::~VoxelizeController()
+{
+	//unregister voxel_tex from cuda
+	cudaCheckError(cudaGraphicsUnregisterResource(m_CudaResource));
+
+	if (m_VoxelizeTex)
+	{
+		delete m_VoxelizeTex;
+		m_VoxelizeTex = nullptr;
+	}
+}
 
 void VoxelizeController::Start()
 {
@@ -52,6 +65,13 @@ void VoxelizeController::Start()
             mat->SetMat4x4Param(s_ViewMtxToForwardName, view_to_forward);
         }
 	}
+
+	//register voxel texture to cuda
+	
+	cudaCheckError(cudaGraphicsGLRegisterImage(&m_CudaResource, m_VoxelizeTex->GetTexObj(), 
+					GL_TEXTURE_3D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+
+	DispatchVoxelization();
 }
 
 void VoxelizeController::SetVoxelDim(uint32_t dim)
@@ -62,4 +82,54 @@ void VoxelizeController::SetVoxelDim(uint32_t dim)
 uint32_t VoxelizeController::GetVoxelDim() const
 {
     return m_VoxelDim;
+}
+
+void VoxelizeController::TransferVoxelDataToCuda()
+{
+	cudaCheckError(cudaGraphicsMapResources(1, &m_CudaResource, 0));
+	cudaArray* cuda_array;
+	cudaCheckError(cudaGraphicsSubResourceGetMappedArray(&cuda_array, m_CudaResource, 0, 0));
+
+	//cudaCheckError(cudaBindSurfaceToArray(surfaceWrite, cuda_array));
+}
+
+void VoxelizeController::UnmapVoxelDataFromCuda()
+{
+
+}
+
+void VoxelizeController::DispatchVoxelization()
+{
+	if (m_VoxelizeTex)
+	{
+		m_VoxelizeTex->CleanContent();
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glDepthMask(GL_FALSE);
+		glViewport(0, 0, m_VoxelDim, m_VoxelDim);
+
+		if (m_VoxelCam)
+			m_VoxelCam->UpdateCamMtx(UniformBufferBinding::kMainCam);
+		else
+			fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+		const RendererList& renderers = World::GetInst().GetRenderers();
+		for (ModelRenderer* renderer : renderers)
+		{
+			renderer->Render(RenderPass::kVoxelize);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		}
+
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+		uint32_t vw, vh;
+		World::GetInst().GetViewportSize(vw, vh);
+		glViewport(0, 0, vw, vh);
+
+	}
 }

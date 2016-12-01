@@ -1,64 +1,6 @@
 #include "World.h"
 #include <cassert>
 
-World::~World()
-{
-    for (Actor*& actor : m_Actors)
-    {
-        if (actor)
-        {
-            delete actor;
-            actor = nullptr;
-        }
-    }
-
-	for (Model*& model : m_Models)
-	{
-		if (model)
-		{
-			delete model;
-			model = nullptr;
-		}
-	}
-
-    for (Material*& material : m_Materials)
-    {
-        if (material)
-        {
-            delete material;
-            material = nullptr;
-        }
-    }
-
-    for (auto it = m_Textures2d.begin(); it != m_Textures2d.end(); it++)
-    {
-        //tex2d
-        if (it->second)
-        {
-            delete (it->second);
-            it->second = nullptr;
-        }
-    }
-
-	for (Texture3dCompute*& tex3d : m_Textures3d)
-	{
-		if (tex3d)
-		{
-			delete tex3d;
-			tex3d = nullptr;
-		}
-	}
-
-	for (ShaderProgram*& shader : m_Shaders)
-	{
-		if (shader)
-		{
-			delete shader;
-			shader = nullptr;
-		}
-	}
-}
-
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 {
 	World& world = World::GetInst();
@@ -234,6 +176,17 @@ void World::SetMouseSensitivity(float sensitivity)
 	m_MouseSensitivity = sensitivity;
 }
 
+const RendererList& World::GetRenderers() const
+{
+	return m_Renderers;
+}
+
+const void World::GetViewportSize(uint32_t & width, uint32_t & height) const
+{
+	width = m_ViewportWidth;
+	height = m_ViewportHeight;
+}
+
 void World::Start()
 {
     for (Component* comp : m_Components)
@@ -248,36 +201,8 @@ void World::Start()
     m_CurrTime = std::chrono::system_clock::now();
 
     /*--------- pass 0: voxelize scene ---------*/
-    if (m_VoxelizeTex)
-    {
-        m_VoxelizeTex->CleanContent();
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-        glDepthMask(GL_FALSE);
-        glViewport(0, 0, 256, 256);
-
-        if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
-        else
-            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
-
-		for (ModelRenderer* renderer : m_Renderers)
-		{
-			renderer->Render(RenderPass::kVoxelize);
-			glMemoryBarrier(GL_ALL_BARRIER_BITS);
-		}
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        glDepthMask(GL_TRUE);
-        glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
-
-		
-    }
+	//m_VoxelizeController->DispatchVoxelization();
+	//is executed in its Start() function
 }
 
 void World::MainLoop()
@@ -453,6 +378,64 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
 	}
 
     return out;
+}
+
+void World::Destroy()
+{
+	for (Actor*& actor : m_Actors)
+	{
+		if (actor)
+		{
+			delete actor;
+			actor = nullptr;
+		}
+	}
+
+	for (Model*& model : m_Models)
+	{
+		if (model)
+		{
+			delete model;
+			model = nullptr;
+		}
+	}
+
+	for (Material*& material : m_Materials)
+	{
+		if (material)
+		{
+			delete material;
+			material = nullptr;
+		}
+	}
+
+	for (auto it = m_Textures2d.begin(); it != m_Textures2d.end(); it++)
+	{
+		//tex2d
+		if (it->second)
+		{
+			delete (it->second);
+			it->second = nullptr;
+		}
+	}
+
+	for (Texture3dCompute*& tex3d : m_Textures3d)
+	{
+		if (tex3d)
+		{
+			delete tex3d;
+			tex3d = nullptr;
+		}
+	}
+
+	for (ShaderProgram*& shader : m_Shaders)
+	{
+		if (shader)
+		{
+			delete shader;
+			shader = nullptr;
+		}
+	}
 }
 
 int World::GetKey(int key)
