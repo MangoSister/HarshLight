@@ -1,5 +1,11 @@
 #include "World.h"
+
 #include <cassert>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+#include <device_launch_parameters.h>
+
+#include "VoxelInvert.h"
 
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 {
@@ -39,9 +45,20 @@ void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 	}
 }
 
+void World::KeyboardCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
+{
+    KeyStatusMap& map = World::GetInst().m_KeyStatusMap;
+    auto key_it = map.find(key);
+    if (key_it != map.cend())
+        key_it->second = action;
+    else
+        map.insert(std::make_pair(key, action));
+}
+
 void World::SetWindow(GLFWwindow* window, uint32_t width, uint32_t height)
 {
     m_Window = window;
+    glfwSetKeyCallback(window, KeyboardCallback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, MouseCallback);
 	m_ViewportWidth = width;
@@ -203,6 +220,12 @@ void World::Start()
     /*--------- pass 0: voxelize scene ---------*/
 	//m_VoxelizeController->DispatchVoxelization();
 	//is executed in its Start() function
+
+    cudaSurfaceObject_t surf_obj = m_VoxelizeController->TransferVoxelDataToCuda();
+
+    //do some testing kernel
+    LaunchKernelVoxelInvert(m_VoxelizeController->GetVoxelDim(), surf_obj);
+    m_VoxelizeController->FinishVoxelDataFromCuda(surf_obj);
 }
 
 void World::MainLoop()
@@ -290,6 +313,13 @@ void World::MainLoop()
             assert(display != nullptr);
             display->Render(RenderPass::kPost);
         }
+    }
+    
+    //maintain 3-status key map
+    for (auto& it : m_KeyStatusMap)
+    {
+        if (it.second == GLFW_PRESS)
+            it.second = GLFW_REPEAT;
     }
 }
 
@@ -438,7 +468,16 @@ void World::Destroy()
 	}
 }
 
+bool World::IsKeyDown(int key)
+{
+    int k = World::GetInst().GetKey(key);
+    return (k == GLFW_REPEAT || k == GLFW_PRESS);
+}
+
 int World::GetKey(int key)
 {
-    return glfwGetKey(m_Window, key);
+    auto key_it = m_KeyStatusMap.find(key);
+    if (key_it == m_KeyStatusMap.cend())
+        return GLFW_RELEASE;
+    else return key_it->second;
 }

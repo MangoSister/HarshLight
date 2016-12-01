@@ -24,6 +24,7 @@ typedef std::vector<Texture3dCompute*> Texture3dList;
 typedef std::vector<ShaderProgram*> ShaderList;
 typedef std::vector<ModelRenderer*> RendererList;
 typedef std::vector<FrameBufferDisplay*> FrameBufferDisplayList;
+typedef std::unordered_map<int, int> KeyStatusMap;
 
 class World
 {
@@ -33,6 +34,7 @@ public:
 
 	void Destroy();
 
+    bool IsKeyDown(int key);
     int GetKey(int key);
     
 	const ActorList& GetActors() const;
@@ -84,6 +86,7 @@ private:
 	~World() { }
 
 	static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+    static void KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     GLFWwindow* m_Window;
 
@@ -102,6 +105,8 @@ private:
 	Camera* m_MainCamera;
 	Camera* m_VoxelizeCamera;
 
+    KeyStatusMap m_KeyStatusMap;
+
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
 
@@ -111,4 +116,3 @@ private:
 
     uint8_t m_RenderPassSwitch[2] = { 1, 1 };
 };
-

@@ -54,32 +54,32 @@ void Camera::Update(float dt)
     if (World::GetInst().GetMainCamera() != this)
         return;
 
-	if (World::GetInst().GetKey(GLFW_KEY_W) == GLFW_PRESS)
+	if (World::GetInst().IsKeyDown(GLFW_KEY_W))
 	{
         m_Transform = glm::translate(m_Transform, vec3(0.0f, 0.0f, m_FreeMoveSpeed * -dt));
 	}
 
-	if (World::GetInst().GetKey(GLFW_KEY_S) == GLFW_PRESS)
+	if (World::GetInst().IsKeyDown(GLFW_KEY_S))
 	{
         m_Transform = glm::translate(m_Transform, vec3(0.0f, 0.0f, m_FreeMoveSpeed * dt));
 	}
 
-	if (World::GetInst().GetKey(GLFW_KEY_A) == GLFW_PRESS)
+	if (World::GetInst().IsKeyDown(GLFW_KEY_A))
 	{
         m_Transform = glm::translate(m_Transform, vec3(m_FreeMoveSpeed * -dt, 0.0f, 0.0f));
 	}
 
-	if (World::GetInst().GetKey(GLFW_KEY_D) == GLFW_PRESS)
+	if (World::GetInst().IsKeyDown(GLFW_KEY_D))
 	{
         m_Transform = glm::translate(m_Transform, vec3(m_FreeMoveSpeed * dt, 0.0f, 0.0f));
 	}
 
-	if (World::GetInst().GetKey(GLFW_KEY_Q) == GLFW_PRESS)
+	if (World::GetInst().IsKeyDown(GLFW_KEY_Q))
 	{
         m_Transform = glm::translate(m_Transform, vec3(0.0f, m_FreeMoveSpeed * dt, 0.0f));
 	}
 
-	if (World::GetInst().GetKey(GLFW_KEY_E) == GLFW_PRESS)
+	if (World::GetInst().IsKeyDown(GLFW_KEY_E))
 	{
         m_Transform = glm::translate(m_Transform, vec3(0.0f, m_FreeMoveSpeed * -dt, 0.0f));
 	}

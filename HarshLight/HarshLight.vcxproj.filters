@@ -104,6 +104,9 @@
     <ClInclude Include="src\Texture.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\VoxelInvert.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\voxelize_vert.glsl">
@@ -148,5 +151,10 @@
     <None Include="src\shaders\sr_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\VoxelInvert.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

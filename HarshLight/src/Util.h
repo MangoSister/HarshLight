@@ -41,3 +41,11 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort 
 #else
 #define cudaCheckError(ans) ans
 #endif
+
+#ifdef _DEBUG
+#define HANDLE_KERNEL_ERROR_SYNC \
+  cudaCheckError(cudaPeekAtLastError()); \
+  cudaCheckError(cudaDeviceSynchronize());
+#else 
+#define HANDLE_KERNEL_ERROR_SYNC
+#endif

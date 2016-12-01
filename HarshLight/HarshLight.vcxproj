@@ -46,6 +46,7 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\ModelRenderer.h" />
     <ClInclude Include="src\Material.h" />
+    <ClInclude Include="src\VoxelInvert.h" />
     <ClInclude Include="src\VoxelizeController.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
@@ -64,6 +65,9 @@
     <None Include="src\shaders\voxelize_vert.glsl" />
     <None Include="src\shaders\voxel_visualize_frag.glsl" />
     <None Include="src\shaders\voxel_visualize_vert.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\VoxelInvert.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E4640478-0BB1-4DA8-845C-290A22D36B23}</ProjectGuid>
@@ -155,6 +159,7 @@ copy "$(ProjectDir)\bin\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <AdditionalOptions>-Xcompiler "/wd 4819" %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

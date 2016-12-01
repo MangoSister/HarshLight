@@ -22,8 +22,8 @@ public:
 	inline const Texture3dCompute* GetVoxelizeTex()
 	{ return m_VoxelizeTex; }
 
-	void TransferVoxelDataToCuda();
-	void UnmapVoxelDataFromCuda();
+    cudaSurfaceObject_t TransferVoxelDataToCuda();
+	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_obj);
 	
 private:
 	

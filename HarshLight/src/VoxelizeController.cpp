@@ -84,18 +84,30 @@ uint32_t VoxelizeController::GetVoxelDim() const
     return m_VoxelDim;
 }
 
-void VoxelizeController::TransferVoxelDataToCuda()
+cudaSurfaceObject_t VoxelizeController::TransferVoxelDataToCuda()
 {
 	cudaCheckError(cudaGraphicsMapResources(1, &m_CudaResource, 0));
-	cudaArray* cuda_array;
-	cudaCheckError(cudaGraphicsSubResourceGetMappedArray(&cuda_array, m_CudaResource, 0, 0));
+	cudaArray* voxel_cuda_array;
+	cudaCheckError(cudaGraphicsSubResourceGetMappedArray(&voxel_cuda_array, m_CudaResource, 0, 0));
 
+    struct cudaResourceDesc res_desc;
+    memset(&res_desc, 0, sizeof(cudaResourceDesc));
+    res_desc.resType = cudaResourceTypeArray;    // be sure to set the resource type to cudaResourceTypeArray
+    res_desc.res.array.array = voxel_cuda_array;
+
+    cudaSurfaceObject_t surf_obj = 0;
+    cudaCheckError(cudaCreateSurfaceObject(&surf_obj, &res_desc));
 	//cudaCheckError(cudaBindSurfaceToArray(surfaceWrite, cuda_array));
+
+    return surf_obj;
 }
 
-void VoxelizeController::UnmapVoxelDataFromCuda()
+void VoxelizeController::FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_obj)
 {
+    //there is no unbinding surface API
 
+    cudaCheckError(cudaDestroySurfaceObject(surf_obj));
+    cudaCheckError(cudaGraphicsUnmapResources(1, &m_CudaResource, 0));
 }
 
 void VoxelizeController::DispatchVoxelization()
