@@ -402,8 +402,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-            mat_voxel_visual->DeleteAllTextures();
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(), "TexVoxel", TexUsage::kRegularTexture, 0);
+            mat_voxel_visual->DeleteAllTextures();	
 			for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
 				mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + i);
             mat_voxel_visual->SetShader(voxel_visualize_shader);

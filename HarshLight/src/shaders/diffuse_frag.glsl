@@ -10,5 +10,6 @@ uniform sampler2D TexAlbedo;
 
 void main()
 {
-    fragColor =  texture(TexAlbedo, vs_Texcoord);
+    fragColor = texture(TexAlbedo, vs_Texcoord);
+	fragColor = vec4(vs_WorldNormal * 0.5 + 0.5, 1.0);
 } 

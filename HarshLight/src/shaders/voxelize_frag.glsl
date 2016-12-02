@@ -130,24 +130,51 @@ vec4 ColorUintToVec4(uint val)
 void AccumulateAlbedo
 (layout(r32ui) coherent volatile uimage3D albedo, ivec3 coords, vec4 val) 
 {
-	uint newVal = ColorVec4ToUint(val);
-	uint prevStoredVal = 0; 
-	uint curStoredVal;
+	uint new_val = ColorVec4ToUint(val);
+	uint prev_val = 0; 
+	uint curr_val;
 
 	// Loop as long as destination value gets changed by other threads
-	while ( (curStoredVal = imageAtomicCompSwap(albedo, coords, prevStoredVal, newVal) ) != prevStoredVal) 
+	while ( (curr_val = imageAtomicCompSwap(albedo, coords, prev_val, new_val) ) != prev_val) 
 	{
-		prevStoredVal = curStoredVal;
-		vec4 rval = ColorUintToVec4(curStoredVal);
-		rval.xyz = (rval.xyz * rval.w); // Denormalize
-		vec4 curValF = rval + val; // Add new value
-		curValF.xyz /= (curValF.w); // Renormalize
-		if(curValF.w == 0xFF) // we can at most count 255 frags in one voxel
+		prev_val = curr_val;
+		vec4 rval = ColorUintToVec4(curr_val);
+		if(rval.w >= 255.0) // we can at most count 255 frags in one voxel
 			break;
-		newVal = ColorVec4ToUint(curValF);
+		rval.xyz = (rval.xyz * rval.w); // Denormalize
+		vec4 curr_val_vf = rval + val; // Add new value
+		curr_val_vf.xyz /= (curr_val_vf.w); // Renormalize
+		new_val = ColorVec4ToUint(curr_val_vf);
 	}
 }
 
+void AccumulateNormal
+(layout(r32ui) coherent volatile uimage3D normal, ivec3 coords, vec3 val)
+{
+	vec4 val_4 = vec4(val, 1.0); //[-1, 1]
+	//[-1, 1] -> [0, 1]
+	//val_4.xyz = 0.5 * (val_4.xyz + vec3(1.0));
+	uint new_val = ColorVec4ToUint(val_4);
+	uint prev_val = 0; 
+	uint curr_val;
+
+	// Loop as long as destination value gets changed by other threads
+	while ( (curr_val = imageAtomicCompSwap(normal, coords, prev_val, new_val) ) != prev_val) 
+	{
+		prev_val = curr_val;
+		vec4 rval = ColorUintToVec4(curr_val);
+		if(rval.w >= 255.0) // we can at most count 255 frags in one voxel
+			break;
+		rval.xyz = (rval.xyz * rval.w); // Denormalize avg
+		//[0, 1] -> [-1, 1]
+		rval.xyz = (rval.xyz * 2.0) - vec3(1.0);
+		vec4 curr_val_vf = rval + val_4; // Add new value
+		//[-1, 1] -> [0, 1]
+		curr_val_vf.xyz = 0.5 * (curr_val_vf.xyz + vec3(1.0));
+		curr_val_vf.xyz /= (curr_val_vf.w); // Renormalize avg
+		new_val = ColorVec4ToUint(curr_val_vf);
+	}
+}
 
 void main()
 {
@@ -176,32 +203,35 @@ void main()
 	uint u32_fragColor = ColorVec4ToUint(fragColor);
 
 	ivec3 next = ivec3(gs_VoxelCoord);
-	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThanEqual(next, ivec3(VoxelDim.xxx)) ) )
+	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThan(next, ivec3(VoxelDim.xxx)) ) )
 	{	
 		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, next) )
 		{
 			AccumulateAlbedo(TexVoxel, next, fragColor);
+			AccumulateNormal(TexVoxelNormal, next, gs_WorldNormal);
 			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
 		}
 	}
 
 
 	next = ivec3(gs_VoxelCoord) + gs_ProjDir;
-	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThanEqual(next, ivec3(VoxelDim.xxx)) ) )
+	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThan(next, ivec3(VoxelDim.xxx)) ) )
 	{
 		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) + gs_ProjDir) )
 		{
 			AccumulateAlbedo(TexVoxel, next, fragColor);
+			AccumulateNormal(TexVoxelNormal, next, gs_WorldNormal);
 			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
 		}
 	}
 
 	next = ivec3(gs_VoxelCoord) - gs_ProjDir;
-	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThanEqual(next, ivec3(VoxelDim.xxx)) ) )
+	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThan(next, ivec3(VoxelDim.xxx)) ) )
 	{
 		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) - gs_ProjDir) )
 		{
 			AccumulateAlbedo(TexVoxel, next, fragColor);
+			AccumulateNormal(TexVoxelNormal, next, gs_WorldNormal);
 			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
 		}
 	}
