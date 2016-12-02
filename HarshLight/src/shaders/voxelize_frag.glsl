@@ -19,7 +19,8 @@ layout (std140, binding = 0) uniform MainCamMtx
 uniform vec2 VoxelDim;
 
 uniform sampler2D TexAlbedo;
-layout (binding = 1, rgba8) uniform image3D TexVoxel;
+layout (binding = 1, r32ui) coherent volatile uniform uimage3D TexVoxel;
+layout (binding = 2, r32ui) coherent volatile uniform uimage3D TexVoxelNormal;
 
 //dummy output
 out vec4 fragColor;
@@ -103,8 +104,49 @@ bool TriangleVoxelTest(in vec3 tri_min, in vec3 tri_max, in vec3 tri_normal, in 
 }
 
 
+uint ColorVec4ToUint(vec4 val) 
+{
+	val.xyz *= 255.0;
+	return	(uint(val.x) & 0x000000FF) << 24U | 
+			(uint(val.y) & 0x000000FF) << 16U | 
+			(uint(val.z) & 0x000000FF) << 8U | 
+			(uint(val.w) & 0x000000FF);
+}
+
+vec4 ColorUintToVec4(uint val) 
+{
+	float r = float((val & 0xFF000000) >> 24U);
+	float g = float((val & 0x00FF0000) >> 16U);
+	float b = float((val & 0x0000FF00) >> 8U);
+	float a = float((val & 0x000000FF));
+
+	vec4 o = vec4(r, g, b, a);
+	o.xyz /= 255.0;
+	o.xyz = clamp(o.xyz, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
+	return o;
+}
 
 
+void AccumulateAlbedo
+(layout(r32ui) coherent volatile uimage3D albedo, ivec3 coords, vec4 val) 
+{
+	uint newVal = ColorVec4ToUint(val);
+	uint prevStoredVal = 0; 
+	uint curStoredVal;
+
+	// Loop as long as destination value gets changed by other threads
+	while ( (curStoredVal = imageAtomicCompSwap(albedo, coords, prevStoredVal, newVal) ) != prevStoredVal) 
+	{
+		prevStoredVal = curStoredVal;
+		vec4 rval = ColorUintToVec4(curStoredVal);
+		rval.xyz = (rval.xyz * rval.w); // Denormalize
+		vec4 curValF = rval + val; // Add new value
+		curValF.xyz /= (curValF.w); // Renormalize
+		if(curValF.w == 0xFF) // we can at most count 255 frags in one voxel
+			break;
+		newVal = ColorVec4ToUint(curValF);
+	}
+}
 
 
 void main()
@@ -112,7 +154,7 @@ void main()
 	if ( (any(lessThan(gs_ExpandedNDCPos, gs_BBox.xy)) || any(greaterThan(gs_ExpandedNDCPos, gs_BBox.zw))) )
 		discard;
 
-	fragColor = texture(TexAlbedo, gs_Texcoord);
+	fragColor = vec4(texture(TexAlbedo, gs_Texcoord).xyz, 1.0);
 
 	vec3 tri_min;
 	tri_min.x = min(min(gs_VoxelSpaceTri[0].x, gs_VoxelSpaceTri[1].x), gs_VoxelSpaceTri[2].x);
@@ -131,14 +173,37 @@ void main()
 	vec3 tri_normal = normalize(cross(edge[0].xyz, edge[2].xyz));
 	float tri_plane_d = -dot(gs_VoxelSpaceTri[0], tri_normal);
 
+	uint u32_fragColor = ColorVec4ToUint(fragColor);
 
-	if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord)) )
-		imageStore(TexVoxel, ivec3(gs_VoxelCoord), fragColor);
-	
-	if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) + gs_ProjDir) )
-		imageStore(TexVoxel, ivec3(gs_VoxelCoord) + gs_ProjDir, fragColor);
-	
-	if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) - gs_ProjDir) )
-		imageStore(TexVoxel, ivec3(gs_VoxelCoord) - gs_ProjDir, fragColor);
-	//imageStore(TexVoxel, ivec3(0, 0, 0), vec4(0.5,1,0.5,1));
+	ivec3 next = ivec3(gs_VoxelCoord);
+	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThanEqual(next, ivec3(VoxelDim.xxx)) ) )
+	{	
+		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, next) )
+		{
+			AccumulateAlbedo(TexVoxel, next, fragColor);
+			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
+		}
+	}
+
+
+	next = ivec3(gs_VoxelCoord) + gs_ProjDir;
+	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThanEqual(next, ivec3(VoxelDim.xxx)) ) )
+	{
+		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) + gs_ProjDir) )
+		{
+			AccumulateAlbedo(TexVoxel, next, fragColor);
+			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
+		}
+	}
+
+	next = ivec3(gs_VoxelCoord) - gs_ProjDir;
+	if( all(greaterThanEqual(next, ivec3(0,0,0))) && all(lessThanEqual(next, ivec3(VoxelDim.xxx)) ) )
+	{
+		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) - gs_ProjDir) )
+		{
+			AccumulateAlbedo(TexVoxel, next, fragColor);
+			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
+		}
+	}
+
 }

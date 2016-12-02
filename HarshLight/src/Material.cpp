@@ -36,7 +36,7 @@ void Material::AddTexture(const Texture3dCompute * tex3d, const char * semantic,
 #ifdef _DEBUG
 	assert(tex3d != nullptr && semantic != nullptr);
 #endif
-	m_Textures3d.push_back(Texture3dSlot(tex3d->GetTexObj(), semantic, usage, binding));
+	m_Textures3d.push_back(Texture3dSlot(tex3d->GetTexObj(), semantic, usage, binding, tex3d->GetInternalFormat()));
 }
 
 void Material::DeleteTexture(const char * semantic)
@@ -163,11 +163,11 @@ void Material::Use() const
 		else
 		{
 			if (tex_slot.m_Usage == TexUsage::kImageReadOnly)
-				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_ONLY, tex_slot.m_InternalFormat);
 			else if (tex_slot.m_Usage == TexUsage::kImageWriteOnly)
-				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_WRITE_ONLY, tex_slot.m_InternalFormat);
 			else if (tex_slot.m_Usage == TexUsage::kImageReadWrite)
-				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_WRITE, tex_slot.m_InternalFormat);
 		}
 	}
 }

@@ -23,11 +23,23 @@ void KernelTestWriteSurface(uint32_t voxel_dim, cudaSurfaceObject_t surf_obj)
     if (x >= voxel_dim || y >= voxel_dim || z >= voxel_dim)
         return;
 
-    uchar4 element;
-    surf3Dread(&element, surf_obj, x * sizeof(uchar4), y, z);
-    element.x = 0xFF - element.x;
-    element.y = 0xFF - element.y;
-    element.z = 0xFF - element.z;
-    element.w = element.w;
-    surf3Dwrite(element, surf_obj, x * sizeof(uchar4), y, z);
+    uint32_t element;
+    surf3Dread(&element, surf_obj, x * sizeof(uint32_t), y, z);
+	uint8_t r = (element & 0xFF000000) >> 24U;
+	r = 0xFF - r;
+	uint8_t g = (element & 0x00FF0000) >> 16U;
+	g = 0xFF - g;
+	uint8_t b = (element & 0x0000FF00) >> 8U;
+	b = 0xFF - b;
+	uint8_t a = (element & 0x000000FF);
+	element = 
+		(r & 0x000000FF) << 24U |
+		(g & 0x000000FF) << 16U |
+		(b & 0x000000FF) << 8U |
+		(a & 0x000000FF);
+    //element.x = 0xFF - element.x;
+    //element.y = 0xFF - element.y;
+    //element.z = 0xFF - element.z;
+    //element.w = element.w;
+    surf3Dwrite(element, surf_obj, x * sizeof(uint32_t), y, z);
 }

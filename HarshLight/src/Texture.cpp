@@ -47,8 +47,8 @@ GLuint Texture2d::GetTexObj() const
     return m_TexObject;
 }
 
-Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format)
-	:m_DimX(dim_x), m_DimY(dim_y), m_DimZ(dim_z), m_TexObject(0), m_UtilFBO(0)
+Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format, GLuint format, GLuint type)
+	:m_DimX(dim_x), m_DimY(dim_y), m_DimZ(dim_z), m_InternalFormat(internal_format), m_Format(format), m_Type(type), m_TexObject(0)
 {
 #ifdef _DEBUG
 	assert(m_DimX && m_DimY && m_DimZ);
@@ -62,23 +62,12 @@ Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    glTexImage3D(GL_TEXTURE_3D, 0, internal_format, m_DimX, m_DimY, m_DimZ, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+    glTexImage3D(GL_TEXTURE_3D, 0, internal_format, m_DimX, m_DimY, m_DimZ, 0, format, type, nullptr);
 	glBindTexture(GL_TEXTURE_3D, 0);
-
-	glGenFramebuffers(1, &m_UtilFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
-	//GL_COLOR_ATTACHMENT0
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_TexObject, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Texture3dCompute::~Texture3dCompute()
 {
-	if (m_UtilFBO)
-	{
-		glDeleteFramebuffers(1, &m_UtilFBO);
-		m_UtilFBO = 0;
-	}
 	if (m_TexObject)
 	{
 		glDeleteTextures(1, &m_TexObject);
@@ -88,13 +77,24 @@ Texture3dCompute::~Texture3dCompute()
 
 void Texture3dCompute::CleanContent()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
-	glClearColor(1.0f, 0.0f, 0.635f, 1.0f);  //pink
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	GLuint clear_color[] = { 0,0,0,0 }; // black and transparent
+	glClearTexImage(m_TexObject, 0, m_Format, m_Type, &clear_color);
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
+	//
+	//glClearBufferuiv(GL_COLOR, 0, clear_color);
+
+	////glClearColor(1.0f, 0.0f, 0.635f, 1.0f);  //pink
+	////glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GLuint Texture3dCompute::GetTexObj() const
 {
 	return m_TexObject;
+}
+
+GLuint Texture3dCompute::GetInternalFormat() const
+{
+	return m_InternalFormat;
 }

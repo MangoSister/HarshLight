@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-#define BINDING_POINT_VOXEL_IMG 1
+#define BINDING_POINT_START_VOXEL_IMG 1
 
 enum class UniformBufferBinding : uint8_t
 {

@@ -60,8 +60,9 @@ private:
 		const char* m_Semantic;
 		TexUsage m_Usage;
         GLuint m_BindingPoint;
-		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage, GLuint binding) :
-			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage), m_BindingPoint(binding) {}
+		GLuint m_InternalFormat;
+		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage, GLuint binding, GLuint internal_format) :
+			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage), m_BindingPoint(binding), m_InternalFormat(internal_format) {}
 	};
 
     std::vector<Texture2dSlot> m_Textures2d;

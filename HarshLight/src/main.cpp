@@ -393,7 +393,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
-            mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex() , "TexVoxel", TexUsage::kImageWriteOnly, BINDING_POINT_VOXEL_IMG);
+			for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
+				mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageWriteOnly, BINDING_POINT_START_VOXEL_IMG + i);
             mat_voxelize->SetShader(voxelize_shader);
             GLuint shader_obj = mat_voxelize->GetShader()->GetProgram();
             sceneRenderer->AddMaterial(RenderPass::kVoxelize, mat_voxelize);
@@ -402,8 +403,9 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
             mat_voxel_visual->DeleteAllTextures();
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(), "TexVoxel", TexUsage::kRegularTexture, 0);
-            //mat_voxel_visual->AddTexture(voxelTex, "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_VOXEL_IMG);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(), "TexVoxel", TexUsage::kRegularTexture, 0);
+			for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
+				mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + i);
             mat_voxel_visual->SetShader(voxel_visualize_shader);
 
 			//mat_voxel_visual->DeleteTexture("TexVoxel");

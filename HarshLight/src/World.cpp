@@ -222,9 +222,10 @@ void World::Start()
 	//is executed in its Start() function
 
     //run a testing kernel
-    //cudaSurfaceObject_t surf_obj = m_VoxelizeController->TransferVoxelDataToCuda();
-    //LaunchKernelVoxelInvert(m_VoxelizeController->GetVoxelDim(), surf_obj);
-    //m_VoxelizeController->FinishVoxelDataFromCuda(surf_obj);
+	cudaSurfaceObject_t surf_objs[VoxelizeController::s_VoxelChannelNum];
+    m_VoxelizeController->TransferVoxelDataToCuda(surf_objs);
+    LaunchKernelVoxelInvert(m_VoxelizeController->GetVoxelDim(), surf_objs[0]);
+    m_VoxelizeController->FinishVoxelDataFromCuda(surf_objs);
 }
 
 void World::MainLoop()

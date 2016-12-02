@@ -10,6 +10,9 @@
 class VoxelizeController : public Component
 {
 public: 
+	static const uint32_t s_VoxelChannelNum = 2; // s_VoxelFragmentSize * 32 bit / 4 bytes
+	static const char* s_VoxelChannelNames[s_VoxelChannelNum];
+
     explicit VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam);
 	virtual ~VoxelizeController();
 
@@ -19,12 +22,12 @@ public:
     void SetVoxelDim(uint32_t dim);
     uint32_t GetVoxelDim() const;
 
-	inline const Texture3dCompute* GetVoxelizeTex()
-	{ return m_VoxelizeTex; }
+	inline const Texture3dCompute* GetVoxelizeTex(uint32_t channel)
+	{ return m_VoxelizeTex[channel]; }
 
-    cudaSurfaceObject_t TransferVoxelDataToCuda();
-	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_obj);
-	
+    void TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[s_VoxelChannelNum]);
+	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[s_VoxelChannelNum]);
+
 private:
 	
 	void DispatchVoxelization();
@@ -38,7 +41,7 @@ private:
     float m_Extent;
     Camera* m_VoxelCam;
 
-	Texture3dCompute* m_VoxelizeTex;
+	Texture3dCompute* m_VoxelizeTex[s_VoxelChannelNum];
 
-	cudaGraphicsResource* m_CudaResource;
+	cudaGraphicsResource* m_CudaResources[s_VoxelChannelNum];
 };

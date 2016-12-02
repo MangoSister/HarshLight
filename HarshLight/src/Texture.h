@@ -20,18 +20,20 @@ private:
 class Texture3dCompute
 {
 public:
-    explicit Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format);
+    explicit Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format, GLuint format, GLuint type);
 	Texture3dCompute(const Texture3dCompute& other) = delete;
 	~Texture3dCompute();
 	void CleanContent();
 	GLuint GetTexObj() const;
+	GLuint GetInternalFormat() const;
 private:
 
 	uint32_t m_DimX;
 	uint32_t m_DimY;
 	uint32_t m_DimZ;
+	GLuint m_InternalFormat;
 	GLuint m_Format;
+	GLuint m_Type;
 
 	GLuint m_TexObject;
-	GLuint m_UtilFBO;
 };

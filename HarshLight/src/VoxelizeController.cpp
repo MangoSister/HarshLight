@@ -8,23 +8,33 @@ const char* VoxelizeController::s_ViewMtxToDownName = "ViewMtxToDown";
 const char* VoxelizeController::s_ViewMtxToLeftName = "ViewMtxToLeft";
 const char* VoxelizeController::s_ViewMtxToForwardName = "ViewMtxToForward";
 
+const char* VoxelizeController::s_VoxelChannelNames[s_VoxelChannelNum]
+{
+	"Albedo",
+	"Normal",
+};
+
 VoxelizeController::VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam)
     :Component(), m_VoxelDim(dim), m_Extent(extent), m_VoxelCam(voxel_cam)
 {
-    m_VoxelizeTex = new Texture3dCompute(dim, dim, dim, GL_R32UI);
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
+		m_VoxelizeTex[i] = new Texture3dCompute(dim, dim, dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT);
 }
 
 VoxelizeController::~VoxelizeController()
 {
 	//unregister voxel_tex from cuda
-	cudaCheckError(cudaGraphicsUnregisterResource(m_CudaResource));
-
-	if (m_VoxelizeTex)
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
 	{
-		delete m_VoxelizeTex;
-		m_VoxelizeTex = nullptr;
+		cudaCheckError(cudaGraphicsUnregisterResource(m_CudaResources[i]));
+		if (m_VoxelizeTex[i])
+		{
+			delete m_VoxelizeTex[i];
+			m_VoxelizeTex[i] = nullptr;
+		}
 	}
 }
+
 
 void VoxelizeController::Start()
 {
@@ -69,9 +79,11 @@ void VoxelizeController::Start()
 	}
 
 	//register voxel texture to cuda
-	
-	cudaCheckError(cudaGraphicsGLRegisterImage(&m_CudaResource, m_VoxelizeTex->GetTexObj(), 
-					GL_TEXTURE_3D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
+	{
+		cudaCheckError(cudaGraphicsGLRegisterImage(&m_CudaResources[i], m_VoxelizeTex[i]->GetTexObj(),
+			GL_TEXTURE_3D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+	}
 
 	DispatchVoxelization();
 }
@@ -86,64 +98,66 @@ uint32_t VoxelizeController::GetVoxelDim() const
     return m_VoxelDim;
 }
 
-cudaSurfaceObject_t VoxelizeController::TransferVoxelDataToCuda()
+void VoxelizeController::TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[s_VoxelChannelNum])
 {
-	cudaCheckError(cudaGraphicsMapResources(1, &m_CudaResource, 0));
-	cudaArray* voxel_cuda_array;
-	cudaCheckError(cudaGraphicsSubResourceGetMappedArray(&voxel_cuda_array, m_CudaResource, 0, 0));
+	cudaCheckError(cudaGraphicsMapResources(s_VoxelChannelNum, m_CudaResources, 0));
+	
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
+	{		
+		cudaArray* channel_cuda_array;
+		cudaCheckError(cudaGraphicsSubResourceGetMappedArray(&channel_cuda_array, m_CudaResources[i], 0, 0));
 
-    struct cudaResourceDesc res_desc;
-    memset(&res_desc, 0, sizeof(cudaResourceDesc));
-    res_desc.resType = cudaResourceTypeArray;    // be sure to set the resource type to cudaResourceTypeArray
-    res_desc.res.array.array = voxel_cuda_array;
+		struct cudaResourceDesc res_desc;
+		memset(&res_desc, 0, sizeof(cudaResourceDesc));
+		res_desc.resType = cudaResourceTypeArray;    // be sure to set the resource type to cudaResourceTypeArray
+		res_desc.res.array.array = channel_cuda_array;
 
-    cudaSurfaceObject_t surf_obj = 0;
-    cudaCheckError(cudaCreateSurfaceObject(&surf_obj, &res_desc));
-	//cudaCheckError(cudaBindSurfaceToArray(surfaceWrite, cuda_array));
-
-    return surf_obj;
+		cudaCheckError(cudaCreateSurfaceObject(&surf_objs[i], &res_desc));
+	}
 }
 
-void VoxelizeController::FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_obj)
+void VoxelizeController::FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[s_VoxelChannelNum])
 {
     //there is no unbinding surface API
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
+		cudaCheckError(cudaDestroySurfaceObject(surf_objs[i]));
 
-    cudaCheckError(cudaDestroySurfaceObject(surf_obj));
-    cudaCheckError(cudaGraphicsUnmapResources(1, &m_CudaResource, 0));
+	cudaCheckError(cudaGraphicsUnmapResources(s_VoxelChannelNum, m_CudaResources, 0));
 }
 
 void VoxelizeController::DispatchVoxelization()
 {
-	if (m_VoxelizeTex)
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
+		if (m_VoxelizeTex[i] == nullptr) return;
+	for (uint32_t i = 0; i < s_VoxelChannelNum; i++)
+		m_VoxelizeTex[i]->CleanContent();
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glDepthMask(GL_FALSE);
+	glViewport(0, 0, m_VoxelDim, m_VoxelDim);
+
+	if (m_VoxelCam)
+		m_VoxelCam->UpdateCamMtx(UniformBufferBinding::kMainCam);
+	else
+		fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+	const RendererList& renderers = World::GetInst().GetRenderers();
+	for (ModelRenderer* renderer : renderers)
 	{
-		m_VoxelizeTex->CleanContent();
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glDepthMask(GL_FALSE);
-		glViewport(0, 0, m_VoxelDim, m_VoxelDim);
-
-		if (m_VoxelCam)
-			m_VoxelCam->UpdateCamMtx(UniformBufferBinding::kMainCam);
-		else
-			fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
-
-		const RendererList& renderers = World::GetInst().GetRenderers();
-		for (ModelRenderer* renderer : renderers)
-		{
-			renderer->Render(RenderPass::kVoxelize);
-			glMemoryBarrier(GL_ALL_BARRIER_BITS);
-		}
-
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glDepthMask(GL_TRUE);
-		uint32_t vw, vh;
-		World::GetInst().GetViewportSize(vw, vh);
-		glViewport(0, 0, vw, vh);
-
+		renderer->Render(RenderPass::kVoxelize);		
 	}
+
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDepthMask(GL_TRUE);
+	uint32_t vw, vh;
+	World::GetInst().GetViewportSize(vw, vh);
+	glViewport(0, 0, vw, vh);
+
 }
