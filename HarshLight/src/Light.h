@@ -18,7 +18,6 @@ public:
 	explicit PointLight(const glm::vec3& pos, const glm::vec4& color);
 
 	glm::vec4 m_Position;
-	//glm::vec4 m_Coefs;
 	glm::vec4 m_Color;
 };
 

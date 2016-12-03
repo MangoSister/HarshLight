@@ -25,7 +25,6 @@ struct DirLight
 struct PointLight
 {
 	vec4 position;
-	//vec4 coefs;
 	vec4 color;
 };
 
@@ -37,7 +36,6 @@ layout (std140, binding = 2) uniform LightInfo
 	vec4 PointLightAtten;
 	uint ActiveDirLights;
 	uint ActivePointLights;
-
 };
 
 uniform sampler2D TexAlbedo;
