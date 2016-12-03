@@ -23,6 +23,7 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\FrameBufferDisplay.cpp" />
+    <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
@@ -39,6 +40,7 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Component.h" />
     <ClInclude Include="src\FrameBufferDisplay.h" />
+    <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\ShaderProgram.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\Util.h" />
@@ -58,6 +60,8 @@
     <None Include="src\shaders\diffuse_vert.glsl" />
     <None Include="src\shaders\framebuffer_color_frag.glsl" />
     <None Include="src\shaders\framebuffer_color_vert.glsl" />
+    <None Include="src\shaders\local_illum_frag.glsl" />
+    <None Include="src\shaders\local_illum_vert.glsl" />
     <None Include="src\shaders\sr_frag.glsl" />
     <None Include="src\shaders\sr_vert.glsl" />
     <None Include="src\shaders\voxelize_frag.glsl" />

@@ -63,6 +63,9 @@
     <ClCompile Include="src\Texture.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Light.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -107,6 +110,9 @@
     <ClInclude Include="src\VoxelInvert.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Light.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\voxelize_vert.glsl">
@@ -149,6 +155,12 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\sr_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\local_illum_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\local_illum_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

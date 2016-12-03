@@ -9,8 +9,9 @@
 
 enum class UniformBufferBinding : uint8_t
 {
-    kMainCam = 0,
-    kVoxelSpaceReconstruct = 1,
+	kMainCam = 0,
+	kVoxelSpaceReconstruct = 1,
+	kLight = 2,
 };
 
 void APIENTRY glDebugOutput(GLenum source,

@@ -41,6 +41,11 @@ public:
 
     void SetFreeMoveSpeed(float speed);
 
+	static constexpr uint32_t GetUBufferSize()
+	{
+		return 2 * sizeof(glm::mat4) + sizeof(glm::vec3);
+	}
+
 private:
 
     mat4x4 m_Transform;

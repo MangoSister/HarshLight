@@ -16,7 +16,7 @@ Camera::Camera(float fovY, float aspect, float near, float far)
    //create camera unifrom buffer
    glGenBuffers(1, &m_CamUniformBuffer);
    glBindBuffer(GL_UNIFORM_BUFFER, m_CamUniformBuffer);
-   glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+   glBufferData(GL_UNIFORM_BUFFER, GetUBufferSize(), nullptr, GL_STATIC_DRAW);
    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 }
@@ -87,7 +87,7 @@ void Camera::Update(float dt)
 
 void Camera::UpdateCamMtx(UniformBufferBinding binding) const
 {
-	glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)binding, m_CamUniformBuffer, 0, 2 * sizeof(glm::mat4));
+	glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)binding, m_CamUniformBuffer, 0, GetUBufferSize());
 	glBindBuffer(GL_UNIFORM_BUFFER, m_CamUniformBuffer);
     mat4x4 view_mtx(1.0f);
     view_mtx[0][0] = m_Transform[0][0];  view_mtx[0][1] = m_Transform[1][0];  view_mtx[0][2] = m_Transform[2][0];
@@ -97,8 +97,11 @@ void Camera::UpdateCamMtx(UniformBufferBinding binding) const
     view_mtx[3][1] = -glm::dot(m_Transform[1], m_Transform[3]);
     view_mtx[3][2] = -glm::dot(m_Transform[2], m_Transform[3]);
 
+	glm::vec3 cam_pos(m_Transform[3]);
+
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view_mtx));
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(m_ProjMtx));
+	glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::vec3), glm::value_ptr(cam_pos));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -169,9 +172,6 @@ void Camera::LookAtDir(const vec3& dir, const vec3 & up)
     m_Transform[1] = u;
     m_Transform[2] = f;
     return;
-    m_Transform[0][0] = r[0]; m_Transform[1][0] = r[1]; m_Transform[2][0] = r[2];
-    m_Transform[0][1] = u[0]; m_Transform[1][1] = u[1]; m_Transform[2][1] = u[2];
-    m_Transform[0][2] = f[0]; m_Transform[1][2] = f[1]; m_Transform[2][2] = f[2];
 }
 
 void Camera::Rotate(const vec3 & axis, float angle_rad)
