@@ -12,14 +12,14 @@ layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
-	vec3 CamWorldPos;
+	vec4 CamWorldPos;
 };
 
 layout (std140, binding = 1) uniform VoxelCamMtx
 {
     mat4 CamVoxelViewMtx;
     mat4 CamVoxelProjMtx;
-	vec3 CamVoxelWorldPos;
+	vec4 CamVoxelWorldPos;
 };
 
 uniform mat4 Model;

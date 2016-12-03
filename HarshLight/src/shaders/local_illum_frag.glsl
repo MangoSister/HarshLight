@@ -10,7 +10,7 @@ layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
-	vec3 CamWorldPos;
+	vec4 CamWorldPos;
 };
 
 #define DIR_LIGHT_MAX_NUM 4
@@ -45,7 +45,7 @@ uniform float Shininess;
 vec3 ComputeDirLightBlinnPhong(DirLight light)
 {
 	vec3 light_dir = normalize(-light.direction.xyz);
-	vec3 view_dir = normalize(CamWorldPos - vs_WorldPosition);
+	vec3 view_dir = normalize(CamWorldPos.xyz - vs_WorldPosition);
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(vs_WorldNormal, light_dir), 0.0);
@@ -58,7 +58,7 @@ vec3 ComputeDirLightBlinnPhong(DirLight light)
 vec3 ComputePointLightBlinnPhong(PointLight light)
 {
 	vec3 light_dir = normalize(light.position.xyz - vs_WorldPosition);
-	vec3 view_dir = normalize(CamWorldPos - vs_WorldPosition);
+	vec3 view_dir = normalize(CamWorldPos.xyz - vs_WorldPosition);
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(vs_WorldNormal, light_dir), 0.0);

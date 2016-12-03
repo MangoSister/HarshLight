@@ -410,7 +410,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			mat_voxel_visual->DeleteTexture("TexVoxel");
             
 			mat_voxel_visual->SetShader(local_illum_shader);
-            mat_voxel_visual->SetFloatParam("Shininess", 1.0f);
+            mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
             
             GLuint shader_obj = mat_voxel_visual->GetShader()->GetProgram();
             //set voxel camera matrices
