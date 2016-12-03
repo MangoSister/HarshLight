@@ -15,14 +15,15 @@ layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
+	vec3 CamWorldPos;
 };
 
 layout (std140, binding = 1) uniform VoxelCamMtx
 {
     mat4 CamVoxelViewMtx;
     mat4 CamVoxelProjMtx;
+	vec3 CamVoxelWorldPos;
 };
-
 
 vec4 ColorUintToVec4(uint val) 
 {

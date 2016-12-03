@@ -97,11 +97,11 @@ void Camera::UpdateCamMtx(UniformBufferBinding binding) const
     view_mtx[3][1] = -glm::dot(m_Transform[1], m_Transform[3]);
     view_mtx[3][2] = -glm::dot(m_Transform[2], m_Transform[3]);
 
-	glm::vec3 cam_pos(m_Transform[3]);
+	glm::vec3 cam_world_pos(m_Transform[3]);
 
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view_mtx));
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(m_ProjMtx));
-	glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::vec3), glm::value_ptr(cam_pos));
+	glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::vec3), glm::value_ptr(cam_world_pos));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 

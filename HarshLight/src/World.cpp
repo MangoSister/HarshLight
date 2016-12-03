@@ -198,6 +198,11 @@ const RendererList& World::GetRenderers() const
 	return m_Renderers;
 }
 
+LightManager & World::GetLightManager()
+{
+    return m_LightManager;
+}
+
 const void World::GetViewportSize(uint32_t & width, uint32_t & height) const
 {
 	width = m_ViewportWidth;
@@ -241,6 +246,8 @@ void World::MainLoop()
         assert(comp != nullptr);
         comp->Update(elapsed);
     }
+
+    m_LightManager.UpdateLight(UniformBufferBinding::kLight);
 
     if (GetKey(GLFW_KEY_Z) == GLFW_PRESS)
         m_RenderPassSwitch[0] = !m_RenderPassSwitch[0];

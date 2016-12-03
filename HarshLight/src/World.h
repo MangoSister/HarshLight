@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "FrameBufferDisplay.h"
 #include "VoxelizeController.h"
+#include "Light.h"
 
 #include "GLFW/glfw3.h"
 #include <chrono>
@@ -64,6 +65,8 @@ public:
 
 	const RendererList& GetRenderers() const;
 
+    LightManager& GetLightManager();
+
 	const void GetViewportSize(uint32_t& width, uint32_t& height) const;
 
     void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
@@ -97,6 +100,7 @@ private:
 	ShaderList m_Shaders;
     Texture2dDict m_Textures2d;
 	Texture3dList m_Textures3d;
+    LightManager m_LightManager;
 
 	/*----------------  Convenience Lists --------------*/
     ComponentList m_Components;

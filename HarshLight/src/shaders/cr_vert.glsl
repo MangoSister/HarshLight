@@ -11,6 +11,7 @@ layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
+	vec3 CamWorldPos;
 };
 
 
@@ -21,5 +22,6 @@ void main()
     gl_Position = Proj * View *  Model * vec4(app_Position, 1.0);
 	vs_Texcoord = app_Uv;
 	vs_WorldPosition = vec3(Model * vec4(app_Position, 1.0));
-	vs_WorldNormal = normalize(mat3(Model) * app_Normal);
+	vs_WorldNormal = (transpose(inverse(Model)) * vec4(app_Normal, 0.0)).xyz;
+	vs_WorldNormal = normalize(vs_WorldNormal);
 }

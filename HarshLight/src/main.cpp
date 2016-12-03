@@ -300,11 +300,11 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
 
 
-    ShaderProgram* diffuse_shader = new ShaderProgram();
-    diffuse_shader->AddVertShader("src/shaders/diffuse_vert.glsl");
-    diffuse_shader->AddFragShader("src/shaders/diffuse_frag.glsl");
-    diffuse_shader->LinkProgram();
-    World::GetInst().RegisterShader(diffuse_shader);
+    ShaderProgram* local_illum_shader = new ShaderProgram();
+    local_illum_shader->AddVertShader("src/shaders/local_illum_vert.glsl");
+    local_illum_shader->AddFragShader("src/shaders/local_illum_frag.glsl");
+    local_illum_shader->LinkProgram();
+    World::GetInst().RegisterShader(local_illum_shader);
 
 
 
@@ -402,14 +402,15 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-            mat_voxel_visual->DeleteAllTextures();	
-			for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
-				mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + i);
-            mat_voxel_visual->SetShader(voxel_visualize_shader);
+   //         mat_voxel_visual->DeleteAllTextures();	
+			//for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
+			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + i);
+   //         mat_voxel_visual->SetShader(voxel_visualize_shader);
 
-			//mat_voxel_visual->DeleteTexture("TexVoxel");
-			//mat_voxel_visual->SetShader(diffuse_shader);
-
+			mat_voxel_visual->DeleteTexture("TexVoxel");
+            
+			mat_voxel_visual->SetShader(local_illum_shader);
+            mat_voxel_visual->SetFloatParam("Shininess", 1.0f);
             
             GLuint shader_obj = mat_voxel_visual->GetShader()->GetProgram();
             //set voxel camera matrices
@@ -422,10 +423,17 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     }
     World::GetInst().RegisterActor(sceneActor);
 
+    /* --------------  Lights  ----------- */
+    LightManager& light_manager = World::GetInst().GetLightManager();
+    light_manager.SetAmbient(glm::vec3(0.1f, 0.1f, 0.1f)); 
+    light_manager.AddDirLight(DirLight(glm::vec3(0.433f, -0.5f, 0.433f), glm::vec4(0.8f, 0.77f, 0.55f, 1.0f)));
+    light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 3.0f)));
+    light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
+
     /* --------------  Frame Buffer Display  ----------- */
     // frame buffer display quad
     Model* quad = new Model(Model::Primitive::kQuad);
-    World::GetInst().RegisterModel(quad);
+    World::GetInst().RegisterModel(quad); 
 
     Actor* frameDisplayActor = new Actor();
   

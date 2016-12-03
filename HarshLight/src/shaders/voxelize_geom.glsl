@@ -7,7 +7,9 @@ layout (std140, binding = 0) uniform MainCamMtx
 {
     mat4 View;
     mat4 Proj;
+	vec3 CamWorldPos;
 };
+
 
 uniform vec2 VoxelDim;
 uniform mat4 ViewMtxToDown;
