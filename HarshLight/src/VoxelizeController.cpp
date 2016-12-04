@@ -86,17 +86,20 @@ void VoxelizeController::Start()
 {
     glm::mat4x4 old_transform = m_VoxelCam->GetTransform();
 
-    const uint32_t max_extent = std::max(m_Extent.x, std::max(m_Extent.y, m_Extent.z));
+    const float max_extent = std::max(m_Extent.x, std::max(m_Extent.y, m_Extent.z));
 
-    m_VoxelCam->MoveTo(m_Center + glm::vec3(0.0f, max_extent, 0.0f));
+    glm::vec3 pos = m_Center + glm::vec3(0.0f, max_extent, 0.0f);
+    m_VoxelCam->MoveTo(pos);
     m_VoxelCam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     glm::mat4x4 view_to_down = m_VoxelCam->GetViewMtx();
 
-    m_VoxelCam->MoveTo(m_Center + glm::vec3(max_extent, 0.0, 0.0f));
+    pos = m_Center + glm::vec3(max_extent, 0.0, 0.0f);
+    m_VoxelCam->MoveTo(pos);
     m_VoxelCam->LookAtDir(glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4x4 view_to_left = m_VoxelCam->GetViewMtx();
 
-    m_VoxelCam->MoveTo(m_Center + glm::vec3(0.0f, 0.0f, -max_extent));
+    pos = m_Center + glm::vec3(0.0f, 0.0f, -max_extent);
+    m_VoxelCam->MoveTo(pos);
     m_VoxelCam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4x4 view_to_forward = m_VoxelCam->GetViewMtx();
 
@@ -245,7 +248,7 @@ void VoxelizeController::DispatchLightInjection()
         //compute light space bounding box
         glm::vec3 min, max;
         LightSpaceBBox(dir_light, min, max);
-        glm::mat4x4 light_proj_mtx = glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
+        glm::mat4x4 light_proj_mtx = glm::ortho(min.x, max.x, min.y, max.y, -max.z, -min.z);
 
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(light_mtx));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(light_proj_mtx));
@@ -275,17 +278,19 @@ void VoxelizeController::LightSpaceBBox(const DirLight& light, glm::vec3& min, g
     min.x = min.y = min.z = FLT_MAX;
     max.x = max.y = max.z = FLT_MIN;
 
+    glm::vec4 center4(m_Center.x, m_Center.y, m_Center.z, 0.0f);
+
     glm::vec4 bbox[8]
     {
-        { -m_Extent.x, -m_Extent.y, -m_Extent.z, 1.0f },
-        { -m_Extent.x, -m_Extent.y, m_Extent.z, 1.0f },
-        { -m_Extent.x, m_Extent.y, -m_Extent.z, 1.0f },
-        { -m_Extent.x, m_Extent.y, m_Extent.z, 1.0f },
+        center4 + glm::vec4{ -m_Extent.x, -m_Extent.y, -m_Extent.z, 1.0f },
+        center4 + glm::vec4{ -m_Extent.x, -m_Extent.y, m_Extent.z, 1.0f },
+        center4 + glm::vec4{ -m_Extent.x, m_Extent.y, -m_Extent.z, 1.0f },
+        center4 + glm::vec4{ -m_Extent.x, m_Extent.y, m_Extent.z, 1.0f },
 
-        { m_Extent.x, -m_Extent.y, -m_Extent.z, 1.0f },
-        { m_Extent.x, -m_Extent.y, m_Extent.z, 1.0f },
-        { m_Extent.x, m_Extent.y, -m_Extent.z, 1.0f },
-        { m_Extent.x, m_Extent.y, m_Extent.z, 1.0f },
+        center4 + glm::vec4{ m_Extent.x, -m_Extent.y, -m_Extent.z, 1.0f },
+        center4 + glm::vec4{ m_Extent.x, -m_Extent.y, m_Extent.z, 1.0f },
+        center4 + glm::vec4{ m_Extent.x, m_Extent.y, -m_Extent.z, 1.0f },
+        center4 + glm::vec4{ m_Extent.x, m_Extent.y, m_Extent.z, 1.0f },
     };
 
     for (uint32_t i = 0; i < 8; i++)
@@ -293,17 +298,17 @@ void VoxelizeController::LightSpaceBBox(const DirLight& light, glm::vec3& min, g
         glm::vec4 curr = light.m_LightMtx * bbox[i];
         if (curr.x < min.x)
             min.x = curr.x;
-        else if (curr.x > max.x)
+        if (curr.x > max.x)
             max.x = curr.x;
 
         if (curr.y < min.y)
             min.y = curr.y;
-        else if (curr.y > max.y)
+        if (curr.y > max.y)
             max.y = curr.y;
 
         if (curr.z < min.z)
             min.z = curr.z;
-        else if (curr.z > max.z)
+        if (curr.z > max.z)
             max.z = curr.z;
     }
 }

@@ -335,7 +335,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     /* --------------  Cameras  ----------- */
     const uint32_t voxel_dim = 256;
 	const uint32_t light_injection_res = 1024;
-    const glm::vec3 voxelize_extent(1000.0f, 700.0f, 700.0f);
+    const glm::vec3 voxelize_center(0.0f, 300.0f, 0.0f);
+    const glm::vec3 voxelize_extent(1000.0f, 450.0f, 600.0f);
     const float max_extent = std::max(voxelize_extent.x, std::max(voxelize_extent.y, voxelize_extent.z));
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
@@ -401,7 +402,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     Actor* sceneActor = new Actor(); 
 
 	//voxelization controller
-	VoxelizeController* voxel_ctrl = new VoxelizeController(voxel_dim, light_injection_res, glm::vec3(0.0f), voxelize_extent, World::GetInst().GetVoxelCamera());
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxel_dim, light_injection_res, voxelize_center, voxelize_extent, World::GetInst().GetVoxelCamera());
 	World::GetInst().m_VoxelizeController = voxel_ctrl;
 	sceneActor->AddComponent(voxel_ctrl);
 
@@ -467,7 +468,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     LightManager& light_manager = World::GetInst().GetLightManager();
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
     //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
-    light_manager.AddDirLight(DirLight(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
+    light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 3.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
