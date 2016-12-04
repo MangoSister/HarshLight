@@ -13,9 +13,10 @@ namespace RenderPass
     {
         kNone = 0x00,
         kVoxelize = 0x01,
-        kRegular = 0x02,
-        kPost = 0x04,
-        kCount = 3,
+		kLightInjection = 0x02,
+        kRegular = 0x04, 
+		kPost = 0x08,
+        kCount = 4,
     };
 }
 
@@ -42,8 +43,9 @@ protected:
     Model* m_Model;
 
 	RenderPassFlag m_RenderPassFlag;
-    std::vector<Material*> m_Materials;
 	std::vector<Material*> m_VoxelizeMaterials;
+	std::vector<Material*> m_LightInjectionMaterials;
+    std::vector<Material*> m_Materials;	
 	std::vector<Material*> m_PostMaterials;
 
 };

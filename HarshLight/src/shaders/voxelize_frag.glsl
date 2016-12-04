@@ -21,7 +21,7 @@ layout (std140, binding = 0) uniform MainCamMtx
 uniform vec2 VoxelDim;
 
 uniform sampler2D TexAlbedo;
-layout (binding = 1, r32ui) coherent volatile uniform uimage3D TexVoxel;
+layout (binding = 1, r32ui) coherent volatile uniform uimage3D TexVoxelAlbedo;
 layout (binding = 2, r32ui) coherent volatile uniform uimage3D TexVoxelNormal;
 
 //dummy output
@@ -209,9 +209,9 @@ void main()
 	{	
 		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, next) )
 		{
-			AccumulateAlbedo(TexVoxel, next, fragColor);
+			AccumulateAlbedo(TexVoxelAlbedo, next, fragColor);
 			AccumulateNormal(TexVoxelNormal, next, gs_WorldNormal);
-			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
+			//imageStore(TexVoxelAlbedo[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
 		}
 	}
 
@@ -221,9 +221,9 @@ void main()
 	{
 		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) + gs_ProjDir) )
 		{
-			AccumulateAlbedo(TexVoxel, next, fragColor);
+			AccumulateAlbedo(TexVoxelAlbedo, next, fragColor);
 			AccumulateNormal(TexVoxelNormal, next, gs_WorldNormal);
-			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
+			//imageStore(TexVoxelAlbedo[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
 		}
 	}
 
@@ -232,9 +232,9 @@ void main()
 	{
 		if( TriangleVoxelTest(tri_min, tri_max, tri_normal, tri_plane_d, edge, ivec3(gs_VoxelCoord) - gs_ProjDir) )
 		{
-			AccumulateAlbedo(TexVoxel, next, fragColor);
+			AccumulateAlbedo(TexVoxelAlbedo, next, fragColor);
 			AccumulateNormal(TexVoxelNormal, next, gs_WorldNormal);
-			//imageStore(TexVoxel[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
+			//imageStore(TexVoxelAlbedo[0], next, uvec4(u32_fragColor, 0xFF00FFFF, 0xFF00FFFF, 0xFF00FFFF));
 		}
 	}
 

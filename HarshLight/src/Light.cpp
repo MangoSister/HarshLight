@@ -1,7 +1,27 @@
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "Light.h"
 
-DirLight::DirLight(const glm::vec3& direction, const glm::vec4& color) : m_Direction(direction.x, direction.y, direction.z, 0.0f), m_Color(color) { }
+DirLight::DirLight(const glm::vec3& direction, const glm::vec4& color) : m_Direction(direction.x, direction.y, direction.z, 0.0f), m_Color(color), m_LightMtx(1.0f) { }
+void DirLight::UpdateLightMtx()
+{
+	glm::vec3 up(0.0f, 1.0f, 0.0f);
+	if (m_Direction.y == 1.0f)
+		up = glm::vec3(0.0f, 0.0f, -1.0f);
+	else if(m_Direction.y == -1.0f)
+		up = glm::vec3(0.0f, 0.0f, 1.0f);
+
+	glm::vec3 dir(m_Direction.x, m_Direction.y, m_Direction.z);
+
+	const glm::vec4 r = glm::vec4(normalize(cross(up, dir)), 0.0f);
+	const glm::vec4 u = glm::vec4(normalize(cross(dir, glm::vec3(r))), 0.0f);
+	const glm::vec4 f = glm::vec4(-normalize(dir), 0.0f);
+
+	m_LightMtx[0][0] = r[0];  m_LightMtx[0][1] = u[0];  m_LightMtx[0][2] = f[0];
+	m_LightMtx[1][0] = r[1];  m_LightMtx[1][1] = u[1];  m_LightMtx[1][2] = f[1];
+	m_LightMtx[2][0] = r[2];  m_LightMtx[2][1] = u[2];  m_LightMtx[2][2] = f[2];
+}
 PointLight::PointLight(const glm::vec3& pos, const glm::vec4& color) : m_Position(pos.x, pos.y, pos.z, 1.0f), m_Color(color) { }
 
 LightManager::LightManager() : m_LightUBuffer(0)
@@ -32,6 +52,9 @@ LightManager::~LightManager()
 
 void LightManager::UpdateLight(UniformBufferBinding binding)
 {
+	for (uint32_t i = 0; i < m_DirLights.size(); i++)
+		m_DirLights[i].UpdateLightMtx();
+	
 	glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)binding, m_LightUBuffer, 0, GetLightUBufferSize());
     //glBindBuffer(GL_UNIFORM_BUFFER, m_LightUBuffer);
     uint32_t offset = 0;
@@ -126,12 +149,12 @@ PointLight& LightManager::GetPointLight(uint32_t idx)
 
 uint32_t LightManager::GetDirLightCount() const
 {
-    return m_DirLights.size();
+	return static_cast<uint32_t>(m_DirLights.size());
 }
 
 uint32_t LightManager::GetPointLightCount() const
 {
-    return m_PointLights.size();
+    return static_cast<uint32_t>(m_PointLights.size());
 }
 
 void LightManager::DeleteDirLight(uint32_t idx)

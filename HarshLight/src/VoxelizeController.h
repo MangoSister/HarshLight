@@ -7,17 +7,27 @@
 #include <cuda_gl_interop.h>
 #include <cuda_runtime.h>
 
+namespace VoxelChannel
+{
+	enum
+	{
+		TexVoxelAlbedo = 0,
+		TexVoxelNormal = 1,
+		TexVoxelRadiance = 2,
+		Count = 3,
+	};
+};
+
 class VoxelizeController : public Component
 {
 public: 
-	static const uint32_t s_VoxelChannelNum = 2; // s_VoxelFragmentSize * 32 bit / 4 bytes
-	static const char* s_VoxelChannelNames[s_VoxelChannelNum];
+	static const char* s_VoxelChannelNames[VoxelChannel::Count];
 
-    explicit VoxelizeController(uint32_t dim, float extent, Camera* voxel_cam);
+    explicit VoxelizeController(uint32_t voxel_dim, uint32_t light_injection_res, float extent, Camera* voxel_cam);
 	virtual ~VoxelizeController();
 
     void Start() override;
-    void Update(float dt) override { }
+	void Update(float dt) override;
     
     void SetVoxelDim(uint32_t dim);
     uint32_t GetVoxelDim() const;
@@ -25,23 +35,28 @@ public:
 	inline const Texture3dCompute* GetVoxelizeTex(uint32_t channel)
 	{ return m_VoxelizeTex[channel]; }
 
-    void TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[s_VoxelChannelNum]);
-	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[s_VoxelChannelNum]);
+    void TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
+	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 
 private:
 	
 	void DispatchVoxelization();
+	void DispatchLightInjection();
 
     static const char* s_VoxelDimName;
     static const char* s_ViewMtxToDownName;
     static const char* s_ViewMtxToLeftName;
     static const char* s_ViewMtxToForwardName;
 
-    uint32_t m_VoxelDim;
+    uint32_t m_VoxelDim = 256;
     float m_Extent;
     Camera* m_VoxelCam;
 
-	Texture3dCompute* m_VoxelizeTex[s_VoxelChannelNum];
+	Texture3dCompute* m_VoxelizeTex[VoxelChannel::Count];
+	cudaGraphicsResource* m_CudaResources[VoxelChannel::Count];
 
-	cudaGraphicsResource* m_CudaResources[s_VoxelChannelNum];
+	uint32_t m_LightInjectionRes = 1024;
+	GLuint m_LightViewUBuffer;
+	GLuint m_DepthFBO;
+	GLuint m_DepthMap;
 };

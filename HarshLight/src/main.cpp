@@ -214,7 +214,7 @@ void CreateCRTestScene()
 
 
     /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, 0.0f, World::GetInst().GetVoxelCamera());
+    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, test_dim, 0.0f, World::GetInst().GetVoxelCamera());
     cr_triActor->AddComponent(voxel_ctrl);
 
     World::GetInst().RegisterActor(cr_triActor);
@@ -290,15 +290,11 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     voxelize_shader->LinkProgram();
     World::GetInst().RegisterShader(voxelize_shader);
 
-
-
     ShaderProgram* voxel_visualize_shader = new ShaderProgram();
     voxel_visualize_shader->AddVertShader("src/shaders/voxel_visualize_vert.glsl");
     voxel_visualize_shader->AddFragShader("src/shaders/voxel_visualize_frag.glsl");
     voxel_visualize_shader->LinkProgram();
     World::GetInst().RegisterShader(voxel_visualize_shader);
-
-
 
     ShaderProgram* local_illum_shader = new ShaderProgram();
     local_illum_shader->AddVertShader("src/shaders/local_illum_vert.glsl");
@@ -306,6 +302,11 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     local_illum_shader->LinkProgram();
     World::GetInst().RegisterShader(local_illum_shader);
 
+	ShaderProgram* light_injection_shader = new ShaderProgram();
+	light_injection_shader->AddVertShader("src/shaders/light_injection_vert.glsl");
+	light_injection_shader->AddFragShader("src/shaders/light_injection_frag.glsl");
+	light_injection_shader->LinkProgram();
+	World::GetInst().RegisterShader(light_injection_shader);
 
 
     ShaderProgram* framebuffer_display_shader = new ShaderProgram();
@@ -319,7 +320,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     printf("Loading scene started\n");
 
     /* --------------  Cameras  ----------- */
-    const uint32_t voxelDim = 256;
+    const uint32_t voxel_dim = 256;
+	const uint32_t light_injection_res = 1024;
     const float voxelize_extent = 1000.0f;
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
@@ -381,7 +383,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     Actor* sceneActor = new Actor(); 
 
 	//voxelization controller
-	VoxelizeController* voxel_ctrl = new VoxelizeController(voxelDim, voxelize_extent, World::GetInst().GetVoxelCamera());
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxel_dim, light_injection_res, voxelize_extent, World::GetInst().GetVoxelCamera());
 	World::GetInst().m_VoxelizeController = voxel_ctrl;
 	sceneActor->AddComponent(voxel_ctrl);
 
@@ -389,35 +391,39 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     sceneActor->AddRenderer(sceneRenderer);
     sceneRenderer->MoveTo({ 0.0f, 0.0f, 0.0f });
     sceneRenderer->ScaleTo({ 0.5f, 0.5f, 0.5f });
-    sceneRenderer->SetRenderPass((RenderPassFlag)(RenderPass::kVoxelize | RenderPass::kRegular));
+    sceneRenderer->SetRenderPass((RenderPassFlag)(RenderPass::kVoxelize | RenderPass::kLightInjection | RenderPass::kRegular));
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
-			for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
-				mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageWriteOnly, BINDING_POINT_START_VOXEL_IMG + i);
+			mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
+			mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
             mat_voxelize->SetShader(voxelize_shader);
-            GLuint shader_obj = mat_voxelize->GetShader()->GetProgram();
+
             sceneRenderer->AddMaterial(RenderPass::kVoxelize, mat_voxelize);
         }
 
+		{
+			Material* mat_light_injection = new Material(*mat_voxelize);
+			mat_light_injection->DeleteAllTextures();
+			mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
+			mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
+			mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
+			mat_light_injection->SetShader(light_injection_shader);
+			sceneRenderer->AddMaterial(RenderPass::kLightInjection, mat_light_injection);
+		}
+
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-   //         mat_voxel_visual->DeleteAllTextures();	
-			//for (uint32_t i = 0; i < VoxelizeController::s_VoxelChannelNum; i++)
-			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(i), "TexVoxel", TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + i);
-   //         mat_voxel_visual->SetShader(voxel_visualize_shader);
+            mat_voxel_visual->DeleteAllTextures();	
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
+            mat_voxel_visual->SetShader(voxel_visualize_shader);
 
-			mat_voxel_visual->DeleteTexture("TexVoxel");
+			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
+			//mat_voxel_visual->SetShader(local_illum_shader);
+   //         mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
             
-			mat_voxel_visual->SetShader(local_illum_shader);
-            mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
-            
-            GLuint shader_obj = mat_voxel_visual->GetShader()->GetProgram();
-            //set voxel camera matrices
-            glm::mat4x4 voxel_view = World::GetInst().GetVoxelCamera()->GetViewMtx();
-            glm::mat4x4 voxel_proj = World::GetInst().GetVoxelCamera()->GetProjMtx();
-           // glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelViewMtx"), 1, glm::value_ptr(voxel_view));
-           // glUniform4fv(glGetUniformLocation(shader_obj, "CamVoxelProjMtx"), 1, glm::value_ptr(voxel_proj));
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
         }
     }
@@ -425,8 +431,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     /* --------------  Lights  ----------- */
     LightManager& light_manager = World::GetInst().GetLightManager();
-    light_manager.SetAmbient(glm::vec3(0.1f, 0.1f, 0.1f)); 
-    light_manager.AddDirLight(DirLight(glm::vec3(0.433f, -0.5f, 0.433f), glm::vec4(0.8f, 0.77f, 0.55f, 1.0f)));
+    light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
+    light_manager.AddDirLight(DirLight(glm::vec3(0.433f, -0.5f, 0.433f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 3.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
@@ -437,7 +443,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     Actor* frameDisplayActor = new Actor();
   
-    FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxelDim, true, true, GL_FILL);
+    FrameBufferDisplay* voxelViewDisplay = new FrameBufferDisplay(quad, voxel_dim, true, true, GL_FILL);
     frameDisplayActor->AddRenderer(voxelViewDisplay);
     voxelViewDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
     voxelViewDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });

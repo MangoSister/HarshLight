@@ -163,6 +163,18 @@
     <None Include="src\shaders\local_illum_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="src\shaders\light_injection_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\light_injection_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\depth_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\depth_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VoxelInvert.cu">

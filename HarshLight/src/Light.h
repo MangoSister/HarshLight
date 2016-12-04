@@ -10,6 +10,9 @@ public:
 
 	glm::vec4 m_Direction;
 	glm::vec4 m_Color;
+	glm::mat4x4 m_LightMtx;
+
+	void UpdateLightMtx();
 };
 
 struct PointLight
@@ -19,6 +22,7 @@ public:
 
 	glm::vec4 m_Position;
 	glm::vec4 m_Color;
+
 };
 
 class LightManager
@@ -30,7 +34,8 @@ public:
 	void UpdateLight(UniformBufferBinding binding);
 
 	static const uint32_t s_DirLightMaxNum = 4;
-	static const uint32_t s_PointLightMaxNum = 8;
+	static const uint32_t s_PointLightMaxNum = 4;
+
     static constexpr uint32_t GetLightUBufferSize()
     {
         return s_DirLightMaxNum * sizeof(DirLight) +

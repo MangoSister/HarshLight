@@ -7,9 +7,10 @@ in vec3 vs_WorldNormal;
 out vec4 fragColor;
 
 uniform sampler2D TexAlbedo;
-layout (binding = 1, r32ui) coherent volatile uniform uimage3D TexVoxel;
+layout (binding = 1, r32ui) coherent volatile uniform uimage3D TexVoxelAlbedo;
 layout (binding = 2, r32ui) coherent volatile uniform uimage3D TexVoxelNormal;
-//uniform usampler3D TexVoxel; //r32ui
+layout (binding = 3, r32ui) coherent volatile uniform uimage3D TexVoxelRadiance;
+//uniform usampler3D TexVoxelAlbedo; //r32ui
 
 layout (std140, binding = 0) uniform MainCamMtx
 {
@@ -40,16 +41,16 @@ vec4 ColorUintToVec4(uint val)
 
 void main()
 {
-	ivec3 dim = imageSize(TexVoxelNormal);
+	ivec3 dim = imageSize(TexVoxelRadiance);
 	vec3 dim_v = vec3(float(dim.x), float(dim.y), float(dim.z));
 	ivec3 load_coord = ivec3(dim_v * vs_VoxelCoord);
-	uvec4 val = imageLoad(TexVoxelNormal, load_coord);
+	uvec4 val = imageLoad(TexVoxelRadiance, load_coord);
 	vec4 dec_val = ColorUintToVec4(val.x);
-	dec_val.xyz = dec_val.xyz * 2.0 - vec3(1.0);
-	dec_val.xyz = normalize(dec_val.xyz);
-	dec_val.xyz = 0.5 * (dec_val.xyz + vec3(1.0));
-	//dec_val.xyz = ((View * vec4(dec_val.xyz, 0.0)).xyz);
+	
+	//dec_val.xyz = dec_val.xyz * 2.0 - vec3(1.0);
+	//dec_val.xyz = normalize(dec_val.xyz);
 	//dec_val.xyz = 0.5 * (dec_val.xyz + vec3(1.0));
+
 	fragColor = vec4(dec_val.xyz, 1.0);
 	//fragColor = vec4(dec_val.w * 20);
 	//fragColor.w = 1.0;

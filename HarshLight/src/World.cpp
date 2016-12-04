@@ -227,7 +227,7 @@ void World::Start()
 	//is executed in its Start() function
 
     //run a testing kernel
-	cudaSurfaceObject_t surf_objs[VoxelizeController::s_VoxelChannelNum];
+	cudaSurfaceObject_t surf_objs[VoxelChannel::Count];
     m_VoxelizeController->TransferVoxelDataToCuda(surf_objs);
     LaunchKernelVoxelInvert(m_VoxelizeController->GetVoxelDim(), surf_objs[0]);
     m_VoxelizeController->FinishVoxelDataFromCuda(surf_objs);
@@ -240,14 +240,16 @@ void World::MainLoop()
 	//fps: 1 / elapsed
 	m_LastTime = m_CurrTime;
 
+	m_LightManager.UpdateLight(UniformBufferBinding::kLight);
     /*--------- CPU update ---------*/
     for (Component* comp : m_Components)
     {
         assert(comp != nullptr);
         comp->Update(elapsed);
     }
-
-    m_LightManager.UpdateLight(UniformBufferBinding::kLight);
+	/*--------- pass 1: light injection ---------*/
+	//m_VoxelizeController->DispatchLightInjection();
+	//is executed in its Update() function
 
     if (GetKey(GLFW_KEY_Z) == GLFW_PRESS)
         m_RenderPassSwitch[0] = !m_RenderPassSwitch[0];
@@ -261,10 +263,8 @@ void World::MainLoop()
     glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
     glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
-   
-	//glGetTexImage(m_TexObject, 0, )
 
-    /*--------- pass 1: regular render to default frame buffer ---------*/
+    /*--------- pass 2: regular render to default frame buffer ---------*/
     if (m_RenderPassSwitch[0])
     {
         if (m_MainCamera)
@@ -284,7 +284,7 @@ void World::MainLoop()
 
     if (m_RenderPassSwitch[1])
     {
-        /*--------- pass 2: regular render to frame buffer displays ---------*/
+        /*--------- pass 3: regular render to frame buffer displays ---------*/
         if (m_VoxelizeCamera)
             m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
         else
@@ -304,7 +304,7 @@ void World::MainLoop()
                 renderer->Render(RenderPass::kRegular);
         }
 
-        /*--------- pass 3: render frame buffer displays as overlay ---------*/
+        /*--------- pass 4: render frame buffer displays as overlay ---------*/
         if (m_MainCamera)
             m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
         else

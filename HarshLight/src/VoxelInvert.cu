@@ -41,5 +41,5 @@ void KernelTestWriteSurface(uint32_t voxel_dim, cudaSurfaceObject_t surf_obj)
     //element.y = 0xFF - element.y;
     //element.z = 0xFF - element.z;
     //element.w = element.w;
-    surf3Dwrite(element, surf_obj, x * sizeof(uint32_t), y, z);
+    //surf3Dwrite(element, surf_obj, x * sizeof(uint32_t), y, z);
 }

@@ -169,7 +169,6 @@ void Camera::LookAtDir(const vec3& dir, const vec3 & up)
     m_Transform[0] = r;
     m_Transform[1] = u;
     m_Transform[2] = f;
-    return;
 }
 
 void Camera::Rotate(const vec3 & axis, float angle_rad)

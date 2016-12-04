@@ -13,13 +13,15 @@ layout (std140, binding = 0) uniform MainCamMtx
 	vec4 CamWorldPos;
 };
 
+/* --------------  Lighting Info  ----------- */
 #define DIR_LIGHT_MAX_NUM 4
-#define POINT_LIGHT_MAX_NUM 8
+#define POINT_LIGHT_MAX_NUM 4
 
 struct DirLight
 {
 	vec4 direction;
 	vec4 color;
+	mat4 lightMtx;
 };
 
 struct PointLight
@@ -37,10 +39,10 @@ layout (std140, binding = 2) uniform LightInfo
 	uint ActiveDirLights;
 	uint ActivePointLights;
 };
+/* --------------------------------------- */
 
 uniform sampler2D TexAlbedo;
 uniform float Shininess;
-
 
 vec3 ComputeDirLightBlinnPhong(DirLight light)
 {
@@ -57,14 +59,18 @@ vec3 ComputeDirLightBlinnPhong(DirLight light)
 
 vec3 ComputePointLightBlinnPhong(PointLight light)
 {
-	vec3 light_dir = normalize(light.position.xyz - vs_WorldPosition);
+	float dist = length(light.position.xyz - vs_WorldPosition);
+	float atten = light.color.w / (PointLightAtten.x + PointLightAtten.y * dist + PointLightAtten.z * dist * dist);
+	if(atten < 0.001)
+		return vec3(0.0);
+
+	vec3 light_dir = (light.position.xyz - vs_WorldPosition) / dist;
 	vec3 view_dir = normalize(CamWorldPos.xyz - vs_WorldPosition);
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(vs_WorldNormal, light_dir), 0.0);
 	float spec_intensity = pow(max(dot(vs_WorldNormal, half_dir), 0.0), Shininess);
-	float dist = length(light.position.xyz - vs_WorldPosition);
-	float atten = light.color.w / (PointLightAtten.x + PointLightAtten.y * dist + PointLightAtten.z * dist * dist);
+
 	return vec3(diffuse_intensity + spec_intensity) * atten * light.color.xyz;
 }
 
