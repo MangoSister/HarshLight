@@ -175,6 +175,12 @@
     <None Include="src\shaders\depth_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="src\shaders\depth_display_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\depth_display_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VoxelInvert.cu">

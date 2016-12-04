@@ -149,6 +149,7 @@ int main(int argc, char* argv[])
 
 void CreateCRTestScene()
 {
+    const glm::vec3 test_extent(16, 16, 16);
     const uint32_t test_dim = 16;
     /* --------------  Shaders  ----------- */
     ShaderProgram* cr_shader = new ShaderProgram();
@@ -214,7 +215,7 @@ void CreateCRTestScene()
 
 
     /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, test_dim, 0.0f, World::GetInst().GetVoxelCamera());
+    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, test_dim, glm::vec3(0.0f), test_extent, World::GetInst().GetVoxelCamera());
     cr_triActor->AddComponent(voxel_ctrl);
 
     World::GetInst().RegisterActor(cr_triActor);
@@ -302,6 +303,18 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     local_illum_shader->LinkProgram();
     World::GetInst().RegisterShader(local_illum_shader);
 
+    ShaderProgram* depth_only_shader = new ShaderProgram();
+    depth_only_shader->AddVertShader("src/shaders/depth_vert.glsl");
+    depth_only_shader->AddFragShader("src/shaders/depth_frag.glsl");
+    depth_only_shader->LinkProgram();
+    World::GetInst().RegisterShader(depth_only_shader);
+
+    ShaderProgram* depth_display_shader = new ShaderProgram();
+    depth_display_shader->AddVertShader("src/shaders/depth_display_vert.glsl");
+    depth_display_shader->AddFragShader("src/shaders/depth_display_frag.glsl");
+    depth_display_shader->LinkProgram();
+    World::GetInst().RegisterShader(depth_display_shader);
+
 	ShaderProgram* light_injection_shader = new ShaderProgram();
 	light_injection_shader->AddVertShader("src/shaders/light_injection_vert.glsl");
 	light_injection_shader->AddFragShader("src/shaders/light_injection_frag.glsl");
@@ -322,19 +335,20 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     /* --------------  Cameras  ----------- */
     const uint32_t voxel_dim = 256;
 	const uint32_t light_injection_res = 1024;
-    const float voxelize_extent = 1000.0f;
+    const glm::vec3 voxelize_extent(1000.0f, 700.0f, 700.0f);
+    const float max_extent = std::max(voxelize_extent.x, std::max(voxelize_extent.y, voxelize_extent.z));
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
         Actor* voxelize_cam_actor = new Actor();
 		
-        const float left = -1.0f * voxelize_extent;
-        const float right = 1.0f * voxelize_extent;
-        const float bottom = -1.0f * voxelize_extent;
-        const float top = 1.0f * voxelize_extent;
+        const float left = -1.0f * max_extent;
+        const float right = 1.0f * max_extent;
+        const float bottom = -1.0f * max_extent;
+        const float top = 1.0f * max_extent;
         const float near = 0.0f;
-        const float far = 2.0f * voxelize_extent;
+        const float far = 2.0f * max_extent;
         Camera* cam = new Camera(left, right, bottom, top, near, far);
-        cam->MoveTo(glm::vec3(0.0, voxelize_extent, 0.0));
+        cam->MoveTo(glm::vec3(0.0, max_extent, 0.0));
         cam->LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
         glm::vec4 a = glm::vec4(1000, -4000, -1000, 1);
@@ -380,10 +394,14 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     Model* sceneModel = new Model(scene_path);
     World::GetInst().RegisterModel(sceneModel);
     std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
+    Material* mat_depth_only = new Material();
+    mat_depth_only->SetShader(depth_only_shader);
+    World::GetInst().RegisterMaterial(mat_depth_only);
+
     Actor* sceneActor = new Actor(); 
 
 	//voxelization controller
-	VoxelizeController* voxel_ctrl = new VoxelizeController(voxel_dim, light_injection_res, voxelize_extent, World::GetInst().GetVoxelCamera());
+	VoxelizeController* voxel_ctrl = new VoxelizeController(voxel_dim, light_injection_res, glm::vec3(0.0f), voxelize_extent, World::GetInst().GetVoxelCamera());
 	World::GetInst().m_VoxelizeController = voxel_ctrl;
 	sceneActor->AddComponent(voxel_ctrl);
 
@@ -403,13 +421,15 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         }
 
 		{
-			Material* mat_light_injection = new Material(*mat_voxelize);
-			mat_light_injection->DeleteAllTextures();
-			mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
-			mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
-			mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
-			mat_light_injection->SetShader(light_injection_shader);
-			sceneRenderer->AddMaterial(RenderPass::kLightInjection, mat_light_injection);
+			//Material* mat_light_injection = new Material(*mat_voxelize);
+			//mat_light_injection->DeleteAllTextures();
+			//mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
+			//mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
+			//mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
+			//mat_light_injection->SetShader(light_injection_shader);
+   //         World::GetInst().RegisterMaterial(mat_light_injection);
+			sceneRenderer->AddMaterial(RenderPass::kLightInjection, mat_depth_only);
+
 		}
 
         {
@@ -419,26 +439,41 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
             mat_voxel_visual->SetShader(voxel_visualize_shader);
+            World::GetInst().RegisterMaterial(mat_voxel_visual);
 
 			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
 			//mat_voxel_visual->SetShader(local_illum_shader);
    //         mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
             
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
+
         }
     }
+
+    Model* quad = new Model(Model::Primitive::kQuad);
+    ModelRenderer* light_depth_display = new ModelRenderer(quad);
+    light_depth_display->SetRenderPass(RenderPass::kPost);
+    light_depth_display->MoveTo({ -0.7f, 0.5f, 0.0f });
+    light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+    Material* mat_depth_display = new Material();
+    mat_depth_display->SetShader(depth_display_shader);
+    mat_depth_display->AddTexture(World::GetInst().m_VoxelizeController->GetDepthMap(), "TexDepth");
+    light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_display);
+    sceneActor->AddRenderer(light_depth_display);
+
     World::GetInst().RegisterActor(sceneActor);
 
     /* --------------  Lights  ----------- */
     LightManager& light_manager = World::GetInst().GetLightManager();
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
-    light_manager.AddDirLight(DirLight(glm::vec3(0.433f, -0.5f, 0.433f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
+    //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
+    light_manager.AddDirLight(DirLight(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 3.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
     /* --------------  Frame Buffer Display  ----------- */
     // frame buffer display quad
-    Model* quad = new Model(Model::Primitive::kQuad);
+   
     World::GetInst().RegisterModel(quad); 
 
     Actor* frameDisplayActor = new Actor();

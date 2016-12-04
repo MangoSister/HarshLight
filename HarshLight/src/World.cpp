@@ -227,10 +227,10 @@ void World::Start()
 	//is executed in its Start() function
 
     //run a testing kernel
-	cudaSurfaceObject_t surf_objs[VoxelChannel::Count];
-    m_VoxelizeController->TransferVoxelDataToCuda(surf_objs);
-    LaunchKernelVoxelInvert(m_VoxelizeController->GetVoxelDim(), surf_objs[0]);
-    m_VoxelizeController->FinishVoxelDataFromCuda(surf_objs);
+	//cudaSurfaceObject_t surf_objs[VoxelChannel::Count];
+ //   m_VoxelizeController->TransferVoxelDataToCuda(surf_objs);
+ //   LaunchKernelVoxelInvert(m_VoxelizeController->GetVoxelDim(), surf_objs[0]);
+ //   m_VoxelizeController->FinishVoxelDataFromCuda(surf_objs);
 }
 
 void World::MainLoop()
@@ -315,10 +315,10 @@ void World::MainLoop()
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
-        for (FrameBufferDisplay* display : m_FrameBufferDisplays)
+        for(ModelRenderer* renderer : m_Renderers)
         {
-            assert(display != nullptr);
-            display->Render(RenderPass::kPost);
+            assert(renderer != nullptr);
+            renderer->Render(RenderPass::kPost);
         }
     }
     

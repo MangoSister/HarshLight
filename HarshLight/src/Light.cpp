@@ -3,7 +3,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Light.h"
 
-DirLight::DirLight(const glm::vec3& direction, const glm::vec4& color) : m_Direction(direction.x, direction.y, direction.z, 0.0f), m_Color(color), m_LightMtx(1.0f) { }
+DirLight::DirLight(const glm::vec3& direction, const glm::vec4& color) : m_Color(color), m_LightMtx(1.0f) 
+{
+    glm::vec3 dir = glm::normalize(direction);
+    m_Direction = glm::vec4(dir.x, dir.y, dir.z, 0.0f);
+}
+
 void DirLight::UpdateLightMtx()
 {
 	glm::vec3 up(0.0f, 1.0f, 0.0f);

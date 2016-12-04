@@ -56,6 +56,8 @@
     <None Include="src\shaders\cr_frag.glsl" />
     <None Include="src\shaders\cr_geom.glsl" />
     <None Include="src\shaders\cr_vert.glsl" />
+    <None Include="src\shaders\depth_display_frag.glsl" />
+    <None Include="src\shaders\depth_display_vert.glsl" />
     <None Include="src\shaders\depth_frag.glsl" />
     <None Include="src\shaders\depth_vert.glsl" />
     <None Include="src\shaders\diffuse_frag.glsl" />

@@ -4,8 +4,10 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Component.h"
+#include "Light.h"
 #include <cuda_gl_interop.h>
 #include <cuda_runtime.h>
+#include "glm/glm.hpp"
 
 namespace VoxelChannel
 {
@@ -23,7 +25,7 @@ class VoxelizeController : public Component
 public: 
 	static const char* s_VoxelChannelNames[VoxelChannel::Count];
 
-    explicit VoxelizeController(uint32_t voxel_dim, uint32_t light_injection_res, float extent, Camera* voxel_cam);
+    explicit VoxelizeController(uint32_t voxel_dim, uint32_t light_injection_res, const glm::vec3& center, const glm::vec3& extent, Camera* voxel_cam);
 	virtual ~VoxelizeController();
 
     void Start() override;
@@ -38,10 +40,15 @@ public:
     void TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 
+    inline GLuint GetDepthMap() const
+    { return m_DepthMap; }
+
 private:
 	
 	void DispatchVoxelization();
 	void DispatchLightInjection();
+
+    void LightSpaceBBox(const DirLight& light, glm::vec3& bmin, glm::vec3& bmax) const;
 
     static const char* s_VoxelDimName;
     static const char* s_ViewMtxToDownName;
@@ -49,7 +56,8 @@ private:
     static const char* s_ViewMtxToForwardName;
 
     uint32_t m_VoxelDim = 256;
-    float m_Extent;
+    glm::vec3 m_Center;
+    glm::vec3 m_Extent;
     Camera* m_VoxelCam;
 
 	Texture3dCompute* m_VoxelizeTex[VoxelChannel::Count];

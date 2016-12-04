@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <cstdio>
 
+#define NOMINMAX
+
 #define BINDING_POINT_START_VOXEL_IMG 1
 
 enum class UniformBufferBinding : uint8_t
