@@ -27,8 +27,11 @@ ShaderProgram::~ShaderProgram()
 		m_FragShader = 0;
 	}
 
-	if (m_ShaderProgram)
-		glDeleteProgram(m_ShaderProgram);
+    if (m_ShaderProgram)
+    {
+        glDeleteProgram(m_ShaderProgram);
+        m_ShaderProgram = 0;
+    }
 }
 
 void ShaderProgram::AddVertShader(const char * path)

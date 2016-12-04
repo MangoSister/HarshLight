@@ -5,9 +5,11 @@
 #include "Material.h"
 #include "Component.h"
 #include "Light.h"
+#include "ComputeShaderProgram.h"
 #include <cuda_gl_interop.h>
 #include <cuda_runtime.h>
 #include "glm/glm.hpp"
+
 
 namespace VoxelChannel
 {
@@ -67,4 +69,7 @@ private:
 	GLuint m_LightViewUBuffer;
 	GLuint m_DepthFBO;
 	GLuint m_DepthMap;
+
+    ComputeShaderProgram* m_LightInjectionShader;
+    uint32_t m_LightInjectionGroupSize = 8;
 };

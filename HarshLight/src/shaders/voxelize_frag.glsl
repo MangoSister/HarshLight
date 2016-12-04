@@ -155,8 +155,9 @@ void AccumulateNormal
 {
 	vec4 val_4 = vec4(val, 1.0); //[-1, 1]
 	//[-1, 1] -> [0, 1]
-	//val_4.xyz = 0.5 * (val_4.xyz + vec3(1.0));
+	val_4.xyz = 0.5 * (val_4.xyz + vec3(1.0));
 	uint new_val = ColorVec4ToUint(val_4);
+	val_4.xyz = 2.0 * val_4.xyz - vec3(1.0);
 	uint prev_val = 0; 
 	uint curr_val;
 
@@ -166,14 +167,15 @@ void AccumulateNormal
 		prev_val = curr_val;
 		vec4 rval = ColorUintToVec4(curr_val);
 		if(rval.w >= 255.0) // we can at most count 255 frags in one voxel
-			break;
-		rval.xyz = (rval.xyz * rval.w); // Denormalize avg
+			break;	
 		//[0, 1] -> [-1, 1]
 		rval.xyz = (rval.xyz * 2.0) - vec3(1.0);
+		rval.xyz = (rval.xyz * rval.w); // Denormalize avg
 		vec4 curr_val_vf = rval + val_4; // Add new value
 		//[-1, 1] -> [0, 1]
-		curr_val_vf.xyz = 0.5 * (curr_val_vf.xyz + vec3(1.0));
 		curr_val_vf.xyz /= (curr_val_vf.w); // Renormalize avg
+		curr_val_vf.xyz = 0.5 * (curr_val_vf.xyz + vec3(1.0));
+		
 		new_val = ColorVec4ToUint(curr_val_vf);
 	}
 }

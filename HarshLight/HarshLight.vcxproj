@@ -22,6 +22,7 @@
     <ClCompile Include="src\Actor.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Component.cpp" />
+    <ClCompile Include="src\ComputeShaderProgram.cpp" />
     <ClCompile Include="src\FrameBufferDisplay.cpp" />
     <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -39,6 +40,7 @@
     <ClInclude Include="src\Actor.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Component.h" />
+    <ClInclude Include="src\ComputeShaderProgram.h" />
     <ClInclude Include="src\FrameBufferDisplay.h" />
     <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\ShaderProgram.h" />
@@ -64,6 +66,7 @@
     <None Include="src\shaders\diffuse_vert.glsl" />
     <None Include="src\shaders\framebuffer_color_frag.glsl" />
     <None Include="src\shaders\framebuffer_color_vert.glsl" />
+    <None Include="src\shaders\light_injection_comp.glsl" />
     <None Include="src\shaders\light_injection_frag.glsl" />
     <None Include="src\shaders\light_injection_vert.glsl" />
     <None Include="src\shaders\local_illum_frag.glsl" />

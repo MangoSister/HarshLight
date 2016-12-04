@@ -131,9 +131,9 @@ void Model::Render(const glm::mat4x4& transform, const std::vector<Material*>& m
         assert(material != nullptr);
 #endif
         material->Use();
-        GLuint model_loc = glGetUniformLocation(material->GetShader()->GetProgram(), "Model");
+        GLint model_loc = glGetUniformLocation(material->GetShader()->GetProgram(), "Model");
 #if _DEBUG
-        if (model_loc == GL_INVALID_VALUE)
+        if (model_loc == -1)
             fprintf(stderr, "WARNING: Invalid model mtx shader program location\n");
 #endif
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(transform));

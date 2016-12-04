@@ -66,6 +66,9 @@
     <ClCompile Include="src\Light.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ComputeShaderProgram.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -111,6 +114,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Light.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ComputeShaderProgram.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -179,6 +185,9 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\depth_display_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\light_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

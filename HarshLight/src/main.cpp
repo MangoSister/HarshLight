@@ -468,7 +468,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     LightManager& light_manager = World::GetInst().GetLightManager();
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
     //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
-    light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
+    light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 3.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
