@@ -21,7 +21,7 @@ const char* VoxelizeController::s_VoxelChannelNames[VoxelChannel::Count]
 };
 
 VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_injection_res, const glm::vec3& center, const glm::vec3& extent, Camera* voxel_cam)
-    :Component(), m_VoxelDim(voxel_dim), m_Center(center), m_Extent(extent), m_VoxelCam(voxel_cam), m_LightInjectionRes(light_injection_res)
+    :Component(), m_VoxelDim(voxel_dim), m_Center(center), m_Extent(extent), m_VoxelCam(voxel_cam), m_DirLightInjectionRes(light_injection_res)
 {
 	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
 		m_VoxelizeTex[i] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT);
@@ -33,23 +33,23 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 
 	glGenFramebuffers(1, &m_DepthFBO);
 
-	glGenTextures(1, &m_DepthMap);
-	glBindTexture(GL_TEXTURE_2D, m_DepthMap);
+	glGenTextures(1, &m_DirectionalDepthMap);
+	glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-		m_LightInjectionRes, m_LightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		m_DirLightInjectionRes, m_DirLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DepthMap, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DirectionalDepthMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     m_LightInjectionShader = new ComputeShaderProgram();
-    m_LightInjectionShader->AddShader("src/shaders/light_injection_comp.glsl");
+    m_LightInjectionShader->AddShader("src/shaders/dir_light_injection_comp.glsl");
     m_LightInjectionShader->LinkProgram();
 
 }
@@ -73,10 +73,10 @@ VoxelizeController::~VoxelizeController()
 		m_LightViewUBuffer = 0;
 	}
 
-	if (m_DepthMap)
+	if (m_DirectionalDepthMap)
 	{
-		glDeleteTextures(1, &m_DepthMap);
-		m_DepthMap = 0;
+		glDeleteTextures(1, &m_DirectionalDepthMap);
+		m_DirectionalDepthMap = 0;
 	}
 
 	if (m_DepthFBO)
@@ -243,7 +243,7 @@ void VoxelizeController::DispatchLightInjection()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glDepthMask(GL_TRUE);
-	glViewport(0, 0, m_LightInjectionRes, m_LightInjectionRes);
+	glViewport(0, 0, m_DirLightInjectionRes, m_DirLightInjectionRes);
 
 	const LightManager& light_manager = World::GetInst().GetLightManager();
 	const RendererList& renderers = World::GetInst().GetRenderers();
@@ -284,7 +284,7 @@ void VoxelizeController::DispatchLightInjection()
         if (loc != -1)
         {
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, m_DepthMap);
+            glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap);
         }
 
         loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), "CurrDirLight.lightMtx");
@@ -315,8 +315,8 @@ void VoxelizeController::DispatchLightInjection()
 
         glUseProgram(m_LightInjectionShader->GetProgram());
         glDispatchCompute(
-            (m_LightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize,
-            (m_LightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize, 1);
+            (m_DirLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize,
+            (m_DirLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize, 1);
 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}

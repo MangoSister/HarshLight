@@ -187,7 +187,7 @@
     <None Include="src\shaders\depth_display_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
-    <None Include="src\shaders\light_injection_comp.glsl">
+    <None Include="src\shaders\dir_light_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

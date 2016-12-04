@@ -42,8 +42,8 @@ public:
     void TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 
-    inline GLuint GetDepthMap() const
-    { return m_DepthMap; }
+    inline GLuint GetDirectionalDepthMap() const
+    { return m_DirectionalDepthMap; }
 
 private:
 	
@@ -65,10 +65,10 @@ private:
 	Texture3dCompute* m_VoxelizeTex[VoxelChannel::Count];
 	cudaGraphicsResource* m_CudaResources[VoxelChannel::Count];
 
-	uint32_t m_LightInjectionRes = 1024;
+	uint32_t m_DirLightInjectionRes = 1024;
 	GLuint m_LightViewUBuffer;
 	GLuint m_DepthFBO;
-	GLuint m_DepthMap;
+	GLuint m_DirectionalDepthMap;
 
     ComputeShaderProgram* m_LightInjectionShader;
     uint32_t m_LightInjectionGroupSize = 8;
