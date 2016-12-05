@@ -98,3 +98,29 @@ void DrawPixelGrid(uint32_t mWidth, uint32_t mHeight)
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
 }
+
+glm::mat4x4 LookAtDir(const glm::vec3& dir, const glm::vec3& up)
+{
+    const glm::vec4 r = glm::vec4(normalize(cross(up, dir)), 0.0f);
+    const glm::vec4 u = glm::vec4(normalize(cross(dir, glm::vec3(r))), 0.0f);
+    const glm::vec4 f = glm::vec4(-normalize(dir), 0.0f);
+    glm::mat4x4 output(1.0f);
+    output[0] = r;
+    output[1] = u;
+    output[2] = f;
+
+    return output;
+}
+
+glm::mat4x4 ViewMtxFromTransform(const glm::mat4x4& transform)
+{
+    glm::mat4x4 view_mtx(1.0f);
+    view_mtx[0][0] = transform[0][0];  view_mtx[0][1] = transform[1][0];  view_mtx[0][2] = transform[2][0];
+    view_mtx[1][0] = transform[0][1];  view_mtx[1][1] = transform[1][1];  view_mtx[1][2] = transform[2][1];
+    view_mtx[2][0] = transform[0][2];  view_mtx[2][1] = transform[1][2];  view_mtx[2][2] = transform[2][2];
+    view_mtx[3][0] = -glm::dot(transform[0], transform[3]);
+    view_mtx[3][1] = -glm::dot(transform[1], transform[3]);
+    view_mtx[3][2] = -glm::dot(transform[2], transform[3]);
+
+    return view_mtx;
+}

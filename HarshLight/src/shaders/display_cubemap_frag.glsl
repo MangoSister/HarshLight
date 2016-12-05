@@ -10,8 +10,8 @@ uniform int Face;
 void main()
 { 
 	if(Face == 0)
-		fragColor.xyz = texture(TexCube, vec3(1.0, 0.0, 0.0)).xxx;
-		//fragColor = texture(TexCube, vec3(1.0, vs_Texcoord * 2.0 - vec2(1.0)));
+		//fragColor.xyz = texture(TexCube, vec3(1.0, 0.0, 0.0)).xxx;
+		fragColor.xyz = texture(TexCube, vec3(1.0, vs_Texcoord * 2.0 - vec2(1.0))).xxx;
 	else if(Face == 1)
 		fragColor.xyz = texture(TexCube, vec3(-1.0, vs_Texcoord * 2.0 - vec2(1.0))).xxx;
 	else if(Face == 2)

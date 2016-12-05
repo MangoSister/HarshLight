@@ -449,17 +449,18 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-            mat_voxel_visual->DeleteAllTextures();	
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
-            mat_voxel_visual->SetShader(voxel_visualize_shader);
-            World::GetInst().RegisterMaterial(mat_voxel_visual);
-
-			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
-			//mat_voxel_visual->SetShader(local_illum_shader);
-   //         mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
+   //         mat_voxel_visual->DeleteAllTextures();	
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
+   //         mat_voxel_visual->SetShader(voxel_visualize_shader);
             
+
+			mat_voxel_visual->DeleteTexture("TexVoxel"); 
+			mat_voxel_visual->SetShader(local_illum_shader);
+            mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
+            
+            World::GetInst().RegisterMaterial(mat_voxel_visual);
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
 
         }

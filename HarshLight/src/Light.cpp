@@ -32,16 +32,32 @@ PointLight::PointLight(const glm::vec3& pos, const glm::vec4& color) : m_Positio
 void PointLight::GomputeCubeLightMtx(float near, float far, glm::mat4x4 light_mtx[6]) const
 {
     glm::mat4x4 light_proj_mtx = glm::perspective(glm::radians(90.0f), 1.0f, near, far);
- 
+
     glm::vec3 pos(m_Position);
-    light_mtx[0] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    light_mtx[1] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    light_mtx[2] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-    light_mtx[3] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    light_mtx[0] = LookAtDir(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    light_mtx[1] = LookAtDir(glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    light_mtx[4] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    light_mtx[5] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    light_mtx[2] = LookAtDir(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    light_mtx[3] = LookAtDir(glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    light_mtx[4] = LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    light_mtx[5] = LookAtDir(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    for (uint32_t i = 0; i < 6; i++)
+    {
+        light_mtx[i][3] = m_Position;
+        light_mtx[i] = ViewMtxFromTransform(light_mtx[i]);
+        light_mtx[i] = light_proj_mtx * light_mtx[i];
+    }
+
+
+    //light_mtx[0] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0));
+    //light_mtx[1] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0));
+    //light_mtx[2] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
+    //light_mtx[3] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0));
+    //light_mtx[4] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0));
+    //light_mtx[5] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0));
 }
 
 LightManager::LightManager() : m_LightUBuffer(0)

@@ -4,6 +4,8 @@
 #include <cuda_runtime.h>
 #include <cstdlib>
 #include <cstdio>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define NOMINMAX
 
@@ -53,3 +55,6 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort 
 #else 
 #define HANDLE_KERNEL_ERROR_SYNC
 #endif
+
+glm::mat4x4 LookAtDir(const glm::vec3& dir, const glm::vec3& up);
+glm::mat4x4 ViewMtxFromTransform(const glm::mat4x4& transform);
