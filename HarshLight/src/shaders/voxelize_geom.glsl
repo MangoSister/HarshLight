@@ -15,7 +15,6 @@ uniform vec2 VoxelDim;
 uniform mat4 ViewMtxToDown;
 uniform mat4 ViewMtxToLeft;
 uniform mat4 ViewMtxToForward;
-//uniform float PixelDiagonal;
 
 in vec2 vs_Texcoord[];
 in vec3 vs_WorldPosition[];

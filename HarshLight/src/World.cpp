@@ -211,6 +211,8 @@ const void World::GetViewportSize(uint32_t & width, uint32_t & height) const
 
 void World::Start()
 {
+    m_TextManager.Init();
+
     for (Component* comp : m_Components)
     {
 #ifdef _DEBUG
@@ -322,6 +324,11 @@ void World::MainLoop()
         }
     }
     
+    static char fps_counter[100];
+    memset(fps_counter, 0, 100);
+    sprintf(fps_counter, "FPS: %.2f", 1.0f / elapsed);
+    m_TextManager.RenderText(std::string(fps_counter), 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+
     //maintain 3-status key map
     for (auto& it : m_KeyStatusMap)
     {

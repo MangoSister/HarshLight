@@ -33,9 +33,12 @@ void ModelRenderer::Render(RenderPassFlag pass)
     case RenderPass::kVoxelize:
         if(m_RenderPassFlag & pass) 
             m_Model->Render(m_Transform, m_VoxelizeMaterials); break;
-	case RenderPass::kLightInjection:
+	case RenderPass::kDirLightInjection:
 		if (m_RenderPassFlag & pass)
-			m_Model->Render(m_Transform, m_LightInjectionMaterials); break;
+			m_Model->Render(m_Transform, m_DirLightInjectionMaterials); break;
+    case RenderPass::kPointLightInjection:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_PointLightInjectionMaterials); break;
     case RenderPass::kRegular:
         if(m_RenderPassFlag & pass) 
             m_Model->Render(m_Transform, m_Materials); break;
@@ -56,7 +59,8 @@ void ModelRenderer::AddMaterial(RenderPassFlag pass, Material* material)
     switch (pass)
     {
     case RenderPass::kVoxelize: m_VoxelizeMaterials.push_back(material); break;
-	case RenderPass::kLightInjection: m_LightInjectionMaterials.push_back(material); break;
+	case RenderPass::kDirLightInjection: m_DirLightInjectionMaterials.push_back(material); break;
+    case RenderPass::kPointLightInjection:m_PointLightInjectionMaterials.push_back(material); break;
     case RenderPass::kRegular: m_Materials.push_back(material); break;
     case RenderPass::kPost: m_PostMaterials.push_back(material); break;
     default:case RenderPass::kNone:
@@ -69,7 +73,8 @@ const std::vector<Material*>& ModelRenderer::GetMaterial(RenderPassFlag pass) co
     switch (pass)
     {
     case RenderPass::kVoxelize: return m_VoxelizeMaterials;
-	case RenderPass::kLightInjection: return m_LightInjectionMaterials;
+	case RenderPass::kDirLightInjection: return m_DirLightInjectionMaterials;
+    case RenderPass::kPointLightInjection: return m_PointLightInjectionMaterials;
     case RenderPass::kRegular:default: return m_Materials;
     case RenderPass::kPost: return m_PostMaterials;
     }

@@ -26,10 +26,15 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
 		m_VoxelizeTex[i] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT);
 
-	glGenBuffers(1, &m_LightViewUBuffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, m_LightViewUBuffer);
+	glGenBuffers(1, &m_DirLightViewUBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, m_DirLightViewUBuffer);
 	glBufferData(GL_UNIFORM_BUFFER, Camera::GetUBufferSize(), nullptr, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glGenBuffers(1, &m_PointLightCaptureUBuffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_PointLightCaptureUBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, GetPointLightCaptureUBufferSize(), nullptr, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	glGenFramebuffers(1, &m_DepthFBO);
 
@@ -42,11 +47,16 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DirectionalDepthMap, 0);
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glGenTextures(1, &m_CubeDepthMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap);
+    for (GLuint i = 0; i < 6; i++)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+            m_PointLightInjectionRes, m_PointLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     m_LightInjectionShader = new ComputeShaderProgram();
     m_LightInjectionShader->AddShader("src/shaders/dir_light_injection_comp.glsl");
@@ -67,17 +77,29 @@ VoxelizeController::~VoxelizeController()
 		}
 	}
 
-	if (m_LightViewUBuffer)
+	if (m_DirLightViewUBuffer)
 	{
-		glDeleteBuffers(1, &m_LightViewUBuffer);
-		m_LightViewUBuffer = 0;
+		glDeleteBuffers(1, &m_DirLightViewUBuffer);
+		m_DirLightViewUBuffer = 0;
 	}
+
+    if (m_PointLightCaptureUBuffer)
+    {
+        glDeleteBuffers(1, &m_PointLightCaptureUBuffer);
+        m_PointLightCaptureUBuffer = 0;
+    }
 
 	if (m_DirectionalDepthMap)
 	{
 		glDeleteTextures(1, &m_DirectionalDepthMap);
 		m_DirectionalDepthMap = 0;
 	}
+
+    if (m_CubeDepthMap)
+    {
+        glDeleteTextures(1, &m_CubeDepthMap);
+        m_CubeDepthMap = 0;
+    }
 
 	if (m_DepthFBO)
 	{
@@ -152,7 +174,8 @@ void VoxelizeController::Start()
 
 void VoxelizeController::Update(float dt)
 {
-	DispatchLightInjection();
+	DispatchDirLightInjection();
+    DispatchPointLightInjection();
 }
 
 void VoxelizeController::SetVoxelDim(uint32_t dim)
@@ -229,15 +252,20 @@ void VoxelizeController::DispatchVoxelization()
 
 }
 
-void VoxelizeController::DispatchLightInjection()
+void VoxelizeController::DispatchDirLightInjection()
 {
 	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
 		if (m_VoxelizeTex[i] == nullptr) return;
 
-	uint32_t vw, vh;
-	World::GetInst().GetViewportSize(vw, vh);
-
     glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DirectionalDepthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+#if _DEBUG
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    assert(status == GL_FRAMEBUFFER_COMPLETE);
+#endif
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -253,8 +281,8 @@ void VoxelizeController::DispatchLightInjection()
 		const DirLight& dir_light = light_manager.GetDirLight(i);
 		//overwrite main camera
 
-		glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)UniformBufferBinding::kMainCam, m_LightViewUBuffer, 0, Camera::GetUBufferSize());
-		glBindBuffer(GL_UNIFORM_BUFFER, m_LightViewUBuffer);
+		glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)UniformBufferBinding::kMainCam, m_DirLightViewUBuffer, 0, Camera::GetUBufferSize());
+		glBindBuffer(GL_UNIFORM_BUFFER, m_DirLightViewUBuffer);
 		const glm::mat4x4& light_mtx = dir_light.m_LightMtx;
         //compute light space bounding box
         glm::vec3 min, max;
@@ -268,7 +296,7 @@ void VoxelizeController::DispatchLightInjection()
 
         glClear(GL_DEPTH_BUFFER_BIT);
 		for (ModelRenderer* renderer : renderers)
-			renderer->Render(RenderPass::kLightInjection);
+			renderer->Render(RenderPass::kDirLightInjection);
 
         //now we have depth for current light, inject current light info
         GLint loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
@@ -326,7 +354,68 @@ void VoxelizeController::DispatchLightInjection()
 	glEnable(GL_CULL_FACE);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glDepthMask(GL_TRUE);
+    uint32_t vw, vh;
+    World::GetInst().GetViewportSize(vw, vh);
 	glViewport(0, 0, vw, vh);
+}
+
+void VoxelizeController::DispatchPointLightInjection()
+{
+    for (uint32_t i = 0; i < VoxelChannel::Count; i++)
+        if (m_VoxelizeTex[i] == nullptr) return;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_CubeDepthMap, 0); 
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+#if _DEBUG
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    assert(status == GL_FRAMEBUFFER_COMPLETE);
+#endif
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    glViewport(0, 0, m_PointLightInjectionRes, m_PointLightInjectionRes);
+
+    const LightManager& light_manager = World::GetInst().GetLightManager();
+    const RendererList& renderers = World::GetInst().GetRenderers();
+
+    for (uint32_t i = 0; i < light_manager.GetPointLightCount(); i++)
+    {
+        const PointLight& point_light = light_manager.GetPointLight(i);
+
+        //overwrite main camera
+        glm::mat4x4 light_mtx[6];
+        glm::vec2 capture_range(0.1f, light_manager.ComputePointLightCutoffRadius(point_light, 0.01f));
+        point_light.GomputeCubeLightMtx(capture_range.x, capture_range.y, light_mtx);
+
+        glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)UniformBufferBinding::kPointLightCapture, m_PointLightCaptureUBuffer, 0, GetPointLightCaptureUBufferSize());
+        glBindBuffer(GL_UNIFORM_BUFFER, m_PointLightCaptureUBuffer);
+
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, 6 * sizeof(glm::mat4), light_mtx);
+        glBufferSubData(GL_UNIFORM_BUFFER, 6 * sizeof(glm::mat4), sizeof(glm::vec4), &point_light.m_Position);
+        glBufferSubData(GL_UNIFORM_BUFFER, 6 * sizeof(glm::mat4) + sizeof(glm::vec4), sizeof(glm::vec2), &capture_range);
+        
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        glClear(GL_DEPTH_BUFFER_BIT);
+        for (ModelRenderer* renderer : renderers)
+            renderer->Render(RenderPass::kPointLightInjection);
+
+        //now that we have depth information, do light injection
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    uint32_t vw, vh;
+    World::GetInst().GetViewportSize(vw, vh);
+    glViewport(0, 0, vw, vh);
 }
 
 void VoxelizeController::LightSpaceBBox(const DirLight& light, glm::vec3& min, glm::vec3& max) const

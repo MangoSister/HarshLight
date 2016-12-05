@@ -45,10 +45,14 @@ public:
     inline GLuint GetDirectionalDepthMap() const
     { return m_DirectionalDepthMap; }
 
+    inline GLuint GetCubeDepthMap() const
+    { return m_CubeDepthMap; }
+
 private:
 	
 	void DispatchVoxelization();
-	void DispatchLightInjection();
+	void DispatchDirLightInjection();
+    void DispatchPointLightInjection();
 
     void LightSpaceBBox(const DirLight& light, glm::vec3& bmin, glm::vec3& bmax) const;
 
@@ -66,9 +70,18 @@ private:
 	cudaGraphicsResource* m_CudaResources[VoxelChannel::Count];
 
 	uint32_t m_DirLightInjectionRes = 1024;
-	GLuint m_LightViewUBuffer;
+    uint32_t m_PointLightInjectionRes = 256;
+
+	GLuint m_DirLightViewUBuffer;
 	GLuint m_DepthFBO;
 	GLuint m_DirectionalDepthMap;
+    GLuint m_CubeDepthMap;
+    GLuint m_PointLightCaptureUBuffer;
+    static inline uint32_t GetPointLightCaptureUBufferSize()
+    {
+        return 6 * sizeof(glm::mat4x4) + sizeof(glm::vec4) + sizeof(glm::vec2);
+    }
+
 
     ComputeShaderProgram* m_LightInjectionShader;
     uint32_t m_LightInjectionGroupSize = 8;

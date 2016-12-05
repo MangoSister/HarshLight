@@ -1,5 +1,4 @@
 #include <string.h>
-#include "glm/glm.hpp"
 #include "Material.h"
 #include "World.h"
 #include "Camera.h"
@@ -9,6 +8,7 @@
 #include "Util.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 const char* APP_NAME = "HarshLight";
@@ -253,7 +253,7 @@ void CreateCRTestScene()
         framBufDisplay->SetRenderPass(RenderPass::kPost);
         Material* frame_display_mat = new Material();
         frame_display_mat->SetShader(framebuffer_display_shader);
-        frame_display_mat->AddTexture(framBufDisplay->GetColorBuffer(), "TexScreen");
+        frame_display_mat->AddTexture2dDirect(framBufDisplay->GetColorBuffer(), "TexScreen");
         framBufDisplay->AddMaterial(RenderPass::kPost, frame_display_mat);
 
         World::GetInst().RegisterActor(rasterTriDisplay);
@@ -270,7 +270,7 @@ void CreateCRTestScene()
         framBufDisplay->SetRenderPass(RenderPass::kPost);
         Material* frame_display_mat = new Material();
         frame_display_mat->SetShader(framebuffer_display_shader);
-        frame_display_mat->AddTexture(framBufDisplay->GetColorBuffer(), "TexScreen");
+        frame_display_mat->AddTexture2dDirect(framBufDisplay->GetColorBuffer(), "TexScreen");
         framBufDisplay->AddMaterial(RenderPass::kPost, frame_display_mat);
 
         World::GetInst().RegisterActor(lineTriDisplay);
@@ -314,6 +314,19 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     depth_display_shader->AddFragShader("src/shaders/depth_display_frag.glsl");
     depth_display_shader->LinkProgram();
     World::GetInst().RegisterShader(depth_display_shader);
+
+    ShaderProgram* depth_cube_shader = new ShaderProgram();
+    depth_cube_shader->AddVertShader("src/shaders/depth_cube_vert.glsl");
+    depth_cube_shader->AddGeomShader("src/shaders/depth_cube_geom.glsl");
+    depth_cube_shader->AddFragShader("src/shaders/depth_cube_frag.glsl");
+    depth_cube_shader->LinkProgram();
+    World::GetInst().RegisterShader(depth_cube_shader);
+
+    ShaderProgram* depth_display_cube_shader = new ShaderProgram();
+    depth_display_cube_shader->AddVertShader("src/shaders/display_cubemap_vert.glsl");
+    depth_display_cube_shader->AddFragShader("src/shaders/display_cubemap_frag.glsl");
+    depth_display_cube_shader->LinkProgram();
+    World::GetInst().RegisterShader(depth_display_cube_shader);
 
 	ShaderProgram* light_injection_shader = new ShaderProgram();
 	light_injection_shader->AddVertShader("src/shaders/light_injection_vert.glsl");
@@ -395,9 +408,14 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     Model* sceneModel = new Model(scene_path);
     World::GetInst().RegisterModel(sceneModel);
     std::vector<Material*> sceneMaterials = World::GetInst().LoadDefaultMaterialsForModel(sceneModel);
-    Material* mat_depth_only = new Material();
-    mat_depth_only->SetShader(depth_only_shader);
-    World::GetInst().RegisterMaterial(mat_depth_only);
+    
+    Material* mat_depth_dir = new Material();
+    mat_depth_dir->SetShader(depth_only_shader);
+    World::GetInst().RegisterMaterial(mat_depth_dir);
+    
+    Material* mat_depth_cube = new Material();
+    mat_depth_cube->SetShader(depth_cube_shader);
+    World::GetInst().RegisterMaterial(mat_depth_cube);
 
     Actor* sceneActor = new Actor(); 
 
@@ -410,7 +428,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     sceneActor->AddRenderer(sceneRenderer);
     sceneRenderer->MoveTo({ 0.0f, 0.0f, 0.0f });
     sceneRenderer->ScaleTo({ 0.5f, 0.5f, 0.5f });
-    sceneRenderer->SetRenderPass((RenderPassFlag)(RenderPass::kVoxelize | RenderPass::kLightInjection | RenderPass::kRegular));
+    sceneRenderer->SetRenderPass((RenderPassFlag)(RenderPass::kVoxelize | RenderPass::kDirLightInjection | RenderPass::kPointLightInjection | RenderPass::kRegular));
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
@@ -422,16 +440,12 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         }
 
 		{
-			//Material* mat_light_injection = new Material(*mat_voxelize);
-			//mat_light_injection->DeleteAllTextures();
-			//mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
-			//mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
-			//mat_light_injection->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
-			//mat_light_injection->SetShader(light_injection_shader);
-   //         World::GetInst().RegisterMaterial(mat_light_injection);
-			sceneRenderer->AddMaterial(RenderPass::kLightInjection, mat_depth_only);
-
+			sceneRenderer->AddMaterial(RenderPass::kDirLightInjection, mat_depth_dir);
 		}
+
+        {
+            sceneRenderer->AddMaterial(RenderPass::kPointLightInjection, mat_depth_cube);
+        }
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
@@ -452,15 +466,26 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     }
 
     Model* quad = new Model(Model::Primitive::kQuad);
-    ModelRenderer* light_depth_display = new ModelRenderer(quad);
-    light_depth_display->SetRenderPass(RenderPass::kPost);
-    light_depth_display->MoveTo({ -0.7f, 0.5f, 0.0f });
-    light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+    ModelRenderer* dir_light_depth_display = new ModelRenderer(quad);
+    dir_light_depth_display->SetRenderPass(RenderPass::kPost);
+    dir_light_depth_display->MoveTo({ -0.7f, 0.5f, 0.0f });
+    dir_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
     Material* mat_depth_display = new Material();
     mat_depth_display->SetShader(depth_display_shader);
-    mat_depth_display->AddTexture(World::GetInst().m_VoxelizeController->GetDepthMap(), "TexDepth");
-    light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_display);
-    sceneActor->AddRenderer(light_depth_display);
+    mat_depth_display->AddTexture2dDirect(World::GetInst().m_VoxelizeController->GetDirectionalDepthMap(), "TexDepth");
+    dir_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_display);
+    sceneActor->AddRenderer(dir_light_depth_display);
+
+    ModelRenderer* point_light_depth_display = new ModelRenderer(quad);
+    point_light_depth_display->SetRenderPass(RenderPass::kPost);
+    point_light_depth_display->MoveTo({ 0.7f, -0.5f, 0.0f });
+    point_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+    Material* mat_depth_cube_display = new Material();
+    mat_depth_cube_display->SetShader(depth_display_cube_shader);
+    mat_depth_cube_display->AddTextureCubeDirect(World::GetInst().m_VoxelizeController->GetCubeDepthMap(), "TexCube");
+    mat_depth_cube_display->SetI32Param("Face", 0);
+    point_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_cube_display);
+    sceneActor->AddRenderer(point_light_depth_display);
 
     World::GetInst().RegisterActor(sceneActor);
 
@@ -486,7 +511,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     voxelViewDisplay->SetRenderPass(RenderPass::kPost);
     Material* quad_mat = new Material();
     quad_mat->SetShader(framebuffer_display_shader);
-    quad_mat->AddTexture(voxelViewDisplay->GetColorBuffer(), "TexScreen");
+    quad_mat->AddTexture2dDirect(voxelViewDisplay->GetColorBuffer(), "TexScreen");
     voxelViewDisplay->AddMaterial(RenderPass::kPost, quad_mat);
 
     World::GetInst().RegisterActor(frameDisplayActor);

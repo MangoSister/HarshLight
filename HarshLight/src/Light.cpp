@@ -29,6 +29,21 @@ void DirLight::UpdateLightMtx()
 }
 PointLight::PointLight(const glm::vec3& pos, const glm::vec4& color) : m_Position(pos.x, pos.y, pos.z, 1.0f), m_Color(color) { }
 
+void PointLight::GomputeCubeLightMtx(float near, float far, glm::mat4x4 light_mtx[6]) const
+{
+    glm::mat4x4 light_proj_mtx = glm::perspective(glm::radians(90.0f), 1.0f, near, far);
+ 
+    glm::vec3 pos(m_Position);
+    light_mtx[0] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    light_mtx[1] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    light_mtx[2] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    light_mtx[3] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    light_mtx[4] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    light_mtx[5] = light_proj_mtx * glm::lookAt(pos, pos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
 LightManager::LightManager() : m_LightUBuffer(0)
 {
 	glGenBuffers(1, &m_LightUBuffer);
@@ -188,4 +203,9 @@ const glm::vec3 & LightManager::GetPointLightAtten() const
 void LightManager::SetPointLightAtten(const glm::vec3& atten)
 {
     m_PointLightAtten = atten;
+}
+
+float LightManager::ComputePointLightCutoffRadius(const PointLight & light, float atten) const
+{
+    return std::sqrt(light.m_Color.w / (atten * m_PointLightAtten.z));
 }

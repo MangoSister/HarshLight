@@ -10,6 +10,7 @@
 #include "FrameBufferDisplay.h"
 #include "VoxelizeController.h"
 #include "Light.h"
+#include "Text.h"
 
 #include "GLFW/glfw3.h"
 #include <chrono>
@@ -101,6 +102,7 @@ private:
     Texture2dDict m_Textures2d;
 	Texture3dList m_Textures3d;
     LightManager m_LightManager;
+    TextManager m_TextManager;
 
 	/*----------------  Convenience Lists --------------*/
     ComponentList m_Components;

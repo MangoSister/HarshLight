@@ -23,13 +23,15 @@ public:
     ~Material();
 
     void AddTexture(const Texture2d* tex2d, const char* semantic);
-	void AddTexture(GLuint tex2d, const char* semantic);
+	void AddTexture2dDirect(GLuint tex2d, const char* semantic);
 	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage, GLuint binding);
+    void AddTextureCubeDirect(GLuint tex_cube, const char* semantic);
     void DeleteTexture(const char* semantic);
     void DeleteAllTextures();
 	void SetShader(ShaderProgram* shader);
 	const ShaderProgram* GetShader() const;
 
+    void SetI32Param(const char* semantic, GLint param);
     void SetFloatParam(const char* semantic, float param);
     void SetVec2Param(const char* semantic, const glm::vec2& param);
     void SetVec3Param(const char* semantic, const glm::vec3& param);
@@ -65,6 +67,16 @@ private:
 			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage), m_BindingPoint(binding), m_InternalFormat(internal_format) {}
 	};
 
+    struct TextureCubeSlot
+    {
+    public:
+        GLuint m_TexCubeObj;
+        const char* m_Semantic;
+        TextureCubeSlot(GLuint tex_cube, const char* semantic) :
+            m_TexCubeObj(tex_cube), m_Semantic(semantic) {}
+    };
+
     std::vector<Texture2dSlot> m_Textures2d;
 	std::vector<Texture3dSlot> m_Textures3d;
+    std::vector<TextureCubeSlot> m_TexturesCube;
 };

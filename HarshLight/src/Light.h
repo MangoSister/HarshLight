@@ -23,6 +23,7 @@ public:
 	glm::vec4 m_Position;
 	glm::vec4 m_Color;
 
+    void GomputeCubeLightMtx(float near, float far, glm::mat4x4 light_mtx[6]) const;
 };
 
 class LightManager
@@ -62,6 +63,8 @@ public:
 
     const glm::vec3& GetPointLightAtten() const;
     void SetPointLightAtten(const glm::vec3& atten);
+
+    float ComputePointLightCutoffRadius(const PointLight& light, float atten) const;
 
 private:
 	std::vector<DirLight> m_DirLights;

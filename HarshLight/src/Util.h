@@ -14,6 +14,7 @@ enum class UniformBufferBinding : uint8_t
 	kMainCam = 0,
 	kVoxelSpaceReconstruct = 1,
 	kLight = 2,
+    kPointLightCapture = 3,
 };
 
 void APIENTRY glDebugOutput(GLenum source,

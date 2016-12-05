@@ -31,6 +31,7 @@
     <ClCompile Include="src\ModelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
+    <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\Util.cpp" />
     <ClCompile Include="src\VoxelizeController.cpp" />
@@ -44,6 +45,7 @@
     <ClInclude Include="src\FrameBufferDisplay.h" />
     <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\ShaderProgram.h" />
+    <ClInclude Include="src\Text.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\Util.h" />
     <ClInclude Include="src\Mesh.h" />
@@ -58,12 +60,19 @@
     <None Include="src\shaders\cr_frag.glsl" />
     <None Include="src\shaders\cr_geom.glsl" />
     <None Include="src\shaders\cr_vert.glsl" />
+    <None Include="src\shaders\depth_cube_frag.glsl" />
+    <None Include="src\shaders\depth_cube_geom.glsl" />
+    <None Include="src\shaders\depth_cube_vert.glsl" />
     <None Include="src\shaders\depth_display_frag.glsl" />
     <None Include="src\shaders\depth_display_vert.glsl" />
     <None Include="src\shaders\depth_frag.glsl" />
     <None Include="src\shaders\depth_vert.glsl" />
     <None Include="src\shaders\diffuse_frag.glsl" />
     <None Include="src\shaders\diffuse_vert.glsl" />
+    <None Include="src\shaders\display_cubemap_frag.glsl" />
+    <None Include="src\shaders\display_cubemap_vert.glsl" />
+    <None Include="src\shaders\font_frag.glsl" />
+    <None Include="src\shaders\font_vert.glsl" />
     <None Include="src\shaders\framebuffer_color_frag.glsl" />
     <None Include="src\shaders\framebuffer_color_vert.glsl" />
     <None Include="src\shaders\dir_light_injection_comp.glsl" />
@@ -158,11 +167,12 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_DLL;WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd 4819 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SOIL.lib; glew32.lib;assimp.lib;opengl32.lib;glfw3dll.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>freetype27.lib;SOIL.lib;glew32.lib;assimp.lib;opengl32.lib;glfw3dll.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -203,13 +213,14 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_DLL;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd 4819 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SOIL.lib; glew32.lib;assimp.lib;opengl32.lib;glfw3dll.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>freetype27.lib;SOIL.lib;glew32.lib;assimp.lib;opengl32.lib;glfw3dll.lib;cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>

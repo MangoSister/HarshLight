@@ -69,6 +69,9 @@
     <ClCompile Include="src\ComputeShaderProgram.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Text.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Actor.h">
@@ -117,6 +120,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ComputeShaderProgram.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Text.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -188,6 +194,27 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\dir_light_injection_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\depth_cube_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\depth_cube_geom.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\depth_cube_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\font_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\font_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\display_cubemap_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\display_cubemap_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>
