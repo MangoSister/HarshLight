@@ -23,7 +23,7 @@ public:
 	glm::vec4 m_Position;
 	glm::vec4 m_Color;
 
-    void GomputeCubeLightMtx(float near, float far, glm::mat4x4 light_mtx[6]) const;
+	void GomputeCubeLightMtx(float near, float far, glm::mat4x4 light_mtx[6], glm::mat4x4& light_proj_mtx) const;
 };
 
 class LightManager

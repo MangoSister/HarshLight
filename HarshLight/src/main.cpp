@@ -329,8 +329,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     World::GetInst().RegisterShader(depth_display_cube_shader);
 
 	ShaderProgram* light_injection_shader = new ShaderProgram();
-	light_injection_shader->AddVertShader("src/shaders/light_injection_vert.glsl");
-	light_injection_shader->AddFragShader("src/shaders/light_injection_frag.glsl");
+	light_injection_shader->AddVertShader("src/shaders/dirlight_injection_vert.glsl");
+	light_injection_shader->AddFragShader("src/shaders/dirlight_injection_frag.glsl");
 	light_injection_shader->LinkProgram();
 	World::GetInst().RegisterShader(light_injection_shader);
 
@@ -449,16 +449,16 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-   //         mat_voxel_visual->DeleteAllTextures();	
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
-   //         mat_voxel_visual->SetShader(voxel_visualize_shader);
+            mat_voxel_visual->DeleteAllTextures();	
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
+            mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 
-			mat_voxel_visual->DeleteTexture("TexVoxel"); 
-			mat_voxel_visual->SetShader(local_illum_shader);
-            mat_voxel_visual->SetFloatParam("Shininess", 16.0f);
+			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
+			//mat_voxel_visual->SetShader(local_illum_shader);
+   //         mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
             
             World::GetInst().RegisterMaterial(mat_voxel_visual);
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
@@ -484,7 +484,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     Material* mat_depth_cube_display = new Material();
     mat_depth_cube_display->SetShader(depth_display_cube_shader);
     mat_depth_cube_display->AddTextureCubeDirect(World::GetInst().m_VoxelizeController->GetCubeDepthMap(), "TexCube");
-    mat_depth_cube_display->SetI32Param("Face", 0);
+    mat_depth_cube_display->SetI32Param("Face", 5);
     point_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_cube_display);
     sceneActor->AddRenderer(point_light_depth_display);
 
@@ -495,7 +495,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
     //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
     light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
-    light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 3.0f)));
+    light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 100.0f, -200.0f), glm::vec4(0.0f, 1.0f, 1.0f, 100.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
     /* --------------  Frame Buffer Display  ----------- */

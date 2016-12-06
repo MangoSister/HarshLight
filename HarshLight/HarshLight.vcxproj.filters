@@ -175,12 +175,6 @@
     <None Include="src\shaders\local_illum_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
-    <None Include="src\shaders\light_injection_vert.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
-    <None Include="src\shaders\light_injection_frag.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
     <None Include="src\shaders\depth_vert.glsl">
       <Filter>src\shaders</Filter>
     </None>
@@ -191,9 +185,6 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\depth_display_frag.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
-    <None Include="src\shaders\dir_light_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\depth_cube_vert.glsl">
@@ -215,6 +206,18 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\display_cubemap_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\dirlight_injection_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\dirlight_injection_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\pointlight_injection_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\dirlight_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

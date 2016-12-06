@@ -10,10 +10,10 @@
 
 struct Character 
 {
-    GLuint TextureID;   // ID handle of the glyph texture
-    glm::ivec2 Size;    // Size of glyph
-    glm::ivec2 Bearing;  // Offset from baseline to left/top of glyph
-    GLuint Advance;    // Horizontal offset to advance to next glyph
+    GLuint m_TexObj;   // ID handle of the glyph texture
+    glm::ivec2 m_Size;    // Size of glyph
+    glm::ivec2 m_Bearing;  // Offset from baseline to left/top of glyph
+    GLuint m_Advance;    // Horizontal offset to advance to next glyph
 };
 
 class TextManager
@@ -24,8 +24,9 @@ public:
     void RenderText(const std::string& text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
 
 private:
-    std::map<GLchar, Character> Characters;
-    GLuint VAO, VBO;
+    std::map<GLchar, Character> m_Characters;
+	GLuint m_VAO;
+	GLuint m_VBO;
     ShaderProgram m_FontShader;
     glm::mat4x4 m_ProjMtx;
 };

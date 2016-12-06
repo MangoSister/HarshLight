@@ -88,8 +88,6 @@ vec3 ComputePointLightLambertian(PointLight light, vec3 world_pos, vec3 albedo, 
 {
 	float dist = length(light.position.xyz - world_pos);
 	float atten = light.color.w / (PointLightAtten.x + PointLightAtten.y * dist + PointLightAtten.z * dist * dist);
-	if(atten < 0.001)
-		return vec3(0.0);
 	
 	vec3 light_dir = (light.position.xyz - world_pos) / dist;
 	float diffuse_intensity = max(dot(normalize(normal), light_dir), 0.0);

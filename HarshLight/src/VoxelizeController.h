@@ -78,11 +78,9 @@ private:
     GLuint m_CubeDepthMap;
     GLuint m_PointLightCaptureUBuffer;
     static inline uint32_t GetPointLightCaptureUBufferSize()
-    {
-        return 6 * sizeof(glm::mat4x4) + sizeof(glm::vec4) + sizeof(glm::vec2);
-    }
+    { return 7 * sizeof(glm::mat4x4) + sizeof(glm::vec4) + sizeof(glm::vec2); }
 
-
-    ComputeShaderProgram* m_LightInjectionShader;
+    ComputeShaderProgram* m_DirLightInjectionShader;
+	ComputeShaderProgram* m_PointLightInjectionShader;
     uint32_t m_LightInjectionGroupSize = 8;
 };

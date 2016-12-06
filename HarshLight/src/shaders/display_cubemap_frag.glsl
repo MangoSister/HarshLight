@@ -7,21 +7,23 @@ uniform samplerCube TexCube;
 
 uniform int Face;
 
+vec3 GetCubemapCoord(in vec2 face_uv, in int face)
+{
+  vec3 v;
+  switch(face)
+  {
+    case 0: v = vec3( 1.0, -face_uv.y, -face_uv.x); break; // +X
+    case 1: v = vec3(-1.0, -face_uv.y,  face_uv.x); break; // -X
+    case 2: v = vec3( face_uv.x,  1.0, face_uv.y); break; // +Y
+    case 3: v = vec3(-face_uv.x, -1.0, face_uv.y); break; // -Y
+    case 4: v = vec3( face_uv.x, -face_uv.y,  1.0); break; // +Z
+    case 5: v = vec3(-face_uv.x, -face_uv.y, -1.0); break; // -Z
+  }
+  return v;//normalize(v);
+}
+
 void main()
 { 
-	if(Face == 0)
-		//fragColor.xyz = texture(TexCube, vec3(1.0, 0.0, 0.0)).xxx;
-		fragColor.xyz = texture(TexCube, vec3(1.0, vs_Texcoord * 2.0 - vec2(1.0))).xxx;
-	else if(Face == 1)
-		fragColor.xyz = texture(TexCube, vec3(-1.0, vs_Texcoord * 2.0 - vec2(1.0))).xxx;
-	else if(Face == 2)
-		fragColor.xyz = texture(TexCube, vec3(vs_Texcoord.x * 2.0 - 1.0, 1.0, vs_Texcoord.y * 2.0 - 1.0)).xxx;
-	else if(Face == 3)
-		fragColor.xyz = texture(TexCube, vec3(vs_Texcoord.x * 2.0 - 1.0, -1.0, vs_Texcoord.y * 2.0 - 1.0)).xxx;
-	else if(Face == 4)
-		fragColor.xyz = texture(TexCube, vec3(vs_Texcoord * 2.0 - vec2(1.0), 1.0)).xxx;
-	else
-		fragColor.xyz = texture(TexCube, vec3(vs_Texcoord * 2.0 - vec2(1.0), -1.0)).xxx;
-
-	fragColor.w = 0.5;
+	fragColor.xyz = texture(TexCube, GetCubemapCoord(vs_Texcoord * vec2(2.0) - vec2(1.0), Face)).xxx;
+	fragColor.w = 1.0;
 }

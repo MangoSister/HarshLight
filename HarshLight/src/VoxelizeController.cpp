@@ -50,7 +50,7 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
     glGenTextures(1, &m_CubeDepthMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap);
     for (GLuint i = 0; i < 6; i++)
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24,
             m_PointLightInjectionRes, m_PointLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -58,9 +58,13 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    m_LightInjectionShader = new ComputeShaderProgram();
-    m_LightInjectionShader->AddShader("src/shaders/dir_light_injection_comp.glsl");
-    m_LightInjectionShader->LinkProgram();
+    m_DirLightInjectionShader = new ComputeShaderProgram();
+    m_DirLightInjectionShader->AddShader("src/shaders/dirlight_injection_comp.glsl");
+    m_DirLightInjectionShader->LinkProgram();
+
+	m_PointLightInjectionShader = new ComputeShaderProgram();
+	m_PointLightInjectionShader->AddShader("src/shaders/pointlight_injection_comp.glsl");
+	m_PointLightInjectionShader->LinkProgram();
 
 }
 
@@ -107,11 +111,18 @@ VoxelizeController::~VoxelizeController()
 		m_DepthFBO = 0;
 	}
 
-    if (m_LightInjectionShader)
+    if (m_DirLightInjectionShader)
     {
-        delete m_LightInjectionShader;
-        m_LightInjectionShader = nullptr;
+        delete m_DirLightInjectionShader;
+        m_DirLightInjectionShader = nullptr;
     }
+
+	if (m_PointLightInjectionShader)
+	{
+		delete m_PointLightInjectionShader;
+		m_PointLightInjectionShader = nullptr;
+	}
+
 }
 
 
@@ -299,49 +310,51 @@ void VoxelizeController::DispatchDirLightInjection()
 			renderer->Render(RenderPass::kDirLightInjection);
 
         //now we have depth for current light, inject current light info
-        GLint loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+		glUseProgram(m_DirLightInjectionShader->GetProgram());
+
+        GLint loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
         if(loc != -1)
             glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, m_VoxelizeTex[VoxelChannel::TexVoxelAlbedo]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelAlbedo]->GetInternalFormat());
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
         if (loc != -1)
             glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetInternalFormat());
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance]);
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance]);
         if (loc != -1)
             glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_WRITE, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), "depthMap");
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "depthMap");
         if (loc != -1)
         {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap);
+			glUniform1i(loc, 0);
         }
 
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), "CurrDirLight.lightMtx");
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "CurrDirLight.lightMtx");
         if (loc != -1)
-            glProgramUniformMatrix4fv(m_LightInjectionShader->GetProgram(), loc, 1, false, glm::value_ptr(dir_light.m_LightMtx));
+            glProgramUniformMatrix4fv(m_DirLightInjectionShader->GetProgram(), loc, 1, false, glm::value_ptr(dir_light.m_LightMtx));
 
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), "LightProjMtx");
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "LightProjMtx");
         if (loc != -1)
-            glProgramUniformMatrix4fv(m_LightInjectionShader->GetProgram(), loc, 1, false, glm::value_ptr(light_proj_mtx));
+            glProgramUniformMatrix4fv(m_DirLightInjectionShader->GetProgram(), loc, 1, false, glm::value_ptr(light_proj_mtx));
 
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), "CurrDirLight.direction");
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "CurrDirLight.direction");
         if(loc != -1)
-        glProgramUniform4f(m_LightInjectionShader->GetProgram(), loc, 
+        glProgramUniform4f(m_DirLightInjectionShader->GetProgram(), loc, 
             dir_light.m_Direction.x,
             dir_light.m_Direction.y,
             dir_light.m_Direction.z,
             1.0f);
 
-        loc = glGetUniformLocation(m_LightInjectionShader->GetProgram(), "CurrDirLight.color");
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "CurrDirLight.color");
         if(loc != -1)
-        glProgramUniform4f(m_LightInjectionShader->GetProgram(), loc, 
+        glProgramUniform4f(m_DirLightInjectionShader->GetProgram(), loc, 
             dir_light.m_Color.x, 
             dir_light.m_Color.y, 
             dir_light.m_Color.z, 
             dir_light.m_Color.w);
 
         m_VoxelCam->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
-
-        glUseProgram(m_LightInjectionShader->GetProgram());
+ 
         glDispatchCompute(
             (m_DirLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize,
             (m_DirLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize, 1);
@@ -389,15 +402,47 @@ void VoxelizeController::DispatchPointLightInjection()
 
         //overwrite main camera
         glm::mat4x4 light_mtx[6];
-        glm::vec2 capture_range(0.1f, light_manager.ComputePointLightCutoffRadius(point_light, 0.01f));
-        point_light.GomputeCubeLightMtx(capture_range.x, capture_range.y, light_mtx);
+		glm::mat4x4 light_proj_mtx;
+		const float far = light_manager.ComputePointLightCutoffRadius(point_light, 0.01f);
+		glm::vec2 capture_range(0.1f, far);
+		//glm::vec2 capture_range(0.1f, 10000.0f);
+        point_light.GomputeCubeLightMtx(capture_range.x, capture_range.y, light_mtx, light_proj_mtx);
+
+		//save
+		float n = capture_range.x, f = capture_range.y;
+		auto a = light_proj_mtx * light_mtx[3] * glm::vec4(348, -290, -67.3, 1);
+		auto v = light_mtx[3] * glm::vec4(348, -290, -67.3, 1);
+		auto b = a / a.w;
+		float d = a.z / a.w * 0.5 + 0.5;
+
+		float e = d * 2.0 - 1.0;
+		float z = ((n - f) * e - 2 * n * f) / (n + f);
+		z = -v.z;
+		float linear = (z - n) / (f - n);
+		float frag_x = b.x * 0.5 + 0.5;
+		float frag_y = b.y * 0.5 + 0.5;
+
+		//restore a (input: frag_x, frag_y and linear)
+		float z_r = n + (f - n) * linear;
+		float x_r = frag_x * 2.0 - 1.0;
+		float y_r = frag_y * 2.0 - 1.0;
+		x_r *= z_r;
+		y_r *= z_r;
+		z_r = -z_r;
+		float w = -z_r;
+		z_r = (n + f + 2 * n * f / z_r) / (f - n);
+		z_r *= w;
+
+		glm::vec4 o = glm::inverse(light_proj_mtx * light_mtx[3]) * glm::vec4(x_r, y_r, z_r, w);
+
 
         glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)UniformBufferBinding::kPointLightCapture, m_PointLightCaptureUBuffer, 0, GetPointLightCaptureUBufferSize());
         glBindBuffer(GL_UNIFORM_BUFFER, m_PointLightCaptureUBuffer);
 
         glBufferSubData(GL_UNIFORM_BUFFER, 0, 6 * sizeof(glm::mat4), light_mtx);
-        glBufferSubData(GL_UNIFORM_BUFFER, 6 * sizeof(glm::mat4), sizeof(glm::vec4), &point_light.m_Position);
-        glBufferSubData(GL_UNIFORM_BUFFER, 6 * sizeof(glm::mat4) + sizeof(glm::vec4), sizeof(glm::vec2), &capture_range);
+		glBufferSubData(GL_UNIFORM_BUFFER, 6 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(light_proj_mtx));
+        glBufferSubData(GL_UNIFORM_BUFFER, 7 * sizeof(glm::mat4), sizeof(glm::vec4), glm::value_ptr(point_light.m_Position));
+		glBufferSubData(GL_UNIFORM_BUFFER, 7 * sizeof(glm::mat4) + sizeof(glm::vec4), sizeof(glm::vec2), glm::value_ptr(capture_range));
         
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -406,6 +451,51 @@ void VoxelizeController::DispatchPointLightInjection()
             renderer->Render(RenderPass::kPointLightInjection);
 
         //now that we have depth information, do light injection
+		glUseProgram(m_PointLightInjectionShader->GetProgram());
+
+		GLint loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+		if (loc != -1)
+			glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, m_VoxelizeTex[VoxelChannel::TexVoxelAlbedo]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelAlbedo]->GetInternalFormat());
+		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
+		if (loc != -1)
+			glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetInternalFormat());
+		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance]);
+		if (loc != -1)
+			glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_WRITE, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
+		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), "cubeDepthMap");
+		if (loc != -1)
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap);
+			glUniform1i(loc, 0);
+		}
+
+		m_VoxelCam->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
+		//we've already updated light capture buffer before
+		
+		//assume light info has been updated by light manager before this get called
+
+		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), "CurrPointLight.position");
+		if(loc != -1)
+			glProgramUniform4f(m_PointLightInjectionShader->GetProgram(), loc,
+				point_light.m_Position.x,
+				point_light.m_Position.y,
+				point_light.m_Position.z,
+				1.0f);
+
+		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), "CurrPointLight.color");
+		if (loc != -1)
+			glProgramUniform4f(m_PointLightInjectionShader->GetProgram(), loc,
+				point_light.m_Color.x,
+				point_light.m_Color.y,
+				point_light.m_Color.z,
+				point_light.m_Color.w);
+
+		glDispatchCompute(
+			(m_PointLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize,
+			(m_PointLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize, 1);
+
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
