@@ -75,10 +75,10 @@ Texture3dCompute::~Texture3dCompute()
 	}
 }
 
-void Texture3dCompute::CleanContent()
+void Texture3dCompute::CleanContent(GLuint clear_color[4])
 {
-	GLuint clear_color[] = { 0,0,0,0 }; // black and transparent
-	glClearTexImage(m_TexObject, 0, m_Format, m_Type, &clear_color);
+//	GLuint clear_color[] = { 0,0,0,0 }; // black and transparent
+	glClearTexImage(m_TexObject, 0, m_Format, m_Type, clear_color);
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
 	//

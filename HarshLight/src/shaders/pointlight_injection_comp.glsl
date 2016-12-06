@@ -54,6 +54,8 @@ layout (std140, binding = 3) uniform LightCapture
 
 uniform PointLight CurrPointLight;
 
+uniform uint CurrLightPass;//start from 1, max 255
+
 vec3 ComputePointLightLambertian(PointLight light, vec3 world_pos, vec3 albedo, vec3 normal)
 {
 	float dist = length(light.position.xyz - world_pos);
@@ -62,7 +64,7 @@ vec3 ComputePointLightLambertian(PointLight light, vec3 world_pos, vec3 albedo, 
 	vec3 light_dir = (light.position.xyz - world_pos) / dist;
 	float diffuse_intensity = max(dot(normalize(normal), light_dir), 0.0);
 
-	return /*vec3(diffuse_intensity) **/ atten * light.color.xyz;
+	return vec3(diffuse_intensity) * atten * light.color.xyz;
 }
 
 vec4 ColorUintToVec4(uint val) 
@@ -150,10 +152,30 @@ void main()
 			vec4 radiance;
 			radiance.xyz = albedo_dec.xyz * ComputePointLightLambertian(CurrPointLight, voxel_center, albedo_dec.xyz, normal_dec.xyz);
 			radiance.xyz = clamp(radiance.xyz, vec3(0.0), vec3(1.0));
-			radiance.w = 1.0;
+			//radiance.w = 1.0;
 			uint u32_radiance = ColorVec4ToUint(radiance);
-			//TODO: we need a lock here to avoid repeat injection
-			imageStore(TexVoxelRadiance, load_coord, uvec4(u32_radiance, 0, 0, 0));
+			//sadly we need a lock here to avoid repeat injection
+			uint old_val = imageLoad(TexVoxelRadiance, load_coord).x;
+			if((old_val & 0x000000FF) <= CurrLightPass - 1)
+			{
+				uvec4 new_v4;
+				new_v4.x = (u32_radiance & 0xFF000000) >> 24U;
+				new_v4.y = (u32_radiance & 0x00FF0000) >> 16U;
+				new_v4.z = (u32_radiance & 0x0000FF00) >> 8U;
+				new_v4.w = CurrLightPass;
+
+				uvec4 old_v4;
+				old_v4.x = (old_val & 0xFF000000) >> 24U;
+				old_v4.y = (old_val & 0x00FF0000) >> 16U;
+				old_v4.z = (old_val & 0x0000FF00) >> 8U;
+				old_v4.w = 0;
+
+				new_v4 = clamp(new_v4 + old_val, 0, 0xFF);
+				uint new_val = (new_v4.x << 24U) | (new_v4.y << 16U) | (new_v4.z << 8U) | (new_v4.w);
+				imageAtomicCompSwap(TexVoxelRadiance, load_coord, old_val, new_val);
+			}
+			
+			//imageStore(TexVoxelRadiance, load_coord, uvec4(u32_radiance, 0, 0, 0));
 	   }
 	}
 }

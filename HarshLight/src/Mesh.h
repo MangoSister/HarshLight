@@ -21,6 +21,12 @@ public:
     void SetMaterialIndex(uint32_t idx);
     uint32_t GetMaterialIndex() const;
 
+    inline const glm::vec3& GetBBoxMin() const
+    { return m_BBoxMin; }
+
+    inline const glm::vec3& GetBBoxMax() const
+    { return m_BBoxMax; }
+
 private:
 	void CreateBuffers();
 	
@@ -36,4 +42,7 @@ private:
 	GLuint m_EBO;
 
     uint32_t m_MaterialIndex;
+
+    glm::vec3 m_BBoxMin;
+    glm::vec3 m_BBoxMax;
 };

@@ -185,6 +185,9 @@ void VoxelizeController::Start()
 
 void VoxelizeController::Update(float dt)
 {
+    GLuint clear_color[4] = { 0,0,0,0 };
+    m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->CleanContent(clear_color);
+   // glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	DispatchDirLightInjection();
     DispatchPointLightInjection();
 }
@@ -228,10 +231,11 @@ void VoxelizeController::FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[V
 
 void VoxelizeController::DispatchVoxelization()
 {
+    GLuint clear_color[4] = { 0,0,0,0 };
 	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
 		if (m_VoxelizeTex[i] == nullptr) return;
-	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
-		m_VoxelizeTex[i]->CleanContent();
+    //for (uint32_t i = 0; i < VoxelChannel::Count; i++)
+    //    m_VoxelizeTex[i]->CleanContent(clear_color);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -354,7 +358,11 @@ void VoxelizeController::DispatchDirLightInjection()
             dir_light.m_Color.w);
 
         m_VoxelCam->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
- 
+        
+        loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "CurrLightPass");
+        if (loc != -1)
+            glProgramUniform1ui(m_DirLightInjectionShader->GetProgram(), loc, i + 1); //light pass
+
         glDispatchCompute(
             (m_DirLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize,
             (m_DirLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize, 1);
@@ -403,37 +411,39 @@ void VoxelizeController::DispatchPointLightInjection()
         //overwrite main camera
         glm::mat4x4 light_mtx[6];
 		glm::mat4x4 light_proj_mtx;
-		const float far = light_manager.ComputePointLightCutoffRadius(point_light, 0.01f);
-		glm::vec2 capture_range(0.1f, far);
+        const float atten_cutoff = 0.05;
+		const float range_far = light_manager.ComputePointLightCutoffRadius(point_light, atten_cutoff);
+		glm::vec2 capture_range(0.1f, range_far);
 		//glm::vec2 capture_range(0.1f, 10000.0f);
         point_light.GomputeCubeLightMtx(capture_range.x, capture_range.y, light_mtx, light_proj_mtx);
 
+        // example cube map coordinate retrieve
 		//save
-		float n = capture_range.x, f = capture_range.y;
-		auto a = light_proj_mtx * light_mtx[3] * glm::vec4(348, -290, -67.3, 1);
-		auto v = light_mtx[3] * glm::vec4(348, -290, -67.3, 1);
-		auto b = a / a.w;
-		float d = a.z / a.w * 0.5 + 0.5;
+		//float n = capture_range.x, f = capture_range.y;
+		//auto a = light_proj_mtx * light_mtx[3] * glm::vec4(348, -290, -67.3, 1);
+		//auto v = light_mtx[3] * glm::vec4(348, -290, -67.3, 1);
+		//auto b = a / a.w;
+		//float d = a.z / a.w * 0.5 + 0.5;
 
-		float e = d * 2.0 - 1.0;
-		float z = ((n - f) * e - 2 * n * f) / (n + f);
-		z = -v.z;
-		float linear = (z - n) / (f - n);
-		float frag_x = b.x * 0.5 + 0.5;
-		float frag_y = b.y * 0.5 + 0.5;
+		//float e = d * 2.0 - 1.0;
+		//float z = ((n - f) * e - 2 * n * f) / (n + f);
+		//z = -v.z;
+		//float linear = (z - n) / (f - n);
+		//float frag_x = b.x * 0.5 + 0.5;
+		//float frag_y = b.y * 0.5 + 0.5;
 
-		//restore a (input: frag_x, frag_y and linear)
-		float z_r = n + (f - n) * linear;
-		float x_r = frag_x * 2.0 - 1.0;
-		float y_r = frag_y * 2.0 - 1.0;
-		x_r *= z_r;
-		y_r *= z_r;
-		z_r = -z_r;
-		float w = -z_r;
-		z_r = (n + f + 2 * n * f / z_r) / (f - n);
-		z_r *= w;
+		////restore a (input: frag_x, frag_y and linear)
+		//float z_r = n + (f - n) * linear;
+		//float x_r = frag_x * 2.0 - 1.0;
+		//float y_r = frag_y * 2.0 - 1.0;
+		//x_r *= z_r;
+		//y_r *= z_r;
+		//z_r = -z_r;
+		//float w = -z_r;
+		//z_r = (n + f + 2 * n * f / z_r) / (f - n);
+		//z_r *= w;
 
-		glm::vec4 o = glm::inverse(light_proj_mtx * light_mtx[3]) * glm::vec4(x_r, y_r, z_r, w);
+		//glm::vec4 o = glm::inverse(light_proj_mtx * light_mtx[3]) * glm::vec4(x_r, y_r, z_r, w);
 
 
         glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)UniformBufferBinding::kPointLightCapture, m_PointLightCaptureUBuffer, 0, GetPointLightCaptureUBufferSize());
@@ -448,7 +458,7 @@ void VoxelizeController::DispatchPointLightInjection()
 
         glClear(GL_DEPTH_BUFFER_BIT);
         for (ModelRenderer* renderer : renderers)
-            renderer->Render(RenderPass::kPointLightInjection);
+            renderer->Render(RenderPass::kPointLightInjection, point_light.m_Position, range_far);
 
         //now that we have depth information, do light injection
 		glUseProgram(m_PointLightInjectionShader->GetProgram());
@@ -490,6 +500,10 @@ void VoxelizeController::DispatchPointLightInjection()
 				point_light.m_Color.y,
 				point_light.m_Color.z,
 				point_light.m_Color.w);
+
+        loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), "CurrLightPass");
+        if (loc != -1)
+            glProgramUniform1ui(m_PointLightInjectionShader->GetProgram(), loc, i + 1 + light_manager.GetDirLightCount()); //light pass
 
 		glDispatchCompute(
 			(m_PointLightInjectionRes + m_LightInjectionGroupSize - 1) / m_LightInjectionGroupSize,

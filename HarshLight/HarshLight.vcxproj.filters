@@ -220,6 +220,9 @@
     <None Include="src\shaders\dirlight_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="src\shaders\light_clear_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VoxelInvert.cu">

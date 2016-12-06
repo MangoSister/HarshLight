@@ -30,13 +30,16 @@ public:
 	void ScaleTo(const glm::vec3& scale);
 
 	void Render(RenderPassFlag pass);
-
+    void Render(RenderPassFlag pass, const glm::vec3& center, float radius);
     void AddMaterial(RenderPassFlag pass, Material* material);
     const std::vector<Material*>& GetMaterial(RenderPassFlag pass) const;
 	void SetRenderPass(RenderPassFlag flag);
 	RenderPassFlag GetRenderPass() const;
 
     const mat4x4& GetTransform() const;
+
+    inline const Model* GetModel() const
+    { return m_Model; }
 
 protected:
 

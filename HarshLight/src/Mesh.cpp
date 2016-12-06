@@ -9,6 +9,9 @@ Mesh::Mesh(std::vector<glm::vec3>&& pos, std::vector<uint32_t>&& indices,
 
 Mesh::Mesh(const aiMesh* aiMesh)
 { 
+    m_BBoxMin = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    m_BBoxMax = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+
 	for (uint32_t i = 0; i < aiMesh->mNumVertices; i++)
 	{
 		glm::vec3 pos;
@@ -16,6 +19,20 @@ Mesh::Mesh(const aiMesh* aiMesh)
 		pos.y = aiMesh->mVertices[i].y;
 		pos.z = aiMesh->mVertices[i].z;
 		m_Positions.push_back(pos);
+
+        if (pos.x < m_BBoxMin.x)
+            m_BBoxMin.x = pos.x;
+        if (pos.y < m_BBoxMin.y)
+            m_BBoxMin.y = pos.y;
+        if (pos.z < m_BBoxMin.z)
+            m_BBoxMin.z = pos.z;
+
+        if (pos.x > m_BBoxMax.x)
+            m_BBoxMax.x = pos.x;
+        if (pos.y > m_BBoxMax.y)
+            m_BBoxMax.y = pos.y;
+        if (pos.z > m_BBoxMax.z)
+            m_BBoxMax.z = pos.z;
 
 		glm::vec3 normal;
 		normal.x = aiMesh->mNormals[i].x;

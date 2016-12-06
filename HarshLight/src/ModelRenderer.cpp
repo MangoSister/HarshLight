@@ -50,6 +50,30 @@ void ModelRenderer::Render(RenderPassFlag pass)
 	}
 }
 
+void ModelRenderer::Render(RenderPassFlag pass, const glm::vec3 & center, float radius)
+{
+    switch (pass)
+    {
+    case RenderPass::kVoxelize:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_VoxelizeMaterials, center, radius); break;
+    case RenderPass::kDirLightInjection:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_DirLightInjectionMaterials, center, radius); break;
+    case RenderPass::kPointLightInjection:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_PointLightInjectionMaterials, center, radius); break;
+    case RenderPass::kRegular:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_Materials, center, radius); break;
+    case RenderPass::kPost:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_PostMaterials, center, radius); break;
+    default:case RenderPass::kNone:
+        break;
+    }
+}
+
 
 void ModelRenderer::AddMaterial(RenderPassFlag pass, Material* material)
 {

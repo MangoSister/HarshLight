@@ -84,6 +84,29 @@ Model::Model(Primitive primitive)
     default:
         break;
     }
+
+    m_BBoxMin = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    m_BBoxMax = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+
+    for (Mesh* mesh : m_Meshes)
+    {
+        const glm::vec3& mesh_min = mesh->GetBBoxMin();
+        const glm::vec3& mesh_max = mesh->GetBBoxMax();
+
+        if (mesh_min.x < m_BBoxMin.x)
+            m_BBoxMin.x = mesh_min.x;
+        if (mesh_min.y < m_BBoxMin.y)
+            m_BBoxMin.y = mesh_min.y;
+        if (mesh_min.z < m_BBoxMin.z)
+            m_BBoxMin.z = mesh_min.z;
+
+        if (mesh_max.x > m_BBoxMax.x)
+            m_BBoxMax.x = mesh_max.x;
+        if (mesh_max.y > m_BBoxMax.y)
+            m_BBoxMax.y = mesh_max.y;
+        if (mesh_max.z > m_BBoxMax.z)
+            m_BBoxMax.z = mesh_max.z;
+    }
 }
 
 Model::Model(const char* path)
@@ -141,6 +164,52 @@ void Model::Render(const glm::mat4x4& transform, const std::vector<Material*>& m
     }
 }
 
+void Model::Render(const glm::mat4x4 & transform, const std::vector<Material*>& materials, const glm::vec3& center, float radius) const
+{
+#if _DEBUG
+    assert(materials.size() > 0);
+#endif
+
+    glm::mat4x4 w2o_transform = glm::inverse(transform);
+
+    for (size_t i = 0; i < m_Meshes.size(); i++)
+    {
+        glm::vec4 obj_pos = glm::vec4(center, 1.0f);
+        obj_pos = w2o_transform * obj_pos;
+        glm::vec3 best;
+
+        const glm::vec3& min = m_Meshes[i]->GetBBoxMin();
+        const glm::vec3& max = m_Meshes[i]->GetBBoxMax();
+
+        best.x = std::max(min.x, std::min(obj_pos.x, max.x));
+        best.y = std::max(min.y, std::min(obj_pos.y, max.y));
+        best.z = std::max(min.z, std::min(obj_pos.z, max.z));
+        glm::vec3 offset = best - glm::vec3(obj_pos);
+        float best_dist_sq = glm::dot(offset, offset);
+        if (best_dist_sq > radius * radius)
+            continue;
+
+        uint32_t material_idx = m_Meshes[i]->GetMaterialIndex();
+        if (material_idx >= materials.size())
+        {
+            fprintf(stderr, "WARNING: mesh material idx (%u) exceed material array size\n", material_idx);
+            material_idx = (uint32_t)materials.size() - 1;
+        }
+        const Material* material = materials[material_idx];
+#if _DEBUG
+        assert(material != nullptr);
+#endif
+        material->Use();
+        GLint model_loc = glGetUniformLocation(material->GetShader()->GetProgram(), "Model");
+#if _DEBUG
+        if (model_loc == -1)
+            fprintf(stderr, "WARNING: Invalid model mtx shader program location\n");
+#endif
+        glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(transform));
+        m_Meshes[i]->Render(material);
+    }
+}
+
 void Model::LoadModel(const char* path)
 {
 	Assimp::Importer import;
@@ -165,6 +234,29 @@ void Model::LoadModel(const char* path)
 	}
 
 	LoadNode(scene->mRootNode, scene);
+
+    m_BBoxMin = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    m_BBoxMax = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+
+    for (Mesh* mesh : m_Meshes)
+    {
+        const glm::vec3& mesh_min = mesh->GetBBoxMin();
+        const glm::vec3& mesh_max = mesh->GetBBoxMax();
+
+        if (mesh_min.x < m_BBoxMin.x)
+            m_BBoxMin.x = mesh_min.x;
+        if (mesh_min.y < m_BBoxMin.y)
+            m_BBoxMin.y = mesh_min.y;
+        if (mesh_min.z < m_BBoxMin.z)
+            m_BBoxMin.z = mesh_min.z;
+
+        if (mesh_max.x > m_BBoxMax.x)
+            m_BBoxMax.x = mesh_max.x;
+        if (mesh_max.y > m_BBoxMax.y)
+            m_BBoxMax.y = mesh_max.y;
+        if (mesh_max.z > m_BBoxMax.z)
+            m_BBoxMax.z = mesh_max.z;
+    }
 }
 
 void Model::LoadNode(const aiNode* node, const aiScene* scene)

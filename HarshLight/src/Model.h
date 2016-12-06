@@ -25,6 +25,17 @@ public:
 	~Model();
     const char* GetRawPath() const;
     void Render(const glm::mat4x4& transform, const std::vector<Material*>& materials) const;
+    void Render(const glm::mat4x4& transform, const std::vector<Material*>& materials, const glm::vec3& center, float radius) const;
+
+    inline const glm::vec3& GetBBoxMin() const
+    {
+        return m_BBoxMin;
+    }
+
+    inline const glm::vec3& GetBBoxMax() const
+    {
+        return m_BBoxMax;
+    }
 
 private:
 
@@ -34,4 +45,6 @@ private:
 	std::vector<Mesh*> m_Meshes;
 	const char* m_RawPath;
 
+    glm::vec3 m_BBoxMin;
+    glm::vec3 m_BBoxMax;
 };
