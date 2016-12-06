@@ -328,13 +328,6 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     depth_display_cube_shader->LinkProgram();
     World::GetInst().RegisterShader(depth_display_cube_shader);
 
-	ShaderProgram* light_injection_shader = new ShaderProgram();
-	light_injection_shader->AddVertShader("src/shaders/dirlight_injection_vert.glsl");
-	light_injection_shader->AddFragShader("src/shaders/dirlight_injection_frag.glsl");
-	light_injection_shader->LinkProgram();
-	World::GetInst().RegisterShader(light_injection_shader);
-
-
     ShaderProgram* framebuffer_display_shader = new ShaderProgram();
     framebuffer_display_shader->AddVertShader("src/shaders/framebuffer_color_vert.glsl");
     framebuffer_display_shader->AddFragShader("src/shaders/framebuffer_color_frag.glsl");

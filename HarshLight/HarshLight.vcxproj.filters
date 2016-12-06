@@ -208,12 +208,6 @@
     <None Include="src\shaders\display_cubemap_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
-    <None Include="src\shaders\dirlight_injection_frag.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
-    <None Include="src\shaders\dirlight_injection_vert.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
     <None Include="src\shaders\pointlight_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>

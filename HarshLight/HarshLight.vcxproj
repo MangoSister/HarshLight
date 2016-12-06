@@ -76,8 +76,6 @@
     <None Include="src\shaders\framebuffer_color_frag.glsl" />
     <None Include="src\shaders\framebuffer_color_vert.glsl" />
     <None Include="src\shaders\dirlight_injection_comp.glsl" />
-    <None Include="src\shaders\dirlight_injection_frag.glsl" />
-    <None Include="src\shaders\dirlight_injection_vert.glsl" />
     <None Include="src\shaders\light_clear_comp.glsl" />
     <None Include="src\shaders\local_illum_frag.glsl" />
     <None Include="src\shaders\local_illum_vert.glsl" />
