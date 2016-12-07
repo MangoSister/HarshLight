@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\anisotropic_mipmap_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_start_comp.glsl" />
     <None Include="src\shaders\cr_frag.glsl" />
     <None Include="src\shaders\cr_geom.glsl" />
     <None Include="src\shaders\cr_vert.glsl" />

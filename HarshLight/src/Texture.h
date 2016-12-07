@@ -20,7 +20,7 @@ private:
 class Texture3dCompute
 {
 public:
-    explicit Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format, GLuint format, GLuint type);
+    explicit Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format, GLuint format, GLuint type, bool mipmap);
 	Texture3dCompute(const Texture3dCompute& other) = delete;
 	~Texture3dCompute();
     void CleanContent(GLuint clear_color[4]);

@@ -24,7 +24,7 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
     :Component(), m_VoxelDim(voxel_dim), m_Center(center), m_Extent(extent), m_VoxelCam(voxel_cam), m_DirLightInjectionRes(light_injection_res)
 {
 	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
-		m_VoxelizeTex[i] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT);
+		m_VoxelizeTex[i] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, false);
 
 	glGenBuffers(1, &m_DirLightViewUBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, m_DirLightViewUBuffer);
@@ -66,6 +66,17 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 	m_PointLightInjectionShader->AddShader("src/shaders/pointlight_injection_comp.glsl");
 	m_PointLightInjectionShader->LinkProgram();
 
+	m_AnisotropicMipmapShaderLeaf = new ComputeShaderProgram();
+	m_AnisotropicMipmapShaderLeaf->AddShader("src/shaders/anisotropic_mipmap_start_comp.glsl");
+	m_AnisotropicMipmapShaderLeaf->LinkProgram();
+
+	m_AnisotropicMipmapShaderInterior = new ComputeShaderProgram();
+	m_AnisotropicMipmapShaderInterior->AddShader("src/shaders/anisotropic_mipmap_comp.glsl");
+	m_AnisotropicMipmapShaderInterior->LinkProgram();
+
+	uint32_t half_voxel_dim = m_VoxelDim / 2;
+	for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
+		m_AnisoRadianceMipmap[i] = new Texture3dCompute(half_voxel_dim, half_voxel_dim, half_voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, true);
 }
 
 VoxelizeController::~VoxelizeController()
@@ -123,6 +134,14 @@ VoxelizeController::~VoxelizeController()
 		m_PointLightInjectionShader = nullptr;
 	}
 
+	for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
+	{
+		if (m_AnisoRadianceMipmap[i])
+		{
+			delete m_AnisoRadianceMipmap[i];
+			m_AnisoRadianceMipmap[i] = nullptr;
+		}
+	}	
 }
 
 
@@ -190,6 +209,7 @@ void VoxelizeController::Update(float dt)
    // glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	DispatchDirLightInjection();
     DispatchPointLightInjection();
+	MipmapRadiance();
 }
 
 void VoxelizeController::SetVoxelDim(uint32_t dim)
@@ -411,7 +431,7 @@ void VoxelizeController::DispatchPointLightInjection()
         //overwrite main camera
         glm::mat4x4 light_mtx[6];
 		glm::mat4x4 light_proj_mtx;
-        const float atten_cutoff = 0.05;
+        const float atten_cutoff = 0.05f;
 		const float range_far = light_manager.ComputePointLightCutoffRadius(point_light, atten_cutoff);
 		glm::vec2 capture_range(0.1f, range_far);
 		//glm::vec2 capture_range(0.1f, 10000.0f);
@@ -520,6 +540,23 @@ void VoxelizeController::DispatchPointLightInjection()
     uint32_t vw, vh;
     World::GetInst().GetViewportSize(vw, vh);
     glViewport(0, 0, vw, vh);
+}
+
+void VoxelizeController::MipmapRadiance()
+{
+	glUseProgram(m_AnisotropicMipmapShaderLeaf->GetProgram());
+	//glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_WRITE, tex_slot.m_InternalFormat);
+	glBindImageTexture(0, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
+	for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
+		glBindImageTexture(i + 1, m_AnisoRadianceMipmap[i]->GetTexObj(), 0, GL_TRUE, 0, GL_WRITE_ONLY, m_AnisoRadianceMipmap[i]->GetInternalFormat());
+
+	glDispatchCompute(
+		(m_VoxelDim / 2 + (m_AnisoMipmapGroupSize - 1)) / (m_AnisoMipmapGroupSize),
+		(m_VoxelDim / 2 + (m_AnisoMipmapGroupSize - 1)) / (m_AnisoMipmapGroupSize),
+		(m_VoxelDim / 2 + (m_AnisoMipmapGroupSize - 1)) / (m_AnisoMipmapGroupSize));
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
 }
 
 void VoxelizeController::LightSpaceBBox(const DirLight& light, glm::vec3& min, glm::vec3& max) const

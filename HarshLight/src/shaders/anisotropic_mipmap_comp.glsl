@@ -6,9 +6,9 @@ layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = LOCA
 layout (binding = 0, r32ui) readonly volatile uniform uimage3D ImgFine[2];
 layout (binding = 1, r32ui) writeonly volatile uniform uimage3D ImgCoarse[2];
 
-uniform uvec3 ChildBaseOffset;
-uniform uvec3 OrthoDirections[2];
-uniform uvec3 MarchDirection;
+uniform ivec3 ChildBaseOffset;
+uniform ivec3 OrthoDirections[2];
+uniform ivec3 MarchDirection;
 
 uint ColorVec4ToUint(vec4 val) 
 {
@@ -38,17 +38,17 @@ void main()
 	//gl_GlobalInvocationID is coarse texture idx
 
 	//out-of-bound check
-	if(any(greaterThanEqual(gl_GlobalInvocationID, imageSize(ImgCoarse)))
+	if( any( greaterThanEqual( gl_GlobalInvocationID, imageSize(ImgCoarse[0]) ) ) )
 		return;
 
-	uvec3 child_base = gl_GlobalInvocationID * vec3(2) + ChildBaseOffset;
+	//uvec3 child_base = gl_GlobalInvocationID * uvec3(2) + ChildBaseOffset;
 
-	uvec3 enters[4];
-	enters[0] = gl_GlobalInvocationID * vec3(2) + ChildBaseOffset; // child_base + child_base_offset
+	ivec3 enters[4];
+	enters[0] = ivec3(gl_GlobalInvocationID) * ivec3(2) + ChildBaseOffset; // child_base + child_base_offset
 	enters[1] = enters[0] + OrthoDirections[0];
 	enters[2] = enters[0] + OrthoDirections[1];
 	enters[3] = enters[1] + OrthoDirections[1];
-	uvec3 exits[4];
+	ivec3 exits[4];
 	vec4 blend = vec4(0.0);
 	for(uint i = 0; i < 4; i++)
 	{
@@ -60,7 +60,7 @@ void main()
 	}
 	blend *= 0.25;	
 	uint u32_blend = ColorVec4ToUint(blend);
-	imageStore(ImgCoarse[0], gl_GlobalInvocationID, u32_blend);
+	imageStore(ImgCoarse[0], ivec3(gl_GlobalInvocationID), uvec4(u32_blend, 0, 0, 0));
 
 	blend = vec4(0.0);
 	for(uint i = 0; i < 4; i++)
@@ -72,5 +72,5 @@ void main()
 	}
 	blend *= 0.25;
 	u32_blend = ColorVec4ToUint(blend);
-	imageStore(ImgCoarse[1], gl_GlobalInvocationID, u32_blend);
+	imageStore(ImgCoarse[1], ivec3(gl_GlobalInvocationID), uvec4(u32_blend, 0, 0, 0));
 }

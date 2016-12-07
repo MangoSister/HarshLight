@@ -48,11 +48,15 @@ public:
     inline GLuint GetCubeDepthMap() const
     { return m_CubeDepthMap; }
 
+	inline const Texture3dCompute* GetAnisoRadianceMipmap(uint32_t idx) const
+	{ return m_AnisoRadianceMipmap[idx]; }
+
 private:
 	
 	void DispatchVoxelization();
 	void DispatchDirLightInjection();
     void DispatchPointLightInjection();
+	void MipmapRadiance();
 
     void LightSpaceBBox(const DirLight& light, glm::vec3& bmin, glm::vec3& bmax) const;
 
@@ -83,4 +87,10 @@ private:
     ComputeShaderProgram* m_DirLightInjectionShader;
 	ComputeShaderProgram* m_PointLightInjectionShader;
     uint32_t m_LightInjectionGroupSize = 8;
+
+	ComputeShaderProgram* m_AnisotropicMipmapShaderLeaf;
+	ComputeShaderProgram* m_AnisotropicMipmapShaderInterior;
+	static const uint32_t s_AnisotropicMipmapCount = 6;
+	uint32_t m_AnisoMipmapGroupSize = 8;
+	Texture3dCompute* m_AnisoRadianceMipmap[s_AnisotropicMipmapCount];
 };
