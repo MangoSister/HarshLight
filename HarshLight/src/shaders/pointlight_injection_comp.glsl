@@ -138,6 +138,9 @@ void main()
 			ivec3 load_coord = ivec3(voxel_coord * voxel_dim);
 		
 			uint albedo_enc = imageLoad(TexVoxelAlbedo, load_coord).x;
+			//skip potential empty voxel though there shouldn't be ideally?
+			//if(albedo_enc == 0)
+			//	continue;
 			vec4 albedo_dec = ColorUintToVec4(albedo_enc);
 			uint normal_enc = imageLoad(TexVoxelNormal, load_coord).x;
 			vec4 normal_dec = ColorUintToVec4(normal_enc);
