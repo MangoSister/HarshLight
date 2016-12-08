@@ -38,25 +38,33 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 
 	glGenFramebuffers(1, &m_DepthFBO);
 
-	glGenTextures(1, &m_DirectionalDepthMap);
-	glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-		m_DirLightInjectionRes, m_DirLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glGenTextures(LightManager::s_DirLightMaxNum, m_DirectionalDepthMap);
+	for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+			m_DirLightInjectionRes, m_DirLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenTextures(1, &m_CubeDepthMap);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap);
-    for (GLuint i = 0; i < 6; i++)
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24,
-            m_PointLightInjectionRes, m_PointLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glGenTextures(LightManager::s_PointLightMaxNum, m_CubeDepthMap);
+	for (uint32_t i = 0; i < LightManager::s_PointLightMaxNum; i++)
+	{
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap[i]);
+		for (GLuint i = 0; i < 6; i++)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24,
+				m_PointLightInjectionRes, m_PointLightInjectionRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	}
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     m_DirLightInjectionShader = new ComputeShaderProgram();
     m_DirLightInjectionShader->AddShader("src/shaders/dirlight_injection_comp.glsl");
@@ -104,17 +112,23 @@ VoxelizeController::~VoxelizeController()
         m_PointLightCaptureUBuffer = 0;
     }
 
-	if (m_DirectionalDepthMap)
+	for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
 	{
-		glDeleteTextures(1, &m_DirectionalDepthMap);
-		m_DirectionalDepthMap = 0;
+		if (m_DirectionalDepthMap[i])
+		{
+			glDeleteTextures(1, &m_DirectionalDepthMap[i]);
+			m_DirectionalDepthMap[i] = 0;
+		}
 	}
 
-    if (m_CubeDepthMap)
-    {
-        glDeleteTextures(1, &m_CubeDepthMap);
-        m_CubeDepthMap = 0;
-    }
+	for (uint32_t i = 0; i < LightManager::s_PointLightMaxNum; i++)
+	{
+		if (m_CubeDepthMap[i])
+		{
+			glDeleteTextures(1, &m_CubeDepthMap[i]);
+			m_CubeDepthMap[i] = 0;
+		}
+	}
 
 	if (m_DepthFBO)
 	{
@@ -250,6 +264,31 @@ void VoxelizeController::FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[V
 	cudaCheckError(cudaGraphicsUnmapResources(VoxelChannel::Count, m_CudaResources, 0));
 }
 
+void VoxelizeController::EnableShadowSampling()
+{
+	for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void VoxelizeController::DisableShadowSampling()
+{
+	for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void VoxelizeController::DispatchVoxelization()
 {
     GLuint clear_color[4] = { 0,0,0,0 };
@@ -293,14 +332,10 @@ void VoxelizeController::DispatchDirLightInjection()
 	for (uint32_t i = 0; i < VoxelChannel::Count; i++)
 		if (m_VoxelizeTex[i] == nullptr) return;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DirectionalDepthMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-#if _DEBUG
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    assert(status == GL_FRAMEBUFFER_COMPLETE);
-#endif
+	LightManager& light_manager = World::GetInst().GetLightManager();
+	const RendererList& renderers = World::GetInst().GetRenderers();
+
+	DisableShadowSampling();
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -309,12 +344,20 @@ void VoxelizeController::DispatchDirLightInjection()
 	glDepthMask(GL_TRUE);
 	glViewport(0, 0, m_DirLightInjectionRes, m_DirLightInjectionRes);
 
-	const LightManager& light_manager = World::GetInst().GetLightManager();
-	const RendererList& renderers = World::GetInst().GetRenderers();
+
 
 	for (uint32_t i = 0; i < light_manager.GetDirLightCount(); i++)
 	{
-		const DirLight& dir_light = light_manager.GetDirLight(i);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DirectionalDepthMap[i], 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+#if _DEBUG
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		assert(status == GL_FRAMEBUFFER_COMPLETE);
+#endif
+
+		DirLight& dir_light = light_manager.GetDirLight(i);
 		//overwrite main camera
 
 		glBindBufferRange(GL_UNIFORM_BUFFER, (uint8_t)UniformBufferBinding::kMainCam, m_DirLightViewUBuffer, 0, Camera::GetUBufferSize());
@@ -324,6 +367,8 @@ void VoxelizeController::DispatchDirLightInjection()
         glm::vec3 min, max;
         LightSpaceBBox(dir_light, min, max);
         glm::mat4x4 light_proj_mtx = glm::ortho(min.x, max.x, min.y, max.y, -max.z, -min.z);
+
+		dir_light.m_LightProjMtx = light_proj_mtx; //update dir light projection matrices here
 
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(light_mtx));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(light_proj_mtx));
@@ -350,7 +395,7 @@ void VoxelizeController::DispatchDirLightInjection()
         if (loc != -1)
         {
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap);
+            glBindTexture(GL_TEXTURE_2D, m_DirectionalDepthMap[i]);
 			glUniform1i(loc, 0);
         }
 
@@ -391,6 +436,8 @@ void VoxelizeController::DispatchDirLightInjection()
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
 	
+ 	EnableShadowSampling();
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -406,14 +453,8 @@ void VoxelizeController::DispatchPointLightInjection()
     for (uint32_t i = 0; i < VoxelChannel::Count; i++)
         if (m_VoxelizeTex[i] == nullptr) return;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_CubeDepthMap, 0); 
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-#if _DEBUG
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    assert(status == GL_FRAMEBUFFER_COMPLETE);
-#endif
+	const LightManager& light_manager = World::GetInst().GetLightManager();
+	const RendererList& renderers = World::GetInst().GetRenderers();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -422,11 +463,18 @@ void VoxelizeController::DispatchPointLightInjection()
     glDepthMask(GL_TRUE);
     glViewport(0, 0, m_PointLightInjectionRes, m_PointLightInjectionRes);
 
-    const LightManager& light_manager = World::GetInst().GetLightManager();
-    const RendererList& renderers = World::GetInst().GetRenderers();
-
     for (uint32_t i = 0; i < light_manager.GetPointLightCount(); i++)
     {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_CubeDepthMap[i], 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+#if _DEBUG
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		assert(status == GL_FRAMEBUFFER_COMPLETE);
+#endif
+
+
         const PointLight& point_light = light_manager.GetPointLight(i);
 
         //overwrite main camera
@@ -497,7 +545,7 @@ void VoxelizeController::DispatchPointLightInjection()
 		if (loc != -1)
 		{
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeDepthMap[i]);
 			glUniform1i(loc, 0);
 		}
 

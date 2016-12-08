@@ -11,6 +11,7 @@ public:
 	glm::vec4 m_Direction;
 	glm::vec4 m_Color;
 	glm::mat4x4 m_LightMtx;
+	glm::mat4x4 m_LightProjMtx;
 
 	void UpdateLightMtx();
 };

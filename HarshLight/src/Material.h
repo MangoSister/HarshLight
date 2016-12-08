@@ -5,6 +5,7 @@
 #include "GL/glew.h"
 #include <cstdint>
 #include <vector>
+#include <string>
 #include <glm/glm.hpp>
 
 enum class TexUsage : uint8_t
@@ -50,7 +51,7 @@ private:
     {
     public:
 		GLuint m_Tex2dObj;
-        const char* m_Semantic;
+        std::string m_Semantic;
         Texture2dSlot(GLuint tex2d, const char* semantic) :
 			m_Tex2dObj(tex2d), m_Semantic(semantic) {}
     };
@@ -59,7 +60,7 @@ private:
 	{
 	public:
 		GLuint m_Tex3dObj;
-		const char* m_Semantic;
+		std::string m_Semantic;
 		TexUsage m_Usage;
         GLuint m_BindingPoint;
 		GLuint m_InternalFormat;
@@ -72,7 +73,7 @@ private:
     {
     public:
         GLuint m_TexCubeObj;
-        const char* m_Semantic;
+		std::string m_Semantic;
         TextureCubeSlot(GLuint tex_cube, const char* semantic) :
             m_TexCubeObj(tex_cube), m_Semantic(semantic) {}
     };

@@ -51,21 +51,21 @@ void Material::DeleteTexture(const char * semantic)
 {
     for (auto iter = m_Textures2d.begin(); iter != m_Textures2d.end();)
     {
-        if (strcmp(semantic, iter->m_Semantic) == 0)
+        if (strcmp(semantic, iter->m_Semantic.c_str()) == 0)
             iter = m_Textures2d.erase(iter);
         else ++iter;
     }
 
     for (auto iter = m_Textures3d.begin(); iter != m_Textures3d.end();)
     {
-        if (strcmp(semantic, iter->m_Semantic) == 0)
+        if (strcmp(semantic, iter->m_Semantic.c_str()) == 0)
             iter = m_Textures3d.erase(iter);
         else ++iter;
     }
 
     for (auto iter = m_TexturesCube.begin(); iter != m_TexturesCube.end();)
     {
-        if (strcmp(semantic, iter->m_Semantic) == 0)
+        if (strcmp(semantic, iter->m_Semantic.c_str()) == 0)
             iter = m_TexturesCube.erase(iter);
         else ++iter;
     }
@@ -149,7 +149,7 @@ void Material::Use() const
     for (uint32_t i = 0; i < tex2d_num; i++)
     {
         const Texture2dSlot& tex_slot = m_Textures2d[i];
-        GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
+        GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic.c_str());
         if (loc == -1)
         {
             //fprintf(stderr, "WARNING: cannot find tex2d %s\n", tex_slot.m_Semantic);
@@ -171,7 +171,7 @@ void Material::Use() const
     for (uint32_t i = 0; i < tex_cube_num; i++)
     {
         const TextureCubeSlot& tex_slot = m_TexturesCube[i];
-        GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
+        GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic.c_str());
         if (loc == -1)
         {
             //fprintf(stderr, "WARNING: cannot find tex_cube variable %s\n", tex_slot.m_Semantic);
@@ -193,7 +193,7 @@ void Material::Use() const
 	for (uint32_t i = 0; i < tex3d_num; i++)
 	{
 		const Texture3dSlot& tex_slot = m_Textures3d[i];
-		GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic);
+		GLint loc = glGetUniformLocation(m_Shader->GetProgram(), tex_slot.m_Semantic.c_str());
 		if (loc == -1)
 		{
 			//fprintf(stderr, "WARNING: cannot find tex3d variable %s\n", tex_slot.m_Semantic);

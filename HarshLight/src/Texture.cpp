@@ -33,6 +33,19 @@ Texture2d::Texture2d(const char * path)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+Texture2d::Texture2d(uint32_t width, uint32_t height)
+{
+	m_RawPath = nullptr;
+	glGenTextures(1, &m_TexObject);
+#ifdef _DEBUG
+	assert(m_TexObject);
+#endif
+	glBindTexture(GL_TEXTURE_2D, m_TexObject);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 Texture2d::~Texture2d()
 {
     if (m_TexObject)

@@ -84,6 +84,7 @@ public:
     std::vector<Material*> LoadDefaultMaterialsForModel(Model * model);
 
 	VoxelizeController* m_VoxelizeController;
+	Texture2d* m_DefaultTex;
 private:
 
     World() { }

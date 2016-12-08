@@ -1,5 +1,7 @@
 #version 450 core
 
+#define SHADOW_BIAS 0.98
+
 in vec2 vs_Texcoord;
 in vec3 vs_WorldPosition;
 in vec3 vs_WorldNormal;
@@ -23,6 +25,7 @@ struct DirLight
 	vec4 direction;
 	vec4 color;
 	mat4 lightMtx;
+	mat4 lightProjMtx;
 };
 
 struct PointLight
@@ -44,7 +47,7 @@ layout (std140, binding = 2) uniform LightInfo
 
 uniform sampler2D TexAlbedo;
 uniform float Shininess;
-uniform sampler2D TexDirShadow[DIR_LIGHT_MAX_NUM];
+uniform sampler2DShadow TexDirShadow[DIR_LIGHT_MAX_NUM];
 
 vec3 ComputeDirLightBlinnPhong(DirLight light)
 {
@@ -78,15 +81,11 @@ vec3 ComputePointLightBlinnPhong(PointLight light)
 
 float ComputeDirLightShadow(uint idx)
 {
-	vec4 light_space_pos = DirLights[idx].lightMtx * vec4(vs_WorldPosition, 1.0);
-	vec3 shadow_coord = light_space_pos.xyz / light_space_pos.w;
+	vec4 shadow_coord = DirLights[idx].lightProjMtx * DirLights[idx].lightMtx * vec4(vs_WorldPosition, 1.0);
 	shadow_coord = shadow_coord * 0.5 + 0.5;
-	float closest_depth = texture(TexDirShadow[idx], shadow_coord.xy).r;   
+	shadow_coord.z *= SHADOW_BIAS;
 	
-	float curr_depth = shadow_coord.z;
-    // Check whether current frag pos is in shadow
-    float shadow = closest_depth > curr_depth ? 1.0 : 0.0;
-	return shadow;
+	return textureProj(TexDirShadow[idx], shadow_coord);
 }
 
 void main()

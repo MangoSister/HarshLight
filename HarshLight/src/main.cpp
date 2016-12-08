@@ -402,6 +402,9 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     World::GetInst().SetMouseSensitivity(mouse_sensitivity);
 
+	World::GetInst().m_DefaultTex = new Texture2d(16, 16);
+	World::GetInst().RegisterTexture2d("", World::GetInst().m_DefaultTex);
+
     /* --------------  Scene  ----------- */
     //hardcode test world...:p
     Model* sceneModel = new Model(scene_path);
@@ -459,7 +462,14 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			mat_voxel_visual->DeleteTexture("TexVoxel"); 
 			mat_voxel_visual->SetShader(local_illum_shader);
             mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
-            
+			char name[30];
+			for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+			{
+				memset(name, 0, 30);
+				sprintf(name, "TexDirShadow[%u]", i);
+				mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), name);
+			}
+
 			//mat_voxel_visual->SetShader(vct_shader);
 			//mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
 			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
@@ -471,34 +481,34 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			//	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
 			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
 			//}
-   //         World::GetInst().RegisterMaterial(mat_voxel_visual);
 
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
+			World::GetInst().RegisterMaterial(mat_voxel_visual);
 
         }
     }
 
     Model* quad = new Model(Model::Primitive::kQuad);
-    ModelRenderer* dir_light_depth_display = new ModelRenderer(quad);
-    dir_light_depth_display->SetRenderPass(RenderPass::kPost);
-    dir_light_depth_display->MoveTo({ -0.7f, 0.5f, 0.0f });
-    dir_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
-    Material* mat_depth_display = new Material();
-    mat_depth_display->SetShader(depth_display_shader);
-    mat_depth_display->AddTexture2dDirect(World::GetInst().m_VoxelizeController->GetDirectionalDepthMap(), "TexDepth");
-    dir_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_display);
-    sceneActor->AddRenderer(dir_light_depth_display);
+    //ModelRenderer* dir_light_depth_display = new ModelRenderer(quad);
+    //dir_light_depth_display->SetRenderPass(RenderPass::kPost);
+    //dir_light_depth_display->MoveTo({ -0.7f, 0.5f, 0.0f });
+    //dir_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+    //Material* mat_depth_display = new Material();
+    //mat_depth_display->SetShader(depth_display_shader);
+    //mat_depth_display->AddTexture2dDirect(World::GetInst().m_VoxelizeController->GetDirectionalDepthMap(0), "TexDepth");
+    //dir_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_display);
+    //sceneActor->AddRenderer(dir_light_depth_display);
 
-    ModelRenderer* point_light_depth_display = new ModelRenderer(quad);
-    point_light_depth_display->SetRenderPass(RenderPass::kPost);
-    point_light_depth_display->MoveTo({ 0.7f, -0.5f, 0.0f });
-    point_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
-    Material* mat_depth_cube_display = new Material();
-    mat_depth_cube_display->SetShader(depth_display_cube_shader);
-    mat_depth_cube_display->AddTextureCubeDirect(World::GetInst().m_VoxelizeController->GetCubeDepthMap(), "TexCube");
-    mat_depth_cube_display->SetI32Param("Face", 5);
-    point_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_cube_display);
-    sceneActor->AddRenderer(point_light_depth_display);
+    //ModelRenderer* point_light_depth_display = new ModelRenderer(quad);
+    //point_light_depth_display->SetRenderPass(RenderPass::kPost);
+    //point_light_depth_display->MoveTo({ 0.7f, -0.5f, 0.0f });
+    //point_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
+    //Material* mat_depth_cube_display = new Material();
+    //mat_depth_cube_display->SetShader(depth_display_cube_shader);
+    //mat_depth_cube_display->AddTextureCubeDirect(World::GetInst().m_VoxelizeController->GetCubeDepthMap(0), "TexCube");
+    //mat_depth_cube_display->SetI32Param("Face", 5);
+    //point_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_cube_display);
+    //sceneActor->AddRenderer(point_light_depth_display);
 
     World::GetInst().RegisterActor(sceneActor);
 

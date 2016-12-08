@@ -409,7 +409,10 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
 
             curr_material->AddTexture(curr_tex2d, "TexAlbedo");
         }
-
+		else
+		{
+			curr_material->AddTexture(m_DefaultTex, "TexAlbedo");
+		}
         RegisterMaterial(curr_material);
         out.push_back(curr_material);
     }

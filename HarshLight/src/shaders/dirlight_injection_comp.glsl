@@ -8,6 +8,7 @@ struct DirLight
 	vec4 direction;
 	vec4 color;
 	mat4 lightMtx;
+	mat4 lightProjMtx;
 };
 
 struct PointLight

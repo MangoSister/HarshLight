@@ -2,9 +2,27 @@
 
 Mesh::Mesh(std::vector<glm::vec3>&& pos, std::vector<uint32_t>&& indices,
 	std::vector<glm::vec3>&& normals, std::vector<glm::vec2>&& uvs)
-	:m_Positions(pos), m_Indices(indices), m_Normals(normals), m_Uvs(uvs), m_MaterialIndex(0), 
-    m_PosVBO(0), m_NrmVBO(0), m_UvVBO(0), m_TanVBO(0), m_EBO(0), m_VAO(0)
+	:m_Positions(pos), m_Indices(indices), m_Normals(normals), m_Uvs(uvs), m_MaterialIndex(0),
+	m_PosVBO(0), m_NrmVBO(0), m_UvVBO(0), m_TanVBO(0), m_EBO(0), m_VAO(0)
 {
+	for (uint32_t i = 0; i < pos.size(); i++)
+	{
+		if (pos[i].x < m_BBoxMin.x)
+			m_BBoxMin.x = pos[i].x;
+		if (pos[i].y < m_BBoxMin.y)
+			m_BBoxMin.y = pos[i].y;
+		if (pos[i].z < m_BBoxMin.z)
+			m_BBoxMin.z = pos[i].z;
+
+		if (pos[i].x > m_BBoxMax.x)
+			m_BBoxMax.x = pos[i].x;
+		if (pos[i].y > m_BBoxMax.y)
+			m_BBoxMax.y = pos[i].y;
+		if (pos[i].z > m_BBoxMax.z)
+			m_BBoxMax.z = pos[i].z;
+	}
+
+
 	CreateBuffers();
 }
 

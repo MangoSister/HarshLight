@@ -42,11 +42,14 @@ public:
     void TransferVoxelDataToCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 	void FinishVoxelDataFromCuda(cudaSurfaceObject_t surf_objs[VoxelChannel::Count]);
 
-    inline GLuint GetDirectionalDepthMap() const
-    { return m_DirectionalDepthMap; }
+	void EnableShadowSampling();
+	void DisableShadowSampling();
 
-    inline GLuint GetCubeDepthMap() const
-    { return m_CubeDepthMap; }
+    inline GLuint GetDirectionalDepthMap(uint32_t idx) const
+    { return m_DirectionalDepthMap[idx]; }
+
+    inline GLuint GetCubeDepthMap(uint32_t idx) const
+    { return m_CubeDepthMap[idx]; }
 
 	inline const Texture3dCompute* GetAnisoRadianceMipmap(uint32_t idx) const
 	{ return m_AnisoRadianceMipmap[idx]; }
@@ -78,8 +81,8 @@ private:
 
 	GLuint m_DirLightViewUBuffer;
 	GLuint m_DepthFBO;
-	GLuint m_DirectionalDepthMap;
-    GLuint m_CubeDepthMap;
+	GLuint m_DirectionalDepthMap[LightManager::s_DirLightMaxNum];
+    GLuint m_CubeDepthMap[LightManager::s_PointLightMaxNum];
     GLuint m_PointLightCaptureUBuffer;
     static inline uint32_t GetPointLightCaptureUBufferSize()
     { return 7 * sizeof(glm::mat4x4) + sizeof(glm::vec4) + sizeof(glm::vec2); }

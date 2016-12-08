@@ -7,6 +7,7 @@ class Texture2d
 {
 public:
     explicit Texture2d(const char* path);
+	explicit Texture2d(uint32_t width, uint32_t height);
 	Texture2d(const Texture2d& other) = delete;
     ~Texture2d();
     
