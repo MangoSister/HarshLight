@@ -92,5 +92,6 @@ private:
 	ComputeShaderProgram* m_AnisotropicMipmapShaderInterior;
 	static const uint32_t s_AnisotropicMipmapCount = 6;
 	uint32_t m_AnisoMipmapGroupSize = 8;
+    uint32_t m_BoxMipmapGroupSize = 8;
 	Texture3dCompute* m_AnisoRadianceMipmap[s_AnisotropicMipmapCount];
 };

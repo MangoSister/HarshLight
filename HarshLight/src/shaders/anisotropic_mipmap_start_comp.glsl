@@ -44,19 +44,19 @@ void main()
 
 	ivec3 child_base = ivec3(gl_GlobalInvocationID) * ivec3(2);
 	vec4 val_leaf[8];
-	val_leaf[0] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 0, 0)).x);
-	val_leaf[1] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 0, 1)).x);
-	val_leaf[2] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 1, 0)).x);
-	val_leaf[3] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 1, 1)).x);
+	val_leaf[0] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 0, 0)).x); val_leaf[0].w = sign(val_leaf[0].w);
+	val_leaf[1] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 0, 1)).x); val_leaf[1].w = sign(val_leaf[1].w);
+	val_leaf[2] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 1, 0)).x); val_leaf[2].w = sign(val_leaf[2].w);
+	val_leaf[3] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(0, 1, 1)).x); val_leaf[3].w = sign(val_leaf[3].w);
 
-	val_leaf[4] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 0, 0)).x);
-	val_leaf[5] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 0, 1)).x);
-	val_leaf[6] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 1, 0)).x);
-	val_leaf[7] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 1, 1)).x);
+	val_leaf[4] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 0, 0)).x); val_leaf[4].w = sign(val_leaf[4].w);
+	val_leaf[5] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 0, 1)).x); val_leaf[5].w = sign(val_leaf[5].w);
+	val_leaf[6] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 1, 0)).x); val_leaf[6].w = sign(val_leaf[6].w);
+	val_leaf[7] = ColorUintToVec4(imageLoad(ImgLeaf, child_base + ivec3(1, 1, 1)).x); val_leaf[7].w = sign(val_leaf[7].w);
 
 	//threshold counter to binary initial opacity
-	for(uint i = 0; i < 8; i++)
-		val_leaf[i].w = sign(val_leaf[i].w);
+	//for(uint i = 0; i < 8; i++)
+	//	val_leaf[i].w = sign(val_leaf[i].w);
 
 	//x axis
 	ivec3 enters[4];

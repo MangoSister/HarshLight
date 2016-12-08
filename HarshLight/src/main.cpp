@@ -452,7 +452,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 1);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 0);
 			mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 

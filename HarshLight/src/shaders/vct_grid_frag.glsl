@@ -1,9 +1,14 @@
 #version 450 core
 
+#define SQRT3 1.73205080757
+#define TAN30 0.57735026919
+#define MAX_TRACE_DIST 100.0
+
 in vec2 vs_Texcoord;
 in vec3 vs_WorldPosition;
 in vec3 vs_WorldNormal;
 in vec3 vs_VoxelCoord;
+in vec3 vs_WorldTangent;
 
 out vec4 fragColor;
 
@@ -109,19 +114,24 @@ vec3 VoxelConeTracing(vec3 origin, vec3 dir, float half_tan, float max_dist)
 	
 	vec4 accum = vec4(0.0, 0.0, 0.0, 0.0);
 	float diameter = 1.0 / VoxelDim;
-	float diameter_init = max(diameter, half_tan * dist);
 	float dist = diameter;
+	float diameter_init = max(diameter, 2.0 * half_tan * dist);
 	float mip_level = 0;
 	vec4 sample_val = vec4(0.0, 0.0, 0.0, 0.0);
 
 	while(dist < max_dist && accum.w < 1.0)
 	{
 		sample_pos = origin + dist * dir;
-		diameter = max(diameter, half_tan * dist);
+		diameter = max(diameter, 2.0 * half_tan * dist);
 		mip_level = log2(diameter * VoxelDim);
 		sample_val = SampleVoxel(sample_pos, mip_level, dir);
 		//TODO
 		sample_val.w = 1.0 - pow(1.0 - sample_val.w, 0.5 * diameter / diameter_init);
+		//alpha blend (pre-multiply)
+		sample_val.xyz *= sample_val.w;
+		accum += (1 - accum.w) * sample_val;
+
+		dist += diameter * 0.5;
 	}
 
 	return accum.xyz;
@@ -144,7 +154,18 @@ void main()
 	fragColor.xyz *= albedo;
 	/* ------------------------------------------------------ */
 
+	//indirect diffuse
 
-	fragColor.xyz += VoxelConeTracing(vs_WorldPosition, vec3(0.0), 0.5, 100.0);
+	fragColor.xyz += VoxelConeTracing(vs_WorldPosition, vs_WorldNormal, TAN30, MAX_TRACE_DIST);
+	vec3 bitangent = cross(vs_WorldNormal, vs_WorldTangent);
+	//cos(60) = 0.5
+	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * vs_WorldTangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * vs_WorldTangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
+
+	//indirect specular
+
+	//voxel shadow ??
 
 }

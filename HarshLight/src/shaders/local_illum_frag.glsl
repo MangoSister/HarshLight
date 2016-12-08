@@ -3,7 +3,8 @@
 in vec2 vs_Texcoord;
 in vec3 vs_WorldPosition;
 in vec3 vs_WorldNormal;
-  
+in vec3 vs_WorldTangent;
+
 out vec4 fragColor;
 
 layout (std140, binding = 0) uniform MainCamMtx

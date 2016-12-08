@@ -34,11 +34,13 @@ private:
 	std::vector<uint32_t> m_Indices;
 	std::vector<glm::vec3> m_Normals;
 	std::vector<glm::vec2> m_Uvs;
-	
+    std::vector<glm::vec3> m_Tangents;
+
 	GLuint m_VAO;
 	GLuint m_PosVBO;
 	GLuint m_NrmVBO;
 	GLuint m_UvVBO;
+    GLuint m_TanVBO;
 	GLuint m_EBO;
 
     uint32_t m_MaterialIndex;

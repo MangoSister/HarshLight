@@ -2,11 +2,13 @@
 layout (location = 0) in vec3 app_Position;
 layout (location = 1) in vec3 app_Normal;
 layout (location = 2) in vec2 app_Uv;
+layout (location = 3) in vec3 app_Tangent;
 
 out vec2 vs_Texcoord;
 out vec3 vs_WorldPosition;
 out vec3 vs_WorldNormal;
 out vec3 vs_VoxelCoord;
+out vec3 vs_WorldTangent;
 
 layout (std140, binding = 0) uniform MainCamMtx
 {
@@ -38,4 +40,6 @@ void main()
 	//voxel_space_pos.xyz is in NDC space now
 	vs_VoxelCoord = (vs_VoxelCoord + vec3(1.0, 1.0, 1.0)) * 0.5;
 	//voxel_space_pos.xyz is in [0,1]^3 space now
+
+	vs_WorldTangent = (Model * vec4(app_Tangent, 1.0)).xyz;
 }
