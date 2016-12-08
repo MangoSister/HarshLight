@@ -24,7 +24,7 @@ public:
 
     void AddTexture(const Texture2d* tex2d, const char* semantic);
 	void AddTexture2dDirect(GLuint tex2d, const char* semantic);
-	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage, GLuint binding);
+	void AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage, GLuint binding, uint32_t level);
     void AddTextureCubeDirect(GLuint tex_cube, const char* semantic);
     void DeleteTexture(const char* semantic);
     void DeleteAllTextures();
@@ -63,8 +63,9 @@ private:
 		TexUsage m_Usage;
         GLuint m_BindingPoint;
 		GLuint m_InternalFormat;
-		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage, GLuint binding, GLuint internal_format) :
-			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage), m_BindingPoint(binding), m_InternalFormat(internal_format) {}
+		uint32_t m_ImgBindLevel;
+		Texture3dSlot(GLuint tex3d, const char* semantic, TexUsage usage, GLuint binding, GLuint internal_format, uint32_t level) :
+			m_Tex3dObj(tex3d), m_Semantic(semantic), m_Usage(usage), m_BindingPoint(binding), m_InternalFormat(internal_format), m_ImgBindLevel(level) {}
 	};
 
     struct TextureCubeSlot

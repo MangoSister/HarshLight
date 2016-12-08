@@ -31,12 +31,12 @@ void Material::AddTexture2dDirect(GLuint tex2d, const char * semantic)
 	m_Textures2d.push_back(Texture2dSlot(tex2d, semantic));
 }
 
-void Material::AddTexture(const Texture3dCompute * tex3d, const char * semantic, TexUsage usage, GLuint binding)
+void Material::AddTexture(const Texture3dCompute* tex3d, const char* semantic, TexUsage usage, GLuint binding, uint32_t level)
 {
 #ifdef _DEBUG
 	assert(tex3d != nullptr && semantic != nullptr);
 #endif
-	m_Textures3d.push_back(Texture3dSlot(tex3d->GetTexObj(), semantic, usage, binding, tex3d->GetInternalFormat()));
+	m_Textures3d.push_back(Texture3dSlot(tex3d->GetTexObj(), semantic, usage, binding, tex3d->GetInternalFormat(), level));
 }
 
 void Material::AddTextureCubeDirect(GLuint tex_cube, const char * semantic)
@@ -209,11 +209,11 @@ void Material::Use() const
 		else
 		{
 			if (tex_slot.m_Usage == TexUsage::kImageReadOnly)
-				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_ONLY, tex_slot.m_InternalFormat);
+				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, tex_slot.m_ImgBindLevel, GL_TRUE, 0, GL_READ_ONLY, tex_slot.m_InternalFormat);
 			else if (tex_slot.m_Usage == TexUsage::kImageWriteOnly)
-				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_WRITE_ONLY, tex_slot.m_InternalFormat);
+				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, tex_slot.m_ImgBindLevel, GL_TRUE, 0, GL_WRITE_ONLY, tex_slot.m_InternalFormat);
 			else if (tex_slot.m_Usage == TexUsage::kImageReadWrite)
-				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, 0, GL_TRUE, 0, GL_READ_WRITE, tex_slot.m_InternalFormat);
+				glBindImageTexture(tex_slot.m_BindingPoint, tex_slot.m_Tex3dObj, tex_slot.m_ImgBindLevel, GL_TRUE, 0, GL_READ_WRITE, tex_slot.m_InternalFormat);
 		}
 	}
 

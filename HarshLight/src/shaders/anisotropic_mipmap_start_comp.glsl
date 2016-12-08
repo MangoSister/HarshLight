@@ -4,7 +4,7 @@
 layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = LOCAL_SIZE) in;
 
 layout (binding = 0, r32ui) readonly volatile uniform uimage3D ImgLeaf;
-layout (binding = 1, r32ui) writeonly volatile uniform uimage3D ImgInterior[6];
+layout (binding = 1, rgba8) writeonly volatile uniform image3D ImgInterior[6];
 
 uint ColorVec4ToUint(vec4 val) 
 {
@@ -72,17 +72,17 @@ void main()
 		exits[i] = enters[i] + ivec3(1, 0, 0);
 		//alpha blending positive: enters over exits
 		vec4 val_enter = val_leaf[GetLeafOffset(enters[i])];
-		//alpha blending negative: exits on enters
+		//alpha blending negative: exits over enters
 		vec4 val_exit = val_leaf[GetLeafOffset(exits[i])];
 		blend_pos += val_enter + (1.0 - val_enter.w) * val_exit;
 		blend_neg += val_exit + (1.0 - val_exit.w) * val_enter;
 	}
 	blend_pos *= 0.25;
-	uint u32_blend_pos = ColorVec4ToUint(blend_pos);
-	imageStore(ImgInterior[0], ivec3(gl_GlobalInvocationID), uvec4(u32_blend_pos, 0, 0, 0));
+	//uint u32_blend_pos = ColorVec4ToUint(blend_pos);
+	imageStore(ImgInterior[0], ivec3(gl_GlobalInvocationID), blend_pos);
 	blend_neg *= 0.25;
-	uint u32_blend_neg = ColorVec4ToUint(blend_neg);
-	imageStore(ImgInterior[1], ivec3(gl_GlobalInvocationID), uvec4(u32_blend_neg, 0, 0, 0));
+	//uint u32_blend_neg = ColorVec4ToUint(blend_neg);
+	imageStore(ImgInterior[1], ivec3(gl_GlobalInvocationID), blend_neg);
 
 	//y axis
 	enters[0] = ivec3(0, 0, 0);
@@ -96,17 +96,17 @@ void main()
 		exits[i] = enters[i] + ivec3(0, 1, 0);
 		//alpha blending positive: enters over exits
 		vec4 val_enter = val_leaf[GetLeafOffset(enters[i])];
-		//alpha blending negative: exits on enters
+		//alpha blending negative: exits over enters
 		vec4 val_exit = val_leaf[GetLeafOffset(exits[i])];
 		blend_pos += val_enter + (1.0 - val_enter.w) * val_exit;
 		blend_neg += val_exit + (1.0 - val_exit.w) * val_enter;
 	}
 	blend_pos *= 0.25;
-	u32_blend_pos = ColorVec4ToUint(blend_pos);
-	imageStore(ImgInterior[2], ivec3(gl_GlobalInvocationID), uvec4(u32_blend_pos, 0, 0, 0));
+	//u32_blend_pos = ColorVec4ToUint(blend_pos);
+	imageStore(ImgInterior[2], ivec3(gl_GlobalInvocationID), blend_pos);
 	blend_neg *= 0.25;
-	u32_blend_neg = ColorVec4ToUint(blend_neg);
-	imageStore(ImgInterior[3], ivec3(gl_GlobalInvocationID), uvec4(u32_blend_neg, 0, 0, 0));
+	//u32_blend_neg = ColorVec4ToUint(blend_neg);
+	imageStore(ImgInterior[3], ivec3(gl_GlobalInvocationID), blend_neg);
 
 	//z axis
 	enters[0] = ivec3(0, 0, 0);
@@ -120,15 +120,15 @@ void main()
 		exits[i] = enters[i] + ivec3(0, 0, 1);
 		//alpha blending positive: enters over exits
 		vec4 val_enter = val_leaf[GetLeafOffset(enters[i])];
-		//alpha blending negative: exits on enters
+		//alpha blending negative: exits over enters
 		vec4 val_exit = val_leaf[GetLeafOffset(exits[i])];
 		blend_pos += val_enter + (1.0 - val_enter.w) * val_exit;
 		blend_neg += val_exit + (1.0 - val_exit.w) * val_enter;
 	}
 	blend_pos *= 0.25;
-	u32_blend_pos = ColorVec4ToUint(blend_pos);
-	imageStore(ImgInterior[4], ivec3(gl_GlobalInvocationID), uvec4(u32_blend_pos, 0, 0, 0));
+	//u32_blend_pos = ColorVec4ToUint(blend_pos);
+	imageStore(ImgInterior[4], ivec3(gl_GlobalInvocationID), blend_pos);
 	blend_neg *= 0.25;
-	u32_blend_neg = ColorVec4ToUint(blend_neg);
-	imageStore(ImgInterior[5], ivec3(gl_GlobalInvocationID), uvec4(u32_blend_neg, 0, 0, 0));
+	//u32_blend_neg = ColorVec4ToUint(blend_neg);
+	imageStore(ImgInterior[5], ivec3(gl_GlobalInvocationID), blend_neg);
 }

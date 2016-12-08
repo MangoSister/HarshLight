@@ -71,6 +71,8 @@ Texture3dCompute::Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_
 		GLsizei level = 1;
 		while (dim_x >>= 1) ++level;
 		glTexStorage3D(GL_TEXTURE_3D, level, internal_format, m_DimX, m_DimY, m_DimZ);
+		if (internal_format == GL_RGBA8 && format == GL_RGBA && type == GL_FLOAT)
+			glGenerateMipmap(GL_TEXTURE_3D);
 	}
 	glBindTexture(GL_TEXTURE_3D, 0);
 }

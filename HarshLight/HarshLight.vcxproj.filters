@@ -223,6 +223,15 @@
     <None Include="src\shaders\anisotropic_mipmap_start_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="src\shaders\box_mipmap_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\vct_grid_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\vct_grid_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VoxelInvert.cu">

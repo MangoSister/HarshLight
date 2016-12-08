@@ -59,6 +59,7 @@
   <ItemGroup>
     <None Include="src\shaders\anisotropic_mipmap_comp.glsl" />
     <None Include="src\shaders\anisotropic_mipmap_start_comp.glsl" />
+    <None Include="src\shaders\box_mipmap_comp.glsl" />
     <None Include="src\shaders\cr_frag.glsl" />
     <None Include="src\shaders\cr_geom.glsl" />
     <None Include="src\shaders\cr_vert.glsl" />
@@ -84,6 +85,8 @@
     <None Include="src\shaders\pointlight_injection_comp.glsl" />
     <None Include="src\shaders\sr_frag.glsl" />
     <None Include="src\shaders\sr_vert.glsl" />
+    <None Include="src\shaders\vct_grid_frag.glsl" />
+    <None Include="src\shaders\vct_grid_vert.glsl" />
     <None Include="src\shaders\voxelize_frag.glsl" />
     <None Include="src\shaders\voxelize_geom.glsl" />
     <None Include="src\shaders\voxelize_vert.glsl" />

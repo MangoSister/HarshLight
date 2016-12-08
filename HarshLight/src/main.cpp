@@ -334,6 +334,12 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     framebuffer_display_shader->LinkProgram();
     World::GetInst().RegisterShader(framebuffer_display_shader);
 
+	ShaderProgram* vct_shader = new ShaderProgram();
+	vct_shader->AddVertShader("src/shaders/vct_grid_vert.glsl");
+	vct_shader->AddFragShader("src/shaders/vct_grid_frag.glsl");
+	vct_shader->LinkProgram();
+	World::GetInst().RegisterShader(vct_shader);
+
     printf("Shaders compiling ended\n");
 
     printf("Loading scene started\n");
@@ -425,8 +431,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
-			mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
-			mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
+			mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
+			mat_voxelize->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadWrite, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
             mat_voxelize->SetShader(voxelize_shader);
 
             sceneRenderer->AddMaterial(RenderPass::kVoxelize, mat_voxelize);
@@ -443,10 +449,10 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
             mat_voxel_visual->DeleteAllTextures();	
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(5), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 1);
 			mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 
