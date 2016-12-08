@@ -448,19 +448,31 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-            mat_voxel_visual->DeleteAllTextures();	
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 0);
-			mat_voxel_visual->SetShader(voxel_visualize_shader);
+   //         mat_voxel_visual->DeleteAllTextures();	
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 0);
+			//mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 
-			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
-			//mat_voxel_visual->SetShader(local_illum_shader);
-   //         mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
+			mat_voxel_visual->DeleteTexture("TexVoxel"); 
+			mat_voxel_visual->SetShader(local_illum_shader);
+            mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
             
-            World::GetInst().RegisterMaterial(mat_voxel_visual);
+			//mat_voxel_visual->SetShader(vct_shader);
+			//mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+			//
+			//char sampler_name[30];	
+			//for (uint32_t i = 0; i < 6; i++)
+			//{
+			//	memset(sampler_name, 0, 30);
+			//	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+			//}
+   //         World::GetInst().RegisterMaterial(mat_voxel_visual);
+
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
 
         }

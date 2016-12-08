@@ -63,7 +63,7 @@ vec3 ComputeDirLightBlinnPhong(DirLight light)
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(vs_WorldNormal, light_dir), 0.0);
-	float spec_intensity = pow(max(dot(vs_WorldNormal, half_dir), 0.0), Shininess);
+	float spec_intensity = 0;//pow(max(dot(vs_WorldNormal, half_dir), 0.0), Shininess);
 
 	return vec3(diffuse_intensity + spec_intensity) * light.color.xyz * light.color.w;
 }
@@ -81,7 +81,7 @@ vec3 ComputePointLightBlinnPhong(PointLight light)
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(vs_WorldNormal, light_dir), 0.0);
-	float spec_intensity = pow(max(dot(vs_WorldNormal, half_dir), 0.0), Shininess);
+	float spec_intensity = 0;//pow(max(dot(vs_WorldNormal, half_dir), 0.0), Shininess);
 
 	return vec3(diffuse_intensity + spec_intensity) * atten * light.color.xyz;
 }

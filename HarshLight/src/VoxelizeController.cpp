@@ -185,7 +185,8 @@ void VoxelizeController::Start()
 	{
         if (mat)
         {
-            mat->SetVec2Param(s_VoxelDimName, glm::vec2(static_cast<float>(m_VoxelDim), static_cast<float>(m_VoxelDim)));
+            //mat->SetVec2Param(s_VoxelDimName, glm::vec2(static_cast<float>(m_VoxelDim), static_cast<float>(m_VoxelDim)));
+			mat->SetFloatParam(s_VoxelDimName, static_cast<float>(m_VoxelDim));
             mat->SetMat4x4Param(s_ViewMtxToDownName, view_to_down);
             mat->SetMat4x4Param(s_ViewMtxToLeftName, view_to_left);
             mat->SetMat4x4Param(s_ViewMtxToForwardName, view_to_forward);

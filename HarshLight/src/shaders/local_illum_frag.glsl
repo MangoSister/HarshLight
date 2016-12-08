@@ -44,6 +44,7 @@ layout (std140, binding = 2) uniform LightInfo
 
 uniform sampler2D TexAlbedo;
 uniform float Shininess;
+uniform sampler2D TexDirShadow[DIR_LIGHT_MAX_NUM];
 
 vec3 ComputeDirLightBlinnPhong(DirLight light)
 {
@@ -75,6 +76,19 @@ vec3 ComputePointLightBlinnPhong(PointLight light)
 	return vec3(diffuse_intensity + spec_intensity) * atten * light.color.xyz;
 }
 
+float ComputeDirLightShadow(uint idx)
+{
+	vec4 light_space_pos = DirLights[idx].lightMtx * vec4(vs_WorldPosition, 1.0);
+	vec3 shadow_coord = light_space_pos.xyz / light_space_pos.w;
+	shadow_coord = shadow_coord * 0.5 + 0.5;
+	float closest_depth = texture(TexDirShadow[idx], shadow_coord.xy).r;   
+	
+	float curr_depth = shadow_coord.z;
+    // Check whether current frag pos is in shadow
+    float shadow = closest_depth > curr_depth ? 1.0 : 0.0;
+	return shadow;
+}
+
 void main()
 {
 	fragColor = vec4(Ambient.xyz, 1.0);
@@ -82,7 +96,7 @@ void main()
     vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
 
 	for(uint i = 0; i < ActiveDirLights; i++)
-		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]);
+		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
 	
 	for(uint i = 0; i < ActivePointLights; i++)
 		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);
