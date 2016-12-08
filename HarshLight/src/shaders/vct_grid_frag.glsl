@@ -1,5 +1,6 @@
 #version 450 core
 
+#define SHADOW_BIAS 0.98
 #define SQRT3 1.73205080757
 #define TAN30 0.57735026919
 #define MAX_TRACE_DIST 100.0
@@ -51,6 +52,7 @@ layout (std140, binding = 2) uniform LightInfo
 
 uniform sampler2D TexAlbedo;
 uniform float Shininess;
+uniform sampler2DShadow TexDirShadow[DIR_LIGHT_MAX_NUM];
 
 uniform float VoxelDim;
 
@@ -69,6 +71,14 @@ vec3 ComputeDirLightBlinnPhong(DirLight light)
 	return vec3(diffuse_intensity + spec_intensity) * light.color.xyz * light.color.w;
 }
 
+float ComputeDirLightShadow(uint idx)
+{
+	vec4 shadow_coord = DirLights[idx].lightProjMtx * DirLights[idx].lightMtx * vec4(vs_WorldPosition, 1.0);
+	shadow_coord = shadow_coord * 0.5 + 0.5;
+	shadow_coord.z *= SHADOW_BIAS;
+	
+	return textureProj(TexDirShadow[idx], shadow_coord);
+}
 
 vec3 ComputePointLightBlinnPhong(PointLight light)
 {
@@ -147,7 +157,7 @@ void main()
     vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
 
 	for(uint i = 0; i < ActiveDirLights; i++)
-		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]);
+		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
 	
 	for(uint i = 0; i < ActivePointLights; i++)
 		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);

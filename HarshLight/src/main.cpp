@@ -459,28 +459,37 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			//mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 
-			mat_voxel_visual->DeleteTexture("TexVoxel"); 
-			mat_voxel_visual->SetShader(local_illum_shader);
-            mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
-			char name[30];
+			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
+			//mat_voxel_visual->SetShader(local_illum_shader);
+   //         mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
+			//char name[30];
+			//for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+			//{
+			//	memset(name, 0, 30);
+			//	sprintf(name, "TexDirShadow[%u]", i);
+			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), name);
+			//}
+
+			mat_voxel_visual->SetShader(vct_shader);
+			mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
+			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+			
+			char sampler_name[30];	
+			for (uint32_t i = 0; i < 6; i++)
+			{
+				memset(sampler_name, 0, 30);
+				sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+				mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+			}
 			for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
 			{
-				memset(name, 0, 30);
-				sprintf(name, "TexDirShadow[%u]", i);
-				mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), name);
+				memset(sampler_name, 0, 30);
+				sprintf(sampler_name, "TexDirShadow[%u]", i);
+				mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), sampler_name);
 			}
 
-			//mat_voxel_visual->SetShader(vct_shader);
-			//mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
-			//
-			//char sampler_name[30];	
-			//for (uint32_t i = 0; i < 6; i++)
-			//{
-			//	memset(sampler_name, 0, 30);
-			//	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
-			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
-			//}
 
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
 			World::GetInst().RegisterMaterial(mat_voxel_visual);
