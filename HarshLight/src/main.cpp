@@ -12,8 +12,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 const char* APP_NAME = "HarshLight";
-const uint32_t DEFAULT_WINDOW_WIDTH = 1920;
-const uint32_t DEFAULT_WINDOW_HEIGHT = 1080;
+const uint32_t DEFAULT_WINDOW_WIDTH = 1280;
+const uint32_t DEFAULT_WINDOW_HEIGHT = 720;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
@@ -454,12 +454,12 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
            
-			//mat_voxel_visual->DeleteAllTextures();	
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 0);
-			//mat_voxel_visual->SetShader(voxel_visualize_shader);
+			mat_voxel_visual->DeleteAllTextures();	
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
+			mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 4);
+			mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 
 			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
@@ -473,27 +473,27 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), name);
 			//}
 
-			mat_voxel_visual->SetShader(vct_shader);
-			
-			mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
-			mat_voxel_visual->SetFloatParam("VoxelScale", voxel_scale);
-			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
-			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
-			
-			char sampler_name[30];	
-			for (uint32_t i = 0; i < 6; i++)
-			{
-				memset(sampler_name, 0, 30);
-				sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
-				mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
-			}
-			for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
-			{
-				memset(sampler_name, 0, 30);
-				sprintf(sampler_name, "TexDirShadow[%u]", i);
-				mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), sampler_name);
-			}
+			//mat_voxel_visual->SetShader(vct_shader);
+			//
+			//mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
+			//mat_voxel_visual->SetFloatParam("VoxelScale", voxel_scale);
+			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+			//
+			//char sampler_name[30];	
+			//for (uint32_t i = 0; i < 6; i++)
+			//{
+			//	memset(sampler_name, 0, 30);
+			//	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+			//}
+			//for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+			//{
+			//	memset(sampler_name, 0, 30);
+			//	sprintf(sampler_name, "TexDirShadow[%u]", i);
+			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), sampler_name);
+			//}
 
 
             sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
@@ -530,7 +530,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     LightManager& light_manager = World::GetInst().GetLightManager();
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
     //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
-    light_manager.AddDirLight(DirLight(glm::vec3(0.3f, -0.6f, 0.3f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
+    light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 50.0f, -200.0f), glm::vec4(0.0f, 1.0f, 1.0f, 50.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 

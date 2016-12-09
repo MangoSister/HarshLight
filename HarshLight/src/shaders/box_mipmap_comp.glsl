@@ -19,20 +19,16 @@ void main()
 		return;
 	
 	ivec3 child_base = ivec3(gl_GlobalInvocationID) * ivec3(2);
-	vec4 val_leaf[8];
-	val_leaf[0] = imageLoad(ImgChild, child_base + ivec3(0, 0, 0));
-	val_leaf[1] = imageLoad(ImgChild, child_base + ivec3(0, 0, 1));
-	val_leaf[2] = imageLoad(ImgChild, child_base + ivec3(0, 1, 0));
-	val_leaf[3] = imageLoad(ImgChild, child_base + ivec3(0, 1, 1));
+	vec4 val_parent = vec4(0.0);
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(0, 0, 0));
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(0, 0, 1));
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(0, 1, 0));
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(0, 1, 1));
 
-	val_leaf[4] = imageLoad(ImgChild, child_base + ivec3(1, 0, 0));
-	val_leaf[5] = imageLoad(ImgChild, child_base + ivec3(1, 0, 1));
-	val_leaf[6] = imageLoad(ImgChild, child_base + ivec3(1, 1, 0));
-	val_leaf[7] = imageLoad(ImgChild, child_base + ivec3(1, 1, 1));
-
-	vec4 val_parent = val_leaf[0] + val_leaf[1] + val_leaf[2] + val_leaf[3] +
-	val_leaf[4] + val_leaf[5] + val_leaf[6] + val_leaf[7];
-	val_parent *= 0.125;
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(1, 0, 0));
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(1, 0, 1));
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(1, 1, 0));
+	val_parent += 0.125 * imageLoad(ImgChild, child_base + ivec3(1, 1, 1));
 
 	imageStore(ImgParent, ivec3(gl_GlobalInvocationID), val_parent);
 }

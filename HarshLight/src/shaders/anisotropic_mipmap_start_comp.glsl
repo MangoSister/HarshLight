@@ -78,9 +78,9 @@ void main()
 		blend_neg += val_exit + (1.0 - val_exit.w) * val_enter;
 	}
 	blend_pos *= 0.25;
+	blend_neg *= 0.25;
 	//uint u32_blend_pos = ColorVec4ToUint(blend_pos);
 	imageStore(ImgInterior[0], ivec3(gl_GlobalInvocationID), blend_pos);
-	blend_neg *= 0.25;
 	//uint u32_blend_neg = ColorVec4ToUint(blend_neg);
 	imageStore(ImgInterior[1], ivec3(gl_GlobalInvocationID), blend_neg);
 
@@ -102,9 +102,9 @@ void main()
 		blend_neg += val_exit + (1.0 - val_exit.w) * val_enter;
 	}
 	blend_pos *= 0.25;
+	blend_neg *= 0.25;
 	//u32_blend_pos = ColorVec4ToUint(blend_pos);
 	imageStore(ImgInterior[2], ivec3(gl_GlobalInvocationID), blend_pos);
-	blend_neg *= 0.25;
 	//u32_blend_neg = ColorVec4ToUint(blend_neg);
 	imageStore(ImgInterior[3], ivec3(gl_GlobalInvocationID), blend_neg);
 
@@ -126,9 +126,9 @@ void main()
 		blend_neg += val_exit + (1.0 - val_exit.w) * val_enter;
 	}
 	blend_pos *= 0.25;
+	blend_neg *= 0.25;
 	//u32_blend_pos = ColorVec4ToUint(blend_pos);
 	imageStore(ImgInterior[4], ivec3(gl_GlobalInvocationID), blend_pos);
-	blend_neg *= 0.25;
 	//u32_blend_neg = ColorVec4ToUint(blend_neg);
 	imageStore(ImgInterior[5], ivec3(gl_GlobalInvocationID), blend_neg);
 }

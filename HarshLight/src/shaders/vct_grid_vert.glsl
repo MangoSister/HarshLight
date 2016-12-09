@@ -7,7 +7,7 @@ layout (location = 3) in vec3 app_Tangent;
 out vec2 vs_Texcoord;
 out vec3 vs_WorldPosition;
 out vec3 vs_WorldNormal;
-out vec3 vs_VoxelCoord;
+//out vec3 vs_VoxelCoord;
 out vec3 vs_WorldTangent;
 
 layout (std140, binding = 0) uniform MainCamMtx
@@ -36,9 +36,9 @@ void main()
 	vs_WorldNormal = (transpose(inverse(Model)) * vec4(app_Normal, 0.0)).xyz;
 	vs_WorldNormal = normalize(vs_WorldNormal);
 
-	vs_VoxelCoord = (CamVoxelProjMtx * CamVoxelViewMtx * vec4(vs_WorldPosition, 1.0)).xyz;
+	//vs_VoxelCoord = (CamVoxelProjMtx * CamVoxelViewMtx * vec4(vs_WorldPosition, 1.0)).xyz;
 	//voxel_space_pos.xyz is in NDC space now
-	vs_VoxelCoord = (vs_VoxelCoord + vec3(1.0, 1.0, 1.0)) * 0.5;
+	//vs_VoxelCoord = (vs_VoxelCoord + vec3(1.0, 1.0, 1.0)) * 0.5;
 	//voxel_space_pos.xyz is in [0,1]^3 space now
 
 	vs_WorldTangent = (Model * vec4(app_Tangent, 1.0)).xyz;

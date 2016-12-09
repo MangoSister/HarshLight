@@ -8,7 +8,7 @@
 in vec2 vs_Texcoord;
 in vec3 vs_WorldPosition;
 in vec3 vs_WorldNormal;
-in vec3 vs_VoxelCoord;
+//in vec3 vs_VoxelCoord;
 in vec3 vs_WorldTangent;
 
 out vec4 fragColor;
@@ -145,13 +145,16 @@ vec3 VoxelConeTracing(vec3 origin, vec3 dir, float half_tan, float max_dist)
 		mip_level = log2(diameter / VoxelScale);
 		sample_val = SampleVoxel(sample_pos, mip_level, dir);
 
-		sample_val.xyz /= sample_val.w;
-		sample_val.w = 1.0 - pow(1.0 - sample_val.w, diameter / diameter_init);
-		//alpha blend (pre-multiply)
-		sample_val.xyz *= sample_val.w;
-		accum += (1 - accum.w) * sample_val;
+		if(sample_val.w > 0.0)
+		{
+			sample_val.xyz /= sample_val.w;
+			sample_val.w = 1.0 - pow(1.0 - sample_val.w, diameter / diameter_init);
+			//alpha blend (pre-multiply)
+			sample_val.xyz *= sample_val.w;
+			accum += (1 - accum.w) * sample_val;
+		}
 
-		dist += diameter;
+		dist += diameter * 0.5;
 
 	}
 
@@ -164,15 +167,15 @@ void main()
 	fragColor = vec4(0, 0, 0, 1);
 
 	/* ----------------- Direct Lighting --------------------- */
-    vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
+ //   vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
 
-	for(uint i = 0; i < ActiveDirLights; i++)
-		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
+	//for(uint i = 0; i < ActiveDirLights; i++)
+	//	fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
 	
-	for(uint i = 0; i < ActivePointLights; i++)
-		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);
+	//for(uint i = 0; i < ActivePointLights; i++)
+	//	fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);
 	
-	fragColor.xyz *= albedo;
+	//fragColor.xyz *= albedo;
 	/* ------------------------------------------------------ */
 
 	//indirect diffuse

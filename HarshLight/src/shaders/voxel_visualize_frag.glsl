@@ -59,7 +59,9 @@ void main()
 	//fragColor = dec_val;
 
 	vec4 radiance = imageLoad(TexRadianceMipmap, load_coord);
-	radiance.xyz /= radiance.w;
+	if(radiance.w > 0.0)
+		radiance.xyz /= radiance.w;
+	else radiance.xyz = vec3(0.0);
 	radiance.w = 1.0;
 	fragColor = radiance;
 }
