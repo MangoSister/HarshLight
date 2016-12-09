@@ -82,10 +82,6 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 	m_AnisotropicMipmapShaderLeaf->AddShader("src/shaders/anisotropic_mipmap_start_comp.glsl");
 	m_AnisotropicMipmapShaderLeaf->LinkProgram();
 
-	m_AnisotropicMipmapShaderInteriorBox = new ComputeShaderProgram();
-	m_AnisotropicMipmapShaderInteriorBox->AddShader("src/shaders/box_mipmap_comp.glsl");
-	m_AnisotropicMipmapShaderInteriorBox->LinkProgram();
-
     char name[50];
     const char* axis_pf[6]
     {
@@ -647,7 +643,8 @@ void VoxelizeController::MipmapRadiance()
 		for (uint32_t level = 0; level < level_count - 1; level++)
 		{
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_3D, m_AnisotropicMipmapShaderInterior[i]->GetProgram());
+            glBindTexture(GL_TEXTURE_3D, m_AnisoRadianceMipmap[i]->GetTexObj());
+
             GLint loc = glGetUniformLocation(m_AnisotropicMipmapShaderInterior[i]->GetProgram(), "ChildMipLevel");
             glProgramUniform1i(m_AnisotropicMipmapShaderInterior[i]->GetProgram(), loc, level);
 			//glBindImageTexture(0, m_AnisoRadianceMipmap[i]->GetTexObj(), level, GL_TRUE, 0, GL_READ_ONLY, m_AnisoRadianceMipmap[i]->GetInternalFormat());
