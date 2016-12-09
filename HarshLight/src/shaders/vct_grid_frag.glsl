@@ -136,7 +136,7 @@ vec4 SampleVoxel(vec3 pos, float mip_level, vec3 dir)
 
 	vec4 sample_interior = sample_x * weights.x + sample_y * weights.y + sample_z * weights.z;
 	
-	vec4 res = sample_interior;//mix(sample_leaf, sample_interior, clamp(mip_level, 0, 1));
+	vec4 res = mix(sample_leaf, sample_interior, clamp(mip_level, 0, 1));
 	return res;
 }
 
@@ -180,13 +180,13 @@ void main()
 	fragColor = vec4(0, 0, 0, 1);
 
 	/* ----------------- Direct Lighting --------------------- */
- //   vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
+    vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
 
-	//for(uint i = 0; i < ActiveDirLights; i++)
-	//	fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
+	for(uint i = 0; i < ActiveDirLights; i++)
+		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
 	
-	//for(uint i = 0; i < ActivePointLights; i++)
-	//	fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);	
+	for(uint i = 0; i < ActivePointLights; i++)
+		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);	
 	/* ------------------------------------------------------ */
 
 	//indirect diffuse
@@ -199,7 +199,7 @@ void main()
 	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
 	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
 
-	//fragColor.xyz *= albedo;
+	fragColor.xyz *= albedo;
 	//indirect specular
 
 	//voxel shadow ??

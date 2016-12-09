@@ -4,7 +4,7 @@
 layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = LOCAL_SIZE) in;
 
 //layout (binding = 0, r32ui) readonly uniform uimage3D ImgLeaf;
-layout (binding = 0) uniform usampler3D ImgLeaf;
+layout (binding = 0) uniform sampler3D ImgLeaf;
 layout (binding = 1, rgba8) writeonly uniform image3D ImgInterior[6];
 
 uint ColorVec4ToUint(vec4 val) 
@@ -46,15 +46,15 @@ void main()
 	ivec3 child_base = ivec3(gl_GlobalInvocationID) * ivec3(2);
 	vec4 val_leaf[8];
 	
-	val_leaf[0] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(0, 0, 0), 0).x); val_leaf[0].w = sign(val_leaf[0].w);
-	val_leaf[1] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(0, 0, 1), 0).x); val_leaf[1].w = sign(val_leaf[1].w);
-	val_leaf[2] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(0, 1, 0), 0).x); val_leaf[2].w = sign(val_leaf[2].w);
-	val_leaf[3] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(0, 1, 1), 0).x); val_leaf[3].w = sign(val_leaf[3].w);
+	val_leaf[0] = (texelFetch(ImgLeaf, child_base + ivec3(0, 0, 0), 0)); val_leaf[0].w = sign(val_leaf[0].w);
+	val_leaf[1] = (texelFetch(ImgLeaf, child_base + ivec3(0, 0, 1), 0)); val_leaf[1].w = sign(val_leaf[1].w);
+	val_leaf[2] = (texelFetch(ImgLeaf, child_base + ivec3(0, 1, 0), 0)); val_leaf[2].w = sign(val_leaf[2].w);
+	val_leaf[3] = (texelFetch(ImgLeaf, child_base + ivec3(0, 1, 1), 0)); val_leaf[3].w = sign(val_leaf[3].w);
 
-	val_leaf[4] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(1, 0, 0), 0).x); val_leaf[4].w = sign(val_leaf[4].w);
-	val_leaf[5] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(1, 0, 1), 0).x); val_leaf[5].w = sign(val_leaf[5].w);
-	val_leaf[6] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(1, 1, 0), 0).x); val_leaf[6].w = sign(val_leaf[6].w);
-	val_leaf[7] = ColorUintToVec4(texelFetch(ImgLeaf, child_base + ivec3(1, 1, 1), 0).x); val_leaf[7].w = sign(val_leaf[7].w);
+	val_leaf[4] = (texelFetch(ImgLeaf, child_base + ivec3(1, 0, 0), 0)); val_leaf[4].w = sign(val_leaf[4].w);
+	val_leaf[5] = (texelFetch(ImgLeaf, child_base + ivec3(1, 0, 1), 0)); val_leaf[5].w = sign(val_leaf[5].w);
+	val_leaf[6] = (texelFetch(ImgLeaf, child_base + ivec3(1, 1, 0), 0)); val_leaf[6].w = sign(val_leaf[6].w);
+	val_leaf[7] = (texelFetch(ImgLeaf, child_base + ivec3(1, 1, 1), 0)); val_leaf[7].w = sign(val_leaf[7].w);
 
 	//threshold counter to binary initial opacity
 	//for(uint i = 0; i < 8; i++)

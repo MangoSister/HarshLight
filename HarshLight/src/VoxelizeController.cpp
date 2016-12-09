@@ -25,7 +25,7 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 {
 	m_VoxelizeTex[VoxelChannel::TexVoxelAlbedo] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, TextureFilter::kPoint);
 	m_VoxelizeTex[VoxelChannel::TexVoxelNormal] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, TextureFilter::kPoint);
-	m_VoxelizeTex[VoxelChannel::TexVoxelRadiance] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, TextureFilter::kBilinear);
+	m_VoxelizeTex[VoxelChannel::TexVoxelRadiance] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, TextureFilter::kBilinear);
 
 	//for (uint32_t i = 0; i < VoxelChannel::Count; i++)
 	//	m_VoxelizeTex[i] = new Texture3dCompute(voxel_dim, voxel_dim, voxel_dim, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, false);
@@ -404,7 +404,7 @@ void VoxelizeController::DispatchDirLightInjection()
             glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetInternalFormat());
         loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance]);
         if (loc != -1)
-            glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_WRITE, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
+            glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI /*m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat()*/);
         loc = glGetUniformLocation(m_DirLightInjectionShader->GetProgram(), "depthMap");
         if (loc != -1)
         {
@@ -554,7 +554,7 @@ void VoxelizeController::DispatchPointLightInjection()
 			glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelNormal]->GetInternalFormat());
 		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance]);
 		if (loc != -1)
-			glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_WRITE, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
+			glBindImageTexture(BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI /*m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat()*/);
 		loc = glGetUniformLocation(m_PointLightInjectionShader->GetProgram(), "cubeDepthMap");
 		if (loc != -1)
 		{

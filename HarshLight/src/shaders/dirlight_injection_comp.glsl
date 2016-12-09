@@ -113,7 +113,7 @@ void main()
 		uint u32_radiance = ColorVec4ToUint(radiance);
 		//sadly we need a lock here to avoid repeat injection
 		uint old_val = imageLoad(TexVoxelRadiance, load_coord).x;
-		if((old_val & 0x000000FF) <= CurrLightPass - 1)
+		if(((old_val & 0xFF000000) >> 24U) <= CurrLightPass - 1)
 		{
 			uvec4 new_v4;
 			new_v4.x = (u32_radiance & 0xFF000000) >> 24U;
@@ -122,13 +122,13 @@ void main()
 			new_v4.w = CurrLightPass;
 
 			uvec4 old_v4;
-			old_v4.x = (old_val & 0xFF000000) >> 24U;
-			old_v4.y = (old_val & 0x00FF0000) >> 16U;
-			old_v4.z = (old_val & 0x0000FF00) >> 8U;
+			old_v4.x = (old_val & 0x000000FF);
+			old_v4.y = (old_val & 0x0000FF00) >> 8U;
+			old_v4.z = (old_val & 0x00FF0000) >> 16U;
 			old_v4.w = 0;
 
 			new_v4 = clamp(new_v4 + old_val, 0, 0xFF);
-			uint new_val = (new_v4.x << 24U) | (new_v4.y << 16U) | (new_v4.z << 8U) | (new_v4.w);
+			uint new_val = (new_v4.x) | (new_v4.y << 8U) | (new_v4.z << 16U) | (new_v4.w << 24U);
 			imageAtomicCompSwap(TexVoxelRadiance, load_coord, old_val, new_val);
 		}
 
