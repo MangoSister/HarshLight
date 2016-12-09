@@ -217,9 +217,6 @@
     <None Include="src\shaders\light_clear_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
-    <None Include="src\shaders\anisotropic_mipmap_comp.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
     <None Include="src\shaders\anisotropic_mipmap_start_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
@@ -230,6 +227,24 @@
       <Filter>src\shaders</Filter>
     </None>
     <None Include="src\shaders\vct_grid_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\anisotropic_mipmap_xpos_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\anisotropic_mipmap_xneg_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\anisotropic_mipmap_ypos_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\anisotropic_mipmap_yneg_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\anisotropic_mipmap_zpos_comp.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\anisotropic_mipmap_zneg_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
   </ItemGroup>

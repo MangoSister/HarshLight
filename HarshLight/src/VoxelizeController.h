@@ -91,9 +91,12 @@ private:
 	ComputeShaderProgram* m_PointLightInjectionShader;
     uint32_t m_LightInjectionGroupSize = 8;
 
+
+    static const uint32_t s_AnisotropicMipmapCount = 6;
 	ComputeShaderProgram* m_AnisotropicMipmapShaderLeaf;
-	ComputeShaderProgram* m_AnisotropicMipmapShaderInterior;
-	static const uint32_t s_AnisotropicMipmapCount = 6;
+	ComputeShaderProgram* m_AnisotropicMipmapShaderInteriorBox;
+    ComputeShaderProgram* m_AnisotropicMipmapShaderInterior[s_AnisotropicMipmapCount];
+
 	uint32_t m_AnisoMipmapGroupSize = 8;
     uint32_t m_BoxMipmapGroupSize = 8;
 	Texture3dCompute* m_AnisoRadianceMipmap[s_AnisotropicMipmapCount];

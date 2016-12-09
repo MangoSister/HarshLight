@@ -66,6 +66,19 @@ uniform float VoxelScale;
 uniform sampler3D ImgRadianceLeaf;
 uniform sampler3D ImgRadianceInterior[6];
 
+vec4 ColorUintToVec4(uint val) 
+{
+	float r = float((val & 0xFF000000) >> 24U);
+	float g = float((val & 0x00FF0000) >> 16U);
+	float b = float((val & 0x0000FF00) >> 8U);
+	float a = float((val & 0x000000FF));
+
+	vec4 o = vec4(r, g, b, a);
+	o /= 255.0;
+	o = clamp(o, vec4(0.0, 0.0, 0.0, 0.0), vec4(1.0, 1.0, 1.0, 1.0));
+	return o;
+}
+
 vec3 ComputeDirLightBlinnPhong(DirLight light)
 {
 	vec3 light_dir = normalize(-light.direction.xyz);
@@ -173,9 +186,7 @@ void main()
 	//	fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i]) * ComputeDirLightShadow(i);
 	
 	//for(uint i = 0; i < ActivePointLights; i++)
-	//	fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);
-	
-	//fragColor.xyz *= albedo;
+	//	fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i]);	
 	/* ------------------------------------------------------ */
 
 	//indirect diffuse
@@ -188,8 +199,10 @@ void main()
 	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
 	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
 
+	//fragColor.xyz *= albedo;
 	//indirect specular
 
 	//voxel shadow ??
 
+	
 }

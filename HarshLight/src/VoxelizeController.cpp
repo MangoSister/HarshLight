@@ -82,9 +82,23 @@ VoxelizeController::VoxelizeController(uint32_t voxel_dim, uint32_t light_inject
 	m_AnisotropicMipmapShaderLeaf->AddShader("src/shaders/anisotropic_mipmap_start_comp.glsl");
 	m_AnisotropicMipmapShaderLeaf->LinkProgram();
 
-	m_AnisotropicMipmapShaderInterior = new ComputeShaderProgram();
-	m_AnisotropicMipmapShaderInterior->AddShader("src/shaders/box_mipmap_comp.glsl");
-	m_AnisotropicMipmapShaderInterior->LinkProgram();
+	m_AnisotropicMipmapShaderInteriorBox = new ComputeShaderProgram();
+	m_AnisotropicMipmapShaderInteriorBox->AddShader("src/shaders/box_mipmap_comp.glsl");
+	m_AnisotropicMipmapShaderInteriorBox->LinkProgram();
+
+    char name[50];
+    const char* axis_pf[6]
+    {
+      "xpos","xneg", "ypos","yneg","zpos", "zneg"
+    };
+    for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
+    {
+        memset(name, 0, 50);
+        sprintf(name, "src/shaders/anisotropic_mipmap_%s_comp.glsl", axis_pf[i]);
+        m_AnisotropicMipmapShaderInterior[i] = new ComputeShaderProgram();
+        m_AnisotropicMipmapShaderInterior[i]->AddShader(name);
+        m_AnisotropicMipmapShaderInterior[i]->LinkProgram();
+    }
 
 	uint32_t half_voxel_dim = m_VoxelDim / 2;
 	for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
@@ -598,8 +612,9 @@ void VoxelizeController::DispatchPointLightInjection()
 void VoxelizeController::MipmapRadiance()
 {
 	glUseProgram(m_AnisotropicMipmapShaderLeaf->GetProgram());
-
-	glBindImageTexture(0, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj());
+	//glBindImageTexture(0, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetTexObj(), 0, GL_TRUE, 0, GL_READ_ONLY, m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->GetInternalFormat());
 	for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
 		glBindImageTexture(i + 1, m_AnisoRadianceMipmap[i]->GetTexObj(), 0, GL_TRUE, 0, GL_WRITE_ONLY, m_AnisoRadianceMipmap[i]->GetInternalFormat());
 
@@ -610,27 +625,32 @@ void VoxelizeController::MipmapRadiance()
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    GLint p[3];
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, p);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, p + 1);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, p + 2);
+    //GLint p[3];
+    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, p);
+    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, p + 1);
+    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, p + 2);
 
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, p);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, p + 1);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, p + 2);
+    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, p);
+    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, p + 1);
+    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, p + 2);
 
-    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, p);
+    //glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, p);
 
-	glUseProgram(m_AnisotropicMipmapShaderInterior->GetProgram());
+
 	uint32_t level_count = 1;
 	uint32_t dim = m_VoxelDim / 2;
 	while (dim >>= 1) ++level_count;
 	for (uint32_t i = 0; i < s_AnisotropicMipmapCount; i++)
 	{
+        glUseProgram(m_AnisotropicMipmapShaderInterior[i]->GetProgram());
 		dim = m_VoxelDim / 4;
 		for (uint32_t level = 0; level < level_count - 1; level++)
 		{
-			glBindImageTexture(0, m_AnisoRadianceMipmap[i]->GetTexObj(), level, GL_TRUE, 0, GL_READ_ONLY, m_AnisoRadianceMipmap[i]->GetInternalFormat());
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_3D, m_AnisotropicMipmapShaderInterior[i]->GetProgram());
+            GLint loc = glGetUniformLocation(m_AnisotropicMipmapShaderInterior[i]->GetProgram(), "ChildMipLevel");
+            glProgramUniform1i(m_AnisotropicMipmapShaderInterior[i]->GetProgram(), loc, level);
+			//glBindImageTexture(0, m_AnisoRadianceMipmap[i]->GetTexObj(), level, GL_TRUE, 0, GL_READ_ONLY, m_AnisoRadianceMipmap[i]->GetInternalFormat());
 			glBindImageTexture(1, m_AnisoRadianceMipmap[i]->GetTexObj(), level + 1, GL_TRUE, 0, GL_WRITE_ONLY, m_AnisoRadianceMipmap[i]->GetInternalFormat());
 			glDispatchCompute(
 				(dim + (m_BoxMipmapGroupSize - 1)) / (m_BoxMipmapGroupSize),

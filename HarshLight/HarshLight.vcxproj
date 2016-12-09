@@ -57,8 +57,13 @@
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\anisotropic_mipmap_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_xneg_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_xpos_comp.glsl" />
     <None Include="src\shaders\anisotropic_mipmap_start_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_yneg_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_ypos_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_zneg_comp.glsl" />
+    <None Include="src\shaders\anisotropic_mipmap_zpos_comp.glsl" />
     <None Include="src\shaders\box_mipmap_comp.glsl" />
     <None Include="src\shaders\cr_frag.glsl" />
     <None Include="src\shaders\cr_geom.glsl" />
