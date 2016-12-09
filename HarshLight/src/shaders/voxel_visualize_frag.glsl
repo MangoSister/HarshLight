@@ -46,17 +46,17 @@ void main()
 	ivec3 dim = imageSize(TexRadianceMipmap);
 	vec3 dim_v = vec3(float(dim.x), float(dim.y), float(dim.z));
 	ivec3 load_coord = ivec3(dim_v * vs_VoxelCoord);
-	//uint val = imageLoad(TexRadianceMipmap, load_coord).x;
+	//uint val = imageLoad(TexVoxelRadiance, load_coord).x;
 	//vec4 dec_val = ColorUintToVec4(val);
 	
-	////dec_val.xyz = dec_val.xyz * 2.0 - vec3(1.0);
-	////dec_val.xyz = normalize(dec_val.xyz);
-	////dec_val.xyz = 0.5 * (dec_val.xyz + vec3(1.0));
+	//dec_val.xyz = dec_val.xyz * 2.0 - vec3(1.0);
+	//dec_val.xyz = normalize(dec_val.xyz);
+	//dec_val.xyz = 0.5 * (dec_val.xyz + vec3(1.0));
 
 	//fragColor = vec4(dec_val.xyz, 1.0);
-	////fragColor = vec4(dec_val.w * 20);
-	////fragColor.w = 1.0;
-	////fragColor = dec_val;
+	//fragColor = vec4(dec_val.w * 20);
+	//fragColor.w = 1.0;
+	//fragColor = dec_val;
 
 	vec4 radiance = imageLoad(TexRadianceMipmap, load_coord);
 	radiance.xyz /= radiance.w;

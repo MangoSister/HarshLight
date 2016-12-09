@@ -3,7 +3,7 @@
 #define SHADOW_BIAS 0.98
 #define SQRT3 1.73205080757
 #define TAN30 0.57735026919
-#define MAX_TRACE_DIST 100.0
+#define MAX_TRACE_DIST 1000.0
 
 in vec2 vs_Texcoord;
 in vec3 vs_WorldPosition;
@@ -38,6 +38,12 @@ layout (std140, binding = 0) uniform MainCamMtx
 	vec4 CamWorldPos;
 };
 
+layout (std140, binding = 1) uniform VoxelCamMtx
+{
+    mat4 CamVoxelViewMtx;
+    mat4 CamVoxelProjMtx;
+	vec4 CamVoxelWorldPos;
+};
 
 layout (std140, binding = 2) uniform LightInfo
 {
@@ -55,6 +61,7 @@ uniform float Shininess;
 uniform sampler2DShadow TexDirShadow[DIR_LIGHT_MAX_NUM];
 
 uniform float VoxelDim;
+uniform float VoxelScale;
 
 uniform sampler3D ImgRadianceLeaf;
 uniform sampler3D ImgRadianceInterior[6];
@@ -100,7 +107,8 @@ vec3 ComputePointLightBlinnPhong(PointLight light)
 vec4 SampleVoxel(vec3 pos, float mip_level, vec3 dir)
 {
 	//leaf?
-	vec3 txc = vs_VoxelCoord;
+	vec3 txc = (CamVoxelProjMtx * CamVoxelViewMtx * vec4(pos, 1.0)).xyz;
+	txc = txc * 0.5 + 0.5;
 	
 	vec4 sample_leaf = texture(ImgRadianceLeaf, txc);
 
@@ -115,7 +123,7 @@ vec4 SampleVoxel(vec3 pos, float mip_level, vec3 dir)
 
 	vec4 sample_interior = sample_x * weights.x + sample_y * weights.y + sample_z * weights.z;
 	
-	vec4 res = mix(sample_leaf, sample_interior, clamp(mip_level, 0, 1));
+	vec4 res = sample_interior;//mix(sample_leaf, sample_interior, clamp(mip_level, 0, 1));
 	return res;
 }
 
@@ -124,9 +132,9 @@ vec3 VoxelConeTracing(vec3 origin, vec3 dir, float half_tan, float max_dist)
 	vec3 sample_pos = origin;
 	
 	vec4 accum = vec4(0.0, 0.0, 0.0, 0.0);
-	float diameter = 1.0 / VoxelDim;
-	float dist = diameter;
-	float diameter_init = max(diameter, 2.0 * half_tan * dist);
+	float diameter = VoxelScale;
+	float dist = 2.0 * VoxelScale / half_tan;
+	float diameter_init = diameter;
 	float mip_level = 0;
 	vec4 sample_val = vec4(0.0, 0.0, 0.0, 0.0);
 
@@ -134,18 +142,20 @@ vec3 VoxelConeTracing(vec3 origin, vec3 dir, float half_tan, float max_dist)
 	{
 		sample_pos = origin + dist * dir;
 		diameter = max(diameter, 2.0 * half_tan * dist);
-		mip_level = log2(diameter * VoxelDim);
+		mip_level = log2(diameter / VoxelScale);
 		sample_val = SampleVoxel(sample_pos, mip_level, dir);
-		//TODO
-		sample_val.w = 1.0 - pow(1.0 - sample_val.w, 0.5 * diameter / diameter_init);
+
+		sample_val.xyz /= sample_val.w;
+		sample_val.w = 1.0 - pow(1.0 - sample_val.w, diameter / diameter_init);
 		//alpha blend (pre-multiply)
 		sample_val.xyz *= sample_val.w;
 		accum += (1 - accum.w) * sample_val;
 
-		dist += diameter * 0.5;
+		dist += diameter;
+
 	}
 
-	return accum.xyz;
+	return accum.xyz / accum.w;
 } 
 
 void main()
@@ -167,13 +177,13 @@ void main()
 
 	//indirect diffuse
 
-	fragColor.xyz += VoxelConeTracing(vs_WorldPosition, vs_WorldNormal, TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.2 * VoxelConeTracing(vs_WorldPosition, vs_WorldNormal, TAN30, MAX_TRACE_DIST);
 	vec3 bitangent = cross(vs_WorldNormal, vs_WorldTangent);
-	//cos(60) = 0.5
-	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * vs_WorldTangent), TAN30, MAX_TRACE_DIST);
-	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * vs_WorldTangent), TAN30, MAX_TRACE_DIST);
-	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
-	fragColor.xyz += 0.5 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
+	//////cos(60) = 0.5
+	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * vs_WorldTangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * vs_WorldTangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal + SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(vs_WorldNormal - SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
 
 	//indirect specular
 

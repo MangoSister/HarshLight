@@ -350,6 +350,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     const glm::vec3 voxelize_center(0.0f, 300.0f, 0.0f);
     const glm::vec3 voxelize_extent(1000.0f, 450.0f, 600.0f);
     const float max_extent = std::max(voxelize_extent.x, std::max(voxelize_extent.y, voxelize_extent.z));
+	const float voxel_scale = max_extent * 2.0 / static_cast<float>(voxel_dim);
+
     const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
     {
         Actor* voxelize_cam_actor = new Actor();
@@ -451,7 +453,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-   //         mat_voxel_visual->DeleteAllTextures();	
+           
+			//mat_voxel_visual->DeleteAllTextures();	
 			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
 			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
 			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
@@ -471,7 +474,9 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			//}
 
 			mat_voxel_visual->SetShader(vct_shader);
+			
 			mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
+			mat_voxel_visual->SetFloatParam("VoxelScale", voxel_scale);
 			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
 			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
@@ -525,7 +530,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     LightManager& light_manager = World::GetInst().GetLightManager();
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
     //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
-    light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
+    light_manager.AddDirLight(DirLight(glm::vec3(0.3f, -0.6f, 0.3f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 50.0f, -200.0f), glm::vec4(0.0f, 1.0f, 1.0f, 50.0f)));
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
