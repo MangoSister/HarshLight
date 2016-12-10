@@ -84,7 +84,11 @@ public:
     std::vector<Material*> LoadDefaultMaterialsForModel(Model * model);
 
 	VoxelizeController* m_VoxelizeController;
-	Texture2d* m_DefaultTex;
+	Texture2d* m_DefaultBlackTex;
+	Texture2d* m_DefaultWhiteTex;
+	Texture2d* m_DefaultGrayTex;
+	Texture2d* m_DefaultNormalTex;
+
 private:
 
     World() { }

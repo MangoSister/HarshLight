@@ -116,6 +116,18 @@ int main(int argc, char* argv[])
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     World::GetInst().SetWindow(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+	uint32_t fill = 0;
+	World::GetInst().m_DefaultBlackTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_BLACK", World::GetInst().m_DefaultBlackTex);
+	fill = 0xFFFFFFFF;
+	World::GetInst().m_DefaultWhiteTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_WHITE", World::GetInst().m_DefaultWhiteTex);
+	fill = 0xFF808080;
+	World::GetInst().m_DefaultGrayTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_GRAY", World::GetInst().m_DefaultGrayTex);
+	fill = 0x00FF8080;
+	World::GetInst().m_DefaultNormalTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_NORMAL", World::GetInst().m_DefaultNormalTex);
     //CreateCRTestScene();    
 	CreateWorld(scene_path, mouse_sensitivity);
 
@@ -404,9 +416,6 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 
     World::GetInst().SetMouseSensitivity(mouse_sensitivity);
 
-	World::GetInst().m_DefaultTex = new Texture2d(16, 16);
-	World::GetInst().RegisterTexture2d("", World::GetInst().m_DefaultTex);
-
     /* --------------  Scene  ----------- */
     //hardcode test world...:p
     Model* sceneModel = new Model(scene_path);
@@ -462,9 +471,10 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			//mat_voxel_visual->SetShader(voxel_visualize_shader);
             
 
-			//mat_voxel_visual->DeleteTexture("TexVoxel"); 
+			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
 			//mat_voxel_visual->SetShader(local_illum_shader);
-   //         mat_voxel_visual->SetFloatParam("Shininess", 20.0f);
+   //         mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
 			//char name[30];
 			//for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
 			//{
@@ -480,7 +490,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
 			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
 			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
-			
+			mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
 			char sampler_name[30];	
 			for (uint32_t i = 0; i < 6; i++)
 			{

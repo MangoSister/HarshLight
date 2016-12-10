@@ -364,11 +364,10 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
     for (uint32_t i = 0; i < scene->mNumMaterials; i++)
     {
         Material* curr_material = new Material();
-        uint32_t albedo_num = scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
 //#ifdef _DEBUG
 //        assert(albedo_num > 0); //temporary
 //#endif
-        if (albedo_num > 0)
+        if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0)
         {
             aiString albedo_path;
             scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0, &albedo_path);
@@ -411,8 +410,144 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
         }
 		else
 		{
-			curr_material->AddTexture(m_DefaultTex, "TexAlbedo");
+			curr_material->AddTexture(m_DefaultBlackTex, "TexAlbedo");
 		}
+
+		if (scene->mMaterials[i]->GetTextureCount(aiTextureType_HEIGHT) > 0)
+		{
+			aiString normal_path;
+			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_HEIGHT, 0, &normal_path);
+#ifdef _DEBUG
+			assert(normal_path.C_Str());
+#endif
+
+			std::string normal_path_str(normal_path.C_Str());
+			for (size_t i = 0; i < normal_path_str.length(); i++)
+			{
+				if (normal_path_str[i] == '\\')
+					normal_path_str[i] = '/';
+			}
+
+			const char* model_path = model->GetRawPath();
+
+			//for (size_t i = 0; model_path[i] != '\0'; i++)
+			//{
+			//	if (model_path[i] == '\\')
+			//		model_path[i] = '/';
+			//}
+			const char* directory = strrchr(model_path, '/');
+			if (directory)
+				normal_path_str.insert(0, model_path, 0, directory - model_path + 1);
+
+			Texture2d* curr_tex2d = nullptr;
+			auto tex_iter = m_Textures2d.find(normal_path_str);
+			if (tex_iter == m_Textures2d.cend())
+			{
+				curr_tex2d = new Texture2d(normal_path_str.c_str());
+				RegisterTexture2d(normal_path_str, curr_tex2d);
+			}
+			else
+			{
+				curr_tex2d = tex_iter->second;
+			}
+
+			curr_material->AddTexture(curr_tex2d, "TexNormal");
+		}
+		else
+		{
+			curr_material->AddTexture(m_DefaultNormalTex, "TexNormal");
+		}
+
+		if (scene->mMaterials[i]->GetTextureCount(aiTextureType_SPECULAR) > 0)
+		{
+			aiString spec_path;
+			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_SPECULAR, 0, &spec_path);
+#ifdef _DEBUG
+			assert(spec_path.C_Str());
+#endif
+
+			std::string spec_path_str(spec_path.C_Str());
+			for (size_t i = 0; i < spec_path_str.length(); i++)
+			{
+				if (spec_path_str[i] == '\\')
+					spec_path_str[i] = '/';
+			}
+
+			const char* model_path = model->GetRawPath();
+
+			//for (size_t i = 0; model_path[i] != '\0'; i++)
+			//{
+			//	if (model_path[i] == '\\')
+			//		model_path[i] = '/';
+			//}
+			const char* directory = strrchr(model_path, '/');
+			if (directory)
+				spec_path_str.insert(0, model_path, 0, directory - model_path + 1);
+
+			Texture2d* curr_tex2d = nullptr;
+			auto tex_iter = m_Textures2d.find(spec_path_str);
+			if (tex_iter == m_Textures2d.cend())
+			{
+				curr_tex2d = new Texture2d(spec_path_str.c_str());
+				RegisterTexture2d(spec_path_str, curr_tex2d);
+			}
+			else
+			{
+				curr_tex2d = tex_iter->second;
+			}
+
+			curr_material->AddTexture(curr_tex2d, "TexSpecular");
+		}
+		else
+		{
+			curr_material->AddTexture(m_DefaultGrayTex, "TexSpecular");
+		}
+
+		if (scene->mMaterials[i]->GetTextureCount(aiTextureType_OPACITY) > 0)
+		{
+			aiString opacity_path;
+			scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_OPACITY, 0, &opacity_path);
+#ifdef _DEBUG
+			assert(opacity_path.C_Str());
+#endif
+
+			std::string opacity_path_str(opacity_path.C_Str());
+			for (size_t i = 0; i < opacity_path_str.length(); i++)
+			{
+				if (opacity_path_str[i] == '\\')
+					opacity_path_str[i] = '/';
+			}
+
+			const char* model_path = model->GetRawPath();
+
+			//for (size_t i = 0; model_path[i] != '\0'; i++)
+			//{
+			//	if (model_path[i] == '\\')
+			//		model_path[i] = '/';
+			//}
+			const char* directory = strrchr(model_path, '/');
+			if (directory)
+				opacity_path_str.insert(0, model_path, 0, directory - model_path + 1);
+
+			Texture2d* curr_tex2d = nullptr;
+			auto tex_iter = m_Textures2d.find(opacity_path_str);
+			if (tex_iter == m_Textures2d.cend())
+			{
+				curr_tex2d = new Texture2d(opacity_path_str.c_str());
+				RegisterTexture2d(opacity_path_str, curr_tex2d);
+			}
+			else
+			{
+				curr_tex2d = tex_iter->second;
+			}
+
+			curr_material->AddTexture(curr_tex2d, "TexOpacityMask");
+		}
+		else
+		{
+			curr_material->AddTexture(m_DefaultWhiteTex, "TexOpacityMask");
+		}
+
         RegisterMaterial(curr_material);
         out.push_back(curr_material);
     }

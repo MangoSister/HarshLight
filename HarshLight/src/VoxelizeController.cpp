@@ -233,7 +233,7 @@ void VoxelizeController::Start()
 
 void VoxelizeController::Update(float dt)
 {
-    GLuint clear_color[4] = { 0,0,0,0 };
+	GLuint clear_color = 0;
     m_VoxelizeTex[VoxelChannel::TexVoxelRadiance]->CleanContent(clear_color);
    // glMemoryBarrier(GL_ALL_BARRIER_BITS);
 	DispatchDirLightInjection();

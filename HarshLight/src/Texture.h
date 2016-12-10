@@ -7,7 +7,7 @@ class Texture2d
 {
 public:
     explicit Texture2d(const char* path);
-	explicit Texture2d(uint32_t width, uint32_t height);
+	explicit Texture2d(uint32_t width, uint32_t height, const uint32_t color);
 	Texture2d(const Texture2d& other) = delete;
     ~Texture2d();
     
@@ -34,7 +34,7 @@ public:
     explicit Texture3dCompute(uint32_t dim_x, uint32_t dim_y, uint32_t dim_z, GLuint internal_format, GLuint format, GLuint type, uint32_t filter);
 	Texture3dCompute(const Texture3dCompute& other) = delete;
 	~Texture3dCompute();
-    void CleanContent(GLuint clear_color[4]);
+    void CleanContent(GLuint clean_color);
 	GLuint GetTexObj() const;
 	GLuint GetInternalFormat() const;
 private:

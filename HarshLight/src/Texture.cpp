@@ -33,7 +33,7 @@ Texture2d::Texture2d(const char * path)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Texture2d::Texture2d(uint32_t width, uint32_t height)
+Texture2d::Texture2d(uint32_t width, uint32_t height, const uint32_t color)
 {
 	m_RawPath = nullptr;
 	glGenTextures(1, &m_TexObject);
@@ -42,6 +42,7 @@ Texture2d::Texture2d(uint32_t width, uint32_t height)
 #endif
 	glBindTexture(GL_TEXTURE_2D, m_TexObject);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glClearTexImage(m_TexObject, 0, GL_RGB, GL_UNSIGNED_BYTE, &color);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -113,10 +114,10 @@ Texture3dCompute::~Texture3dCompute()
 	}
 }
 
-void Texture3dCompute::CleanContent(GLuint clear_color[4])
+void Texture3dCompute::CleanContent(GLuint clean_color)
 {
 //	GLuint clear_color[] = { 0,0,0,0 }; // black and transparent
-	glClearTexImage(m_TexObject, 0, m_Format, m_Type, clear_color);
+	glClearTexImage(m_TexObject, 0, m_Format, m_Type, &clean_color);
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, m_UtilFBO);
 	//

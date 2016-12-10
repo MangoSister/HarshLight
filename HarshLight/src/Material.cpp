@@ -139,7 +139,7 @@ void Material::Use() const
     assert(m_Shader);
 #endif
 	m_Shader->Use();
-    const uint32_t SAMPLER2D_MAX_NUM = 8;
+    const uint32_t SAMPLER2D_MAX_NUM = 16;
 	uint32_t tex2d_num = (uint32_t)m_Textures2d.size();
 	if (tex2d_num > SAMPLER2D_MAX_NUM)
 	{
