@@ -4,7 +4,7 @@
 #define SQRT3 1.73205080757
 #define TAN30 0.57735026919
 #define TAN10 0.1763269807
-#define MAX_TRACE_DIST 500.0
+#define MAX_TRACE_DIST 200.0 //500, 1000?
 
 in vec2 vs_Texcoord;
 in vec3 vs_WorldPosition;
@@ -89,7 +89,7 @@ vec3 ComputeDirLightBlinnPhong(in DirLight light, in vec3 view_dir, in vec3 norm
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(normal, light_dir), 0.0);
-	float spec_intensity = 0;//pow(max(dot(normal, half_dir), 0.0), Shininess) * spec_scale;
+	float spec_intensity = pow(max(dot(normal, half_dir), 0.0), Shininess) * spec_scale;
 
 	return vec3(diffuse_intensity + spec_intensity) * light.color.xyz * light.color.w;
 }
@@ -114,7 +114,7 @@ vec3 ComputePointLightBlinnPhong(in PointLight light, in vec3 view_dir, in vec3 
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(normal, light_dir), 0.0);
-	float spec_intensity = 0;//pow(max(dot(normal, half_dir), 0.0), Shininess) * spec_scale;
+	float spec_intensity = pow(max(dot(normal, half_dir), 0.0), Shininess) * spec_scale;
 
 	return vec3(diffuse_intensity + spec_intensity) * atten * light.color.xyz;
 }
@@ -200,11 +200,11 @@ void main()
 	float spec_scale = texture(TexSpecular, vs_Texcoord).r;
 
 	/* ----------------- Direct Lighting --------------------- */
-	//for(uint i = 0; i < ActiveDirLights; i++)
-	//	fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i], view_dir, adj_world_normal, spec_scale) * ComputeDirLightShadow(i);
+	for(uint i = 0; i < ActiveDirLights; i++)
+		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i], view_dir, adj_world_normal, spec_scale) * ComputeDirLightShadow(i);
 	
-	//for(uint i = 0; i < ActivePointLights; i++)
-	//	fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i], view_dir, adj_world_normal, spec_scale);	
+	for(uint i = 0; i < ActivePointLights; i++)
+		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i], view_dir, adj_world_normal, spec_scale);	
 	/* ------------------------------------------------------ */
 
 	////indirect diffuse
@@ -218,8 +218,11 @@ void main()
 	//indirect specular
 	vec3 ref_dir = -reflect(view_dir, adj_world_normal);
 	float spec_half_tan = tan(0.5 * acos(pow(0.244, 1.0 / (1 + Shininess)))); //magic number here, from GPU PRO5 SSR cone trace chapter
-	//fragColor.xyz += spec_scale * VoxelConeTracing(vs_WorldPosition, ref_dir, spec_half_tan, MAX_TRACE_DIST);
+	//precompute this
+
+	fragColor.xyz += spec_scale * VoxelConeTracing(vs_WorldPosition, ref_dir, spec_half_tan, MAX_TRACE_DIST);
 	//voxel shadow ??
 	
-	//fragColor.xyz *= albedo;
+	fragColor.xyz *= albedo;
+	fragColor.xyz = sqrt(fragColor.xyz); // approximate gamma correction (2 instead of 2.2)
 }

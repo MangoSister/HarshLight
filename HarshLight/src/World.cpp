@@ -367,6 +367,7 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
 //#ifdef _DEBUG
 //        assert(albedo_num > 0); //temporary
 //#endif
+		aiString fk = scene->mMaterials[i]->mProperties[0]->mKey;
         if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0)
         {
             aiString albedo_path;
@@ -500,7 +501,7 @@ std::vector<Material*> World::LoadDefaultMaterialsForModel(Model * model)
 		}
 		else
 		{
-			curr_material->AddTexture(m_DefaultGrayTex, "TexSpecular");
+			curr_material->AddTexture(m_DefaultBlackTex, "TexSpecular");
 		}
 
 		if (scene->mMaterials[i]->GetTextureCount(aiTextureType_OPACITY) > 0)

@@ -95,7 +95,8 @@ void main()
 	if(opacity_mask == 0.0)
 		discard;
 	
-	fragColor = vec4(Ambient.xyz, 1.0);
+	//fragColor = vec4(Ambient.xyz, 1.0);
+	fragColor = vec4(0.0, 0.0, 0.0, 1.0);
 	vec3 tan_normal = texture(TexNormal, vs_Texcoord).rgb;
 	tan_normal.xy = tan_normal.xy * vec2(2.0) - vec2(1.0);
 	tan_normal.z = sqrt(1.0 - dot(tan_normal.xy, tan_normal.xy));
@@ -114,6 +115,7 @@ void main()
 		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i], view_dir, adj_world_normal, spec_scale);
 	
 	fragColor.xyz *= albedo;
+	fragColor.xyz = sqrt(fragColor.xyz); // approximate gamma correction (2 instead of 2.2)
 	//fragColor.xyz = vec3(spec_scale);
 	//fragColor.w = 1.0;
 	//fragColor = vec4(vs_WorldNormal * 0.5 + 0.5, 1.0);
