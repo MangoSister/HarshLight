@@ -10,8 +10,8 @@
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 {
 	World& world = World::GetInst();
-	static double s_LastMouseX = 0.5 * static_cast<double>(world.m_ViewportWidth);
-	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_ViewportHeight);
+	static double s_LastMouseX = 0.5 * static_cast<double>(world.m_FullRenderWidth);
+	static double s_LastMouseY = 0.5 * static_cast<double>(world.m_FullRenderHeight);
 
 	double xoffset = xpos - s_LastMouseX;
 	double yoffset = s_LastMouseY - ypos;
@@ -55,14 +55,56 @@ void World::KeyboardCallback(GLFWwindow * window, int key, int scancode, int act
         map.insert(std::make_pair(key, action));
 }
 
+void World::ComputeGeometryPass()
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_GBufferFBO);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
+
+    if (m_MainCamera)
+        m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
+    else
+        fprintf(stderr, "WARNING: MainCamera is null\n");
+
+    for (ModelRenderer* renderer : m_Renderers)
+        renderer->Render(RenderPass::kGeometry);
+
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void World::ComputeShadingPass()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (m_MainCamera)
+        m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
+    else
+        fprintf(stderr, "WARNING: MainCamera is null\n");
+
+    if (m_VoxelizeCamera)
+        m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
+    else
+        fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+    m_DeferredShadingQuad->Render(RenderPass::kDeferredShading);
+    //render quad
+}
+
 void World::SetWindow(GLFWwindow* window, uint32_t width, uint32_t height)
 {
     m_Window = window;
     glfwSetKeyCallback(window, KeyboardCallback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, MouseCallback);
-	m_ViewportWidth = width;
-	m_ViewportHeight = height;
+	m_FullRenderWidth = width;
+	m_FullRenderHeight = height;
 }
 
 const ActorList& World::GetActors() const
@@ -205,12 +247,96 @@ LightManager & World::GetLightManager()
 
 const void World::GetViewportSize(uint32_t & width, uint32_t & height) const
 {
-	width = m_ViewportWidth;
-	height = m_ViewportHeight;
+	width = m_FullRenderWidth;
+	height = m_FullRenderHeight;
 }
 
 void World::Start()
 {
+    /*----------------  Initialize G-buffer --------------*/
+    glGenFramebuffers(1, &m_GBufferFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_GBufferFBO);
+
+    glGenTextures(1, &m_GPositionAndSpecPower);
+    glBindTexture(GL_TEXTURE_2D, m_GPositionAndSpecPower);
+    //RGBA 16F HERE 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_FullRenderWidth, m_FullRenderHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_GPositionAndSpecPower, 0);
+
+    //RGBA 16F HERE 
+    glGenTextures(1, &m_GNormalAndTangent);
+    glBindTexture(GL_TEXTURE_2D, m_GNormalAndTangent);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_FullRenderWidth, m_FullRenderHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_GNormalAndTangent, 0);
+
+    //RGBA 8 HERE
+    glGenTextures(1, &m_GAlbedoAndSpecIntensity);
+    glBindTexture(GL_TEXTURE_2D, m_GAlbedoAndSpecIntensity);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_FullRenderWidth, m_FullRenderHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_GAlbedoAndSpecIntensity, 0);
+
+    GLuint attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
+
+    //also depth buffer
+    glGenRenderbuffers(1, &m_GDepthRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_GDepthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_FullRenderWidth, m_FullRenderHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_GDepthRBO);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        fprintf(stderr, "G-Buffer incomplete\n");
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        exit(1);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    ShaderProgram* ds_shading_shader = new ShaderProgram();
+    ds_shading_shader->AddVertShader("src/shaders/ds_vct_grid_vert.glsl");
+    ds_shading_shader->AddFragShader("src/shaders/ds_vct_grid_frag.glsl");
+    ds_shading_shader->LinkProgram();
+    RegisterShader(ds_shading_shader);
+
+    Model* quad = new Model(Model::Primitive::kQuad);
+    RegisterModel(quad);
+
+    m_DeferredShadingQuad = new ModelRenderer(quad);
+    m_DeferredShadingQuad->SetRenderPass(RenderPass::kDeferredShading);
+    m_DeferredShadingQuad->MoveTo({ 0.0f, 0.0f, 0.0f });
+    m_DeferredShadingQuad->ScaleTo({ 2.0f, 2.0f, 1.0f });
+
+    Material* mat_deferred_shading = new Material();
+    mat_deferred_shading->SetShader(ds_shading_shader);
+    mat_deferred_shading->SetFloatParam("VoxelDim", static_cast<float>(m_VoxelizeController->GetVoxelDim()));
+    mat_deferred_shading->SetFloatParam("VoxelScale", m_VoxelizeController->GetVoxelScale());
+    mat_deferred_shading->AddTexture2dDirect(m_GPositionAndSpecPower, "GPositionAndSpecPower");
+    mat_deferred_shading->AddTexture2dDirect(m_GNormalAndTangent, "GNormalAndTangent");
+    mat_deferred_shading->AddTexture2dDirect(m_GAlbedoAndSpecIntensity, "GAlbedoAndSpecIntensity");
+    mat_deferred_shading->AddTexture(m_VoxelizeController->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+    char sampler_name[30];
+    for (uint32_t i = 0; i < 6; i++)
+    {
+    	memset(sampler_name, 0, 30);
+    	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+        mat_deferred_shading->AddTexture(m_VoxelizeController->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+    }
+    for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+    {
+    	memset(sampler_name, 0, 30);
+    	sprintf(sampler_name, "TexDirShadow[%u]", i);
+        mat_deferred_shading->AddTexture2dDirect(m_VoxelizeController->GetDirectionalDepthMap(i), sampler_name);
+    }
+    RegisterMaterial(mat_deferred_shading);
+
+    m_DeferredShadingQuad->AddMaterial(RenderPass::kDeferredShading, mat_deferred_shading);
+
     m_TextManager.Init();
 
     for (Component* comp : m_Components)
@@ -264,26 +390,29 @@ void World::MainLoop()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-    glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
+    glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
 
     /*--------- pass 2: regular render to default frame buffer ---------*/
-    if (m_RenderPassSwitch[0])
-    {
-        if (m_MainCamera)
-            m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
-        else
-            fprintf(stderr, "WARNING: MainCamera is null\n");
-        
-        //reconstruct voxelize space
-        if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
-        else
-            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+    //if (m_RenderPassSwitch[0])
+    //{
+    //    if (m_MainCamera)
+    //        m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
+    //    else
+    //        fprintf(stderr, "WARNING: MainCamera is null\n");
+    //    
+    //    //reconstruct voxelize space
+    //    if (m_VoxelizeCamera)
+    //        m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
+    //    else
+    //        fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
-        for (ModelRenderer* renderer : m_Renderers)
-            renderer->Render(RenderPass::kRegular);
-    }
+    //    for (ModelRenderer* renderer : m_Renderers)
+    //        renderer->Render(RenderPass::kGeometry);
+    //}
 
+    ComputeGeometryPass();
+    ComputeShadingPass();
+    
     if (m_RenderPassSwitch[1])
     {
         /*--------- pass 3: regular render to frame buffer displays ---------*/
@@ -303,7 +432,7 @@ void World::MainLoop()
             assert(display != nullptr);
             display->StartRenderToFrameBuffer();
             for (ModelRenderer* renderer : m_Renderers)
-                renderer->Render(RenderPass::kRegular);
+                renderer->Render(RenderPass::kGeometry);
         }
 
         /*--------- pass 4: render frame buffer displays as overlay ---------*/
@@ -316,7 +445,7 @@ void World::MainLoop()
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
+        glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
         for(ModelRenderer* renderer : m_Renderers)
         {
             assert(renderer != nullptr);
@@ -324,6 +453,10 @@ void World::MainLoop()
         }
     }
     
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     static char fps_counter[100];
     memset(fps_counter, 0, 100);
     sprintf(fps_counter, "FPS: %.2f", 1.0f / elapsed);
@@ -619,6 +752,37 @@ void World::Destroy()
 			shader = nullptr;
 		}
 	}
+
+    /*----------------  G-buffer --------------*/
+    if (m_GDepthRBO)
+    {
+        glDeleteRenderbuffers(1, &m_GDepthRBO);
+        m_GDepthRBO = 0;
+    }
+
+    if (m_GAlbedoAndSpecIntensity)
+    {
+        glDeleteTextures(1, &m_GAlbedoAndSpecIntensity);
+        m_GAlbedoAndSpecIntensity = 0;
+    }
+
+    if (m_GNormalAndTangent)
+    {
+        glDeleteTextures(1, &m_GNormalAndTangent);
+        m_GNormalAndTangent = 0;
+    }
+
+    if (m_GPositionAndSpecPower)
+    {
+        glDeleteTextures(1, &m_GPositionAndSpecPower);
+        m_GPositionAndSpecPower = 0;
+    }
+
+    if (m_GBufferFBO)
+    {
+        glDeleteFramebuffers(1, &m_GBufferFBO);
+        m_GBufferFBO = 0;
+    }
 }
 
 bool World::IsKeyDown(int key)

@@ -9,7 +9,7 @@
 #include <cuda_gl_interop.h>
 #include <cuda_runtime.h>
 #include "glm/glm.hpp"
-
+#include <algorithm>
 
 namespace VoxelChannel
 {
@@ -53,6 +53,13 @@ public:
 
 	inline const Texture3dCompute* GetAnisoRadianceMipmap(uint32_t idx) const
 	{ return m_AnisoRadianceMipmap[idx]; }
+
+    inline float GetVoxelScale() const
+    {
+        float max_extent = std::max(m_Extent.x, std::max(m_Extent.y, m_Extent.z));
+        const float voxel_scale = max_extent * 2.0f / static_cast<float>(m_VoxelDim);
+        return voxel_scale;
+    }
 
 private:
 	

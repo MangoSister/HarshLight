@@ -39,9 +39,12 @@ void ModelRenderer::Render(RenderPassFlag pass)
     case RenderPass::kPointLightInjection:
         if (m_RenderPassFlag & pass)
             m_Model->Render(m_Transform, m_PointLightInjectionMaterials); break;
-    case RenderPass::kRegular:
+    case RenderPass::kGeometry:
         if(m_RenderPassFlag & pass) 
             m_Model->Render(m_Transform, m_Materials); break;
+    case RenderPass::kDeferredShading:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_DeferredShadingMaterials); break;
     case RenderPass::kPost:
         if(m_RenderPassFlag & pass) 
             m_Model->Render(m_Transform, m_PostMaterials); break;
@@ -63,7 +66,10 @@ void ModelRenderer::Render(RenderPassFlag pass, const glm::vec3 & center, float 
     case RenderPass::kPointLightInjection:
         if (m_RenderPassFlag & pass)
             m_Model->Render(m_Transform, m_PointLightInjectionMaterials, center, radius); break;
-    case RenderPass::kRegular:
+    case RenderPass::kGeometry:
+        if (m_RenderPassFlag & pass)
+            m_Model->Render(m_Transform, m_Materials, center, radius); break;
+    case RenderPass::kDeferredShading:
         if (m_RenderPassFlag & pass)
             m_Model->Render(m_Transform, m_Materials, center, radius); break;
     case RenderPass::kPost:
@@ -85,7 +91,8 @@ void ModelRenderer::AddMaterial(RenderPassFlag pass, Material* material)
     case RenderPass::kVoxelize: m_VoxelizeMaterials.push_back(material); break;
 	case RenderPass::kDirLightInjection: m_DirLightInjectionMaterials.push_back(material); break;
     case RenderPass::kPointLightInjection:m_PointLightInjectionMaterials.push_back(material); break;
-    case RenderPass::kRegular: m_Materials.push_back(material); break;
+    case RenderPass::kGeometry: m_Materials.push_back(material); break;
+    case RenderPass::kDeferredShading: m_DeferredShadingMaterials.push_back(material); break;
     case RenderPass::kPost: m_PostMaterials.push_back(material); break;
     default:case RenderPass::kNone:
         break;
@@ -99,7 +106,8 @@ const std::vector<Material*>& ModelRenderer::GetMaterial(RenderPassFlag pass) co
     case RenderPass::kVoxelize: return m_VoxelizeMaterials;
 	case RenderPass::kDirLightInjection: return m_DirLightInjectionMaterials;
     case RenderPass::kPointLightInjection: return m_PointLightInjectionMaterials;
-    case RenderPass::kRegular:default: return m_Materials;
+    case RenderPass::kGeometry:default: return m_Materials;
+    case RenderPass::kDeferredShading: return m_DeferredShadingMaterials;
     case RenderPass::kPost: return m_PostMaterials;
     }
 }

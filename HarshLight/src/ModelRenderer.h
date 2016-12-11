@@ -13,11 +13,12 @@ namespace RenderPass
     {
         kNone = 0x00,
         kVoxelize = 0x01,
-		kDirLightInjection = 0x02,
+        kDirLightInjection = 0x02,
         kPointLightInjection = 0x04,
-        kRegular = 0x08, 
-		kPost = 0x10,
-        kCount = 5,
+        kGeometry = 0x08,
+        kDeferredShading = 0x10,
+		kPost = 0x20,
+        kCount = 6,
     };
 }
 
@@ -51,6 +52,7 @@ protected:
 	std::vector<Material*> m_DirLightInjectionMaterials;
     std::vector<Material*> m_PointLightInjectionMaterials;
     std::vector<Material*> m_Materials;	
+    std::vector<Material*> m_DeferredShadingMaterials;
 	std::vector<Material*> m_PostMaterials;
 
 };

@@ -17,7 +17,6 @@ const uint32_t DEFAULT_WINDOW_HEIGHT = 720;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
-void CreateCRTestScene();
 void CreateWorld(const char* scene_path, float mouse_sensitivity);
 
 int main(int argc, char* argv[])
@@ -159,139 +158,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void CreateCRTestScene()
-{
-    const glm::vec3 test_extent(16, 16, 16);
-    const uint32_t test_dim = 16;
-    /* --------------  Shaders  ----------- */
-    ShaderProgram* cr_shader = new ShaderProgram();
-    cr_shader->AddVertShader("src/shaders/cr_vert.glsl");
-    cr_shader->AddGeomShader("src/shaders/cr_geom.glsl");
-    cr_shader->AddFragShader("src/shaders/cr_frag.glsl");
-    cr_shader->LinkProgram();
-    World::GetInst().RegisterShader(cr_shader);
-
-    ShaderProgram* sr_shader = new ShaderProgram();
-    sr_shader->AddVertShader("src/shaders/sr_vert.glsl");
-    sr_shader->AddFragShader("src/shaders/sr_frag.glsl");
-    sr_shader->LinkProgram();
-    World::GetInst().RegisterShader(sr_shader);
-
-    ShaderProgram* framebuffer_display_shader = new ShaderProgram();
-    framebuffer_display_shader->AddVertShader("src/shaders/framebuffer_color_vert.glsl");
-    framebuffer_display_shader->AddFragShader("src/shaders/framebuffer_color_frag.glsl");
-    framebuffer_display_shader->LinkProgram();
-    World::GetInst().RegisterShader(framebuffer_display_shader);
-
-    printf("Shaders compiling ended\n");
-
-    printf("Loading scene started\n");
-
-    /* --------------  Cameras  ----------- */
-    const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
-    {
-        Actor* cam_actor = new Actor();
-        const float left = -1.0f;
-        const float right = 1.0f;
-        const float bottom = -1.0f;
-        const float top = 1.0f;
-        const float near = -1.0f;
-        const float far = 1.0f;
-        Camera* cam = new Camera(left, right, bottom, top, near, far);
-        cam->MoveTo(glm::vec3(0.0f, 0.0f, 0.0f));
-        cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-        cam_actor->AddComponent(cam);
-        World::GetInst().RegisterActor(cam_actor);
-        World::GetInst().SetMainCamera(cam);
-        World::GetInst().SetVoxelCamera(cam);
-    }
-
-    
-    /* --------------  Test Shape  ----------- */
-	glm::vec3 scale(-0.0001, -0.0001, -1.0);
-	glm::vec3 pos(0.125f, 0.0f, 0.0f);
-    Model* tri = new Model(Model::Primitive::kTriangle);
-    World::GetInst().RegisterModel(tri);
-
-    Actor* cr_triActor = new Actor();
-
-    ModelRenderer* cr_renderer = new ModelRenderer(tri);
-    cr_renderer->ScaleTo(scale);
-	cr_renderer->MoveTo(pos);
-    cr_triActor->AddRenderer(cr_renderer);
-    cr_renderer->SetRenderPass(RenderPass::kRegular);
-    Material* cr_mat = new Material();
-    cr_mat->SetShader(cr_shader);
-    cr_renderer->AddMaterial(RenderPass::kRegular, cr_mat);
-
-
-    /* --------------  Controller  ----------- */
-    VoxelizeController* voxel_ctrl = new VoxelizeController(test_dim, test_dim, glm::vec3(0.0f), test_extent, World::GetInst().GetVoxelCamera());
-    cr_triActor->AddComponent(voxel_ctrl);
-
-    World::GetInst().RegisterActor(cr_triActor);
-
-    glm::vec4 a(0.0, 0.5, 0, 1);
-    a = cr_renderer->GetTransform() * a;
-    a = World::GetInst().GetMainCamera()->GetViewMtx() * a;
-    a = World::GetInst().GetMainCamera()->GetProjMtx() * a;
-
-    Actor* sr_triActor = new Actor();
-
-    ModelRenderer* sr_renderer = new ModelRenderer(tri);
-    sr_renderer->ScaleTo(scale);
-	sr_renderer->MoveTo(pos);
-    sr_triActor->AddRenderer(sr_renderer);
-    sr_renderer->SetRenderPass(RenderPass::kRegular);	
-    Material* sr_mat = new Material();
-    sr_mat->SetShader(sr_shader);
-    sr_renderer->AddMaterial(RenderPass::kRegular, sr_mat);
-
-    World::GetInst().RegisterActor(sr_triActor);
-
-
-    /* --------------  Frame Buffer Display  ----------- */
-    Model* quad = new Model(Model::Primitive::kQuad);
-    World::GetInst().RegisterModel(quad);
-    
-    {
-        Actor* rasterTriDisplay = new Actor();
-
-        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, test_dim, false, false, GL_FILL);
-        rasterTriDisplay->AddRenderer(framBufDisplay);
-        framBufDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
-        framBufDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
-        framBufDisplay->SetRenderPass(RenderPass::kPost);
-        Material* frame_display_mat = new Material();
-        frame_display_mat->SetShader(framebuffer_display_shader);
-        frame_display_mat->AddTexture2dDirect(framBufDisplay->GetColorBuffer(), "TexScreen");
-        framBufDisplay->AddMaterial(RenderPass::kPost, frame_display_mat);
-
-        World::GetInst().RegisterActor(rasterTriDisplay);
-    }
-
-    {
-        const uint32_t ref_dim = 256;
-        Actor* lineTriDisplay = new Actor();
-
-        FrameBufferDisplay* framBufDisplay = new FrameBufferDisplay(quad, ref_dim, false, false, GL_LINE);
-        lineTriDisplay->AddRenderer(framBufDisplay);
-        framBufDisplay->MoveTo({ 0.7f, 0.5f, 0.0f });
-        framBufDisplay->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
-        framBufDisplay->SetRenderPass(RenderPass::kPost);
-        Material* frame_display_mat = new Material();
-        frame_display_mat->SetShader(framebuffer_display_shader);
-        frame_display_mat->AddTexture2dDirect(framBufDisplay->GetColorBuffer(), "TexScreen");
-        framBufDisplay->AddMaterial(RenderPass::kPost, frame_display_mat);
-
-        World::GetInst().RegisterActor(lineTriDisplay);
-    }
-
-    printf("Loading scene ended\n");
-
-}
-
 void CreateWorld(const char* scene_path, float mouse_sensitivity)
 {
     /* --------------  Shaders  ----------- */
@@ -351,6 +217,12 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 	vct_shader->AddFragShader("src/shaders/vct_grid_frag.glsl");
 	vct_shader->LinkProgram();
 	World::GetInst().RegisterShader(vct_shader);
+
+    ShaderProgram* ds_geometry_shader = new ShaderProgram();
+    ds_geometry_shader->AddVertShader("src/shaders/ds_geometry_pass_vert.glsl");
+    ds_geometry_shader->AddFragShader("src/shaders/ds_geometry_pass_frag.glsl");
+    ds_geometry_shader->LinkProgram();
+    World::GetInst().RegisterShader(ds_geometry_shader);
 
     printf("Shaders compiling ended\n");
 
@@ -441,7 +313,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     sceneActor->AddRenderer(sceneRenderer);
     sceneRenderer->MoveTo({ 0.0f, 0.0f, 0.0f });
     sceneRenderer->ScaleTo({ 0.5f, 0.5f, 0.5f });
-    sceneRenderer->SetRenderPass((RenderPassFlag)(RenderPass::kVoxelize | RenderPass::kDirLightInjection | RenderPass::kPointLightInjection | RenderPass::kRegular));
+    sceneRenderer->SetRenderPass((RenderPassFlag)(RenderPass::kVoxelize | RenderPass::kDirLightInjection | RenderPass::kPointLightInjection | RenderPass::kGeometry));
     for (Material*& mat_voxelize : sceneMaterials)
     {
         {
@@ -483,30 +355,33 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
 			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), name);
 			//}
 
-			mat_voxel_visual->SetShader(vct_shader);
-			
-			mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
-			mat_voxel_visual->SetFloatParam("VoxelScale", voxel_scale);
-			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
-			mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
-			mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
-			mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
-			char sampler_name[30];	
-			for (uint32_t i = 0; i < 6; i++)
-			{
-				memset(sampler_name, 0, 30);
-				sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
-				mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
-			}
-			for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
-			{
-				memset(sampler_name, 0, 30);
-				sprintf(sampler_name, "TexDirShadow[%u]", i);
-				mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), sampler_name);
-			}
+			//mat_voxel_visual->SetShader(vct_shader);
+			//mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
+			//mat_voxel_visual->SetFloatParam("VoxelScale", voxel_scale);
+			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
+			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+			//mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
+			//char sampler_name[30];	
+			//for (uint32_t i = 0; i < 6; i++)
+			//{
+			//	memset(sampler_name, 0, 30);
+			//	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+			//}
+			//for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+			//{
+			//	memset(sampler_name, 0, 30);
+			//	sprintf(sampler_name, "TexDirShadow[%u]", i);
+			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), sampler_name);
+			//}
 
+            mat_voxel_visual->SetShader(ds_geometry_shader);
+            mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
+            mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
+            mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
 
-            sceneRenderer->AddMaterial(RenderPass::kRegular, mat_voxel_visual);
+            sceneRenderer->AddMaterial(RenderPass::kGeometry, mat_voxel_visual);
 			World::GetInst().RegisterMaterial(mat_voxel_visual);
 
         }

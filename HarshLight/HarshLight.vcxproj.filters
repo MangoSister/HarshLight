@@ -247,6 +247,18 @@
     <None Include="src\shaders\anisotropic_mipmap_zneg_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
+    <None Include="src\shaders\ds_geometry_pass_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\ds_geometry_pass_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\ds_vct_grid_vert.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\shaders\ds_vct_grid_frag.glsl">
+      <Filter>src\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VoxelInvert.cu">

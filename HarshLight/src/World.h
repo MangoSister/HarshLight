@@ -88,6 +88,7 @@ public:
 	Texture2d* m_DefaultWhiteTex;
 	Texture2d* m_DefaultGrayTex;
 	Texture2d* m_DefaultNormalTex;
+    ModelRenderer* m_DeferredShadingQuad;
 
 private:
 
@@ -98,6 +99,9 @@ private:
     static void KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     GLFWwindow* m_Window;
+
+    void ComputeGeometryPass();
+    void ComputeShadingPass();
 
 	/*----------------  Resources --------------*/
 	ModelList m_Models;
@@ -121,9 +125,17 @@ private:
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
 
-	uint32_t m_ViewportWidth;
-	uint32_t m_ViewportHeight;
+	uint32_t m_FullRenderWidth;
+	uint32_t m_FullRenderHeight;
 	float m_MouseSensitivity;
 
-    uint8_t m_RenderPassSwitch[2] = { 1, 1 };
+    uint8_t m_RenderPassSwitch[2] = { 1, 0 };
+
+    /*----------------  G-buffer --------------*/
+    GLuint m_GBufferFBO = 0;
+    GLuint m_GPositionAndSpecPower = 0; //RGBA 16F HERE 
+    GLuint m_GNormalAndTangent = 0; //RGBA 16F HERE 
+    GLuint m_GAlbedoAndSpecIntensity = 0; //RGBA 8 HERE
+    GLuint m_GDepthRBO = 0;
+    
 };

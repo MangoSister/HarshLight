@@ -208,7 +208,7 @@ void VoxelizeController::Start()
         }
 	}
 
-	const std::vector<Material*>& regular_mats = m_Actor->GetRenderer<ModelRenderer>()->GetMaterial(RenderPass::kRegular);
+	const std::vector<Material*>& regular_mats = m_Actor->GetRenderer<ModelRenderer>()->GetMaterial(RenderPass::kGeometry);
 	for (auto mat : regular_mats)
 	{
         if (mat)

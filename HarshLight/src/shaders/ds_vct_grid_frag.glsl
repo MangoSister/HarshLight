@@ -7,12 +7,13 @@
 #define MAX_TRACE_DIST 200 //500, 1000?
 
 in vec2 vs_Texcoord;
-in vec3 vs_WorldPosition;
-in vec3 vs_WorldNormal;
-//in vec3 vs_VoxelCoord;
-in vec3 vs_WorldTangent;
-
 out vec4 fragColor;
+
+/* --------------  G-Buffer  ----------- */
+uniform sampler2D GPositionAndSpecPower;
+uniform sampler2D GNormalAndTangent;
+uniform sampler2D GAlbedoAndSpecIntensity;
+/* --------------------------------------- */
 
 /* --------------  Lighting Info  ----------- */
 #define DIR_LIGHT_MAX_NUM 4
@@ -41,6 +42,8 @@ layout (std140, binding = 2) uniform LightInfo
 	uint ActiveDirLights;
 	uint ActivePointLights;
 };
+
+uniform sampler2DShadow TexDirShadow[DIR_LIGHT_MAX_NUM];
 /* --------------------------------------- */
 
 /* --------------  Camera Info  ----------- */
@@ -59,64 +62,46 @@ layout (std140, binding = 1) uniform VoxelCamMtx
 };
 /* --------------------------------------- */
 
-uniform sampler2D TexAlbedo;
-uniform sampler2D TexNormal;
-uniform sampler2D TexSpecular;
-uniform sampler2D TexOpacityMask;
-uniform float Shininess;
-uniform sampler2DShadow TexDirShadow[DIR_LIGHT_MAX_NUM];
-
+/* --------------  VCT Info  ----------- */
 uniform float VoxelDim;
 uniform float VoxelScale;
 
 uniform sampler3D ImgRadianceLeaf;
 uniform sampler3D ImgRadianceInterior[6];
+/* --------------------------------------- */
 
-vec4 ColorUintToVec4(uint val) 
-{
-	float r = float((val & 0xFF000000) >> 24U);
-	float g = float((val & 0x00FF0000) >> 16U);
-	float b = float((val & 0x0000FF00) >> 8U);
-	float a = float((val & 0x000000FF));
-
-	vec4 o = vec4(r, g, b, a);
-	o /= 255.0;
-	o = clamp(o, vec4(0.0, 0.0, 0.0, 0.0), vec4(1.0, 1.0, 1.0, 1.0));
-	return o;
-}
-
-vec3 ComputeDirLightBlinnPhong(in DirLight light, in vec3 view_dir, in vec3 normal, in float spec_scale)
+vec3 ComputeDirLightBlinnPhong(in DirLight light, in vec3 view_dir, in vec3 normal, in float spec_scale, in float shininess)
 {
 	vec3 light_dir = normalize(-light.direction.xyz);
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(normal, light_dir), 0.0);
-	float spec_intensity = pow(max(dot(normal, half_dir), 0.0), Shininess) * spec_scale;
+	float spec_intensity = pow(max(dot(normal, half_dir), 0.0), shininess) * spec_scale;
 
 	return vec3(diffuse_intensity + spec_intensity) * light.color.xyz * light.color.w;
 }
 
-float ComputeDirLightShadow(uint idx)
+float ComputeDirLightShadow(in uint idx, in vec3 position)
 {
-	vec4 shadow_coord = DirLights[idx].lightProjMtx * DirLights[idx].lightMtx * vec4(vs_WorldPosition, 1.0);
+	vec4 shadow_coord = DirLights[idx].lightProjMtx * DirLights[idx].lightMtx * vec4(position, 1.0);
 	shadow_coord = shadow_coord * 0.5 + 0.5;
 	shadow_coord.z *= SHADOW_BIAS;
 	
 	return textureProj(TexDirShadow[idx], shadow_coord);
 }
 
-vec3 ComputePointLightBlinnPhong(in PointLight light, in vec3 view_dir, in vec3 normal, in float spec_scale)
+vec3 ComputePointLightBlinnPhong(in PointLight light, in vec3 position, in vec3 view_dir, in vec3 normal, in float spec_scale, in float shininess)
 {
-	float dist = length(light.position.xyz - vs_WorldPosition);
+	float dist = length(light.position.xyz - position);
 	float atten = light.color.w / (PointLightAtten.x + PointLightAtten.y * dist + PointLightAtten.z * dist * dist);
 	if(atten < 0.001)
 		return vec3(0.0);
 
-	vec3 light_dir = (light.position.xyz - vs_WorldPosition) / dist;
+	vec3 light_dir = (light.position.xyz - position) / dist;
 	vec3 half_dir = normalize(light_dir + view_dir);
 
 	float diffuse_intensity = max(dot(normal, light_dir), 0.0);
-	float spec_intensity = pow(max(dot(normal, half_dir), 0.0), Shininess) * spec_scale;
+	float spec_intensity = pow(max(dot(normal, half_dir), 0.0), shininess) * spec_scale;
 
 	return vec3(diffuse_intensity + spec_intensity) * atten * light.color.xyz;
 }
@@ -155,7 +140,6 @@ vec3 VoxelConeTracing(vec3 origin, vec3 dir, float half_tan, float max_dist)
 
 	vec3 sample_pos = origin + dist * dir;
 	vec3 voxel_coord = ((CamVoxelProjMtx * CamVoxelViewMtx * vec4(sample_pos, 1.0)).xyz) * vec3(0.5) + vec3(0.5);
-	int step_count = 0;
 	while(dist < max_dist && accum.w < 1.0 && 
 		all(greaterThanEqual(voxel_coord, vec3(0.0))) && 
 		all(lessThanEqual(voxel_coord, vec3(1.0))))  //make sure sample_pos in bound
@@ -183,48 +167,50 @@ vec3 VoxelConeTracing(vec3 origin, vec3 dir, float half_tan, float max_dist)
 
 void main()
 {
-	float opacity_mask = texture(TexOpacityMask, vs_Texcoord).r;
-	if(opacity_mask == 0.0)
-		discard;
-
-	//fragColor = vec4(Ambient.xyz, 1.0);
 	fragColor = vec4(0, 0, 0, 1);
-	vec3 albedo = texture(TexAlbedo, vs_Texcoord).xyz;
-	vec3 tan_normal = texture(TexNormal, vs_Texcoord).rgb;
-	tan_normal.xy = tan_normal.xy * vec2(2.0) - vec2(1.0);
-	tan_normal.z = sqrt(1.0 - dot(tan_normal.xy, tan_normal.xy));
-	vec3 bitangent = cross(vs_WorldNormal, vs_WorldTangent);
-	vec3 adj_world_normal = tan_normal.x * vs_WorldTangent + tan_normal.y * bitangent + tan_normal.z * vs_WorldNormal;
-	vec3 adj_world_tangent = normalize(cross(adj_world_normal, vs_WorldTangent));
-	vec3 adj_world_bitangent = cross(adj_world_normal, vs_WorldTangent);
+	vec4 pos_spec_power = texture(GPositionAndSpecPower, vs_Texcoord);
+	vec3 position = pos_spec_power.xyz;
+	float shininess = pos_spec_power.w;
 
-	vec3 view_dir = normalize(CamWorldPos.xyz - vs_WorldPosition);
-	float spec_scale = texture(TexSpecular, vs_Texcoord).r;
+	vec4 albedo_spec_scale = texture(GAlbedoAndSpecIntensity, vs_Texcoord);
+	vec3 albedo = albedo_spec_scale.xyz;
+	float spec_scale = albedo_spec_scale.w;
+
+	vec4 normal_tangent = texture(GNormalAndTangent, vs_Texcoord);
+	vec3 normal;
+	normal.xy = normal_tangent.xy;
+	normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));
+	vec3 tangent;
+	tangent.xy = normal_tangent.zw;
+	tangent.z = sqrt(1.0 - dot(tangent.xy, tangent.xy));
+	vec3 bitangent = cross(normal, tangent);
+
+	vec3 view_dir = normalize(CamWorldPos.xyz - position);
 
 	/* ----------------- Direct Lighting --------------------- */
 	for(uint i = 0; i < ActiveDirLights; i++)
-		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i], view_dir, adj_world_normal, spec_scale) * ComputeDirLightShadow(i);
+		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i], view_dir, normal, spec_scale, shininess) * ComputeDirLightShadow(i, position);
 	
 	for(uint i = 0; i < ActivePointLights; i++)
-		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i], view_dir, adj_world_normal, spec_scale);	
+		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i], position, view_dir, normal, spec_scale, shininess);	
 	/* ------------------------------------------------------ */
 
 	//indirect diffuse
-	fragColor.xyz += 0.2 * VoxelConeTracing(vs_WorldPosition, adj_world_normal, TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.2 * VoxelConeTracing(position, normal, TAN30, MAX_TRACE_DIST);
 	//cos(60) = 0.5
-	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(adj_world_normal + SQRT3 * adj_world_tangent), TAN30, MAX_TRACE_DIST);
-	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(adj_world_normal - SQRT3 * adj_world_tangent), TAN30, MAX_TRACE_DIST);
-	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(adj_world_normal + SQRT3 * adj_world_bitangent), TAN30, MAX_TRACE_DIST);
-	fragColor.xyz += 0.1 * VoxelConeTracing(vs_WorldPosition, normalize(adj_world_normal - SQRT3 * adj_world_bitangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(position, normalize(normal + SQRT3 * tangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(position, normalize(normal - SQRT3 * tangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(position, normalize(normal + SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
+	fragColor.xyz += 0.1 * VoxelConeTracing(position, normalize(normal - SQRT3 * bitangent), TAN30, MAX_TRACE_DIST);
+
 
 	//indirect specular
-	vec3 ref_dir = -reflect(view_dir, adj_world_normal);
-	float spec_half_tan = tan(0.5 * acos(pow(0.244, 1.0 / (1 + Shininess)))); //magic number here, from GPU PRO5 SSR cone trace chapter
-	//precompute this
+	vec3 ref_dir = -reflect(view_dir, normal);
+	float spec_half_tan = tan(0.5 * acos(pow(0.244, 1.0 / (1 + shininess)))); //magic number here, from GPU PRO5 SSR cone trace chapter
+	//precompute shininess?
 
-	fragColor.xyz += spec_scale * VoxelConeTracing(vs_WorldPosition, ref_dir, spec_half_tan, MAX_TRACE_DIST);
-	//voxel shadow ??
-	
+	fragColor.xyz += spec_scale * VoxelConeTracing(position, ref_dir, spec_half_tan, MAX_TRACE_DIST);
+
 	fragColor.xyz *= albedo;
 	fragColor.xyz = sqrt(fragColor.xyz); // approximate gamma correction (2 instead of 2.2)
 }
