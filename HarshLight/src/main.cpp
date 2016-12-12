@@ -226,11 +226,11 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     framebuffer_display_shader->LinkProgram();
     World::GetInst().RegisterShader(framebuffer_display_shader);
 
-	ShaderProgram* vct_shader = new ShaderProgram();
-	vct_shader->AddVertShader("src/shaders/vct_grid_vert.glsl");
-	vct_shader->AddFragShader("src/shaders/vct_grid_frag.glsl");
-	vct_shader->LinkProgram();
-	World::GetInst().RegisterShader(vct_shader);
+	//ShaderProgram* vct_shader = new ShaderProgram();
+	//vct_shader->AddVertShader("src/shaders/ds_shading_vert.glsl");
+	//vct_shader->AddFragShader("src/shaders/vct_grid_frag.glsl");
+	//vct_shader->LinkProgram();
+	//World::GetInst().RegisterShader(vct_shader);
 
     ShaderProgram* ds_geometry_shader = new ShaderProgram();
     ds_geometry_shader->AddVertShader("src/shaders/ds_geometry_pass_vert.glsl");

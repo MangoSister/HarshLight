@@ -102,6 +102,8 @@ private:
 
     void ComputeGeometryPass();
     void ComputeShadingPass();
+	void ComputeIndirectDiffusePass();
+	void ComputeFinalCompositionPass();
 	void RenderUIText();
 
 	/*----------------  Resources --------------*/
@@ -139,5 +141,6 @@ private:
     GLuint m_GNormalAndTangent = 0; //RGBA 16F HERE 
     GLuint m_GAlbedoAndSpecIntensity = 0; //RGBA 8 HERE
     GLuint m_GDepthRBO = 0;
-	GLuint m_IndirectDiffuseHalfTex;
+	GLuint m_IndirectDiffuseFBO;
+	GLuint m_IndirectDiffuseHalfBuffer;
 };

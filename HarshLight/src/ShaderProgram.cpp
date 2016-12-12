@@ -37,7 +37,7 @@ ShaderProgram::~ShaderProgram()
 void ShaderProgram::AddVertShader(const char * path)
 {
 	m_ShaderTypeMask |= VERTEX;
-	FILE* file = std::fopen(path, "r");
+	FILE* file = std::fopen(path, "rb");
 	if (!file)
 	{
 		fprintf(stderr, "ERROR: fail to open vertex shader file: %s\n", path);
@@ -77,7 +77,7 @@ void ShaderProgram::AddVertShader(const char * path)
 void ShaderProgram::AddGeomShader(const char * path)
 {
 	m_ShaderTypeMask |= GEOMETRY;
-	FILE* file = std::fopen(path, "r");
+	FILE* file = std::fopen(path, "rb");
 	if (!file)
 	{
 		fprintf(stderr, "ERROR: fail to open geometry shader file: %s\n", path);
@@ -117,7 +117,7 @@ void ShaderProgram::AddGeomShader(const char * path)
 void ShaderProgram::AddFragShader(const char * path)
 {
 	m_ShaderTypeMask |= FRAGMENT;
-	FILE* file = std::fopen(path, "r");
+	FILE* file = std::fopen(path, "rb");
 	if (!file)
 	{
 		fprintf(stderr, "ERROR: fail to open fragment shader file: %s\n", path);

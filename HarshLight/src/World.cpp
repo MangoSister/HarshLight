@@ -82,6 +82,7 @@ void World::ComputeShadingPass()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
 
     if (m_MainCamera)
         m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
@@ -93,8 +94,58 @@ void World::ComputeShadingPass()
     else
         fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
 
-    m_DeferredShadingQuad->Render(RenderPass::kDeferredShading);
-    //render quad
+	//render quad
+    m_DeferredShadingQuad->Render(RenderPass::kDeferredIndirectDiffuse);
+   
+}
+
+void World::ComputeIndirectDiffusePass()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, m_IndirectDiffuseFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_IndirectDiffuseHalfBuffer, 0);
+
+	glClearColor(0.8f, 0.3f, 0.2f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT); //not using stencil buffer?
+
+	const uint32_t half_render_width = m_FullRenderWidth / 2;
+	const uint32_t half_render_height = m_FullRenderHeight / 2;
+	glViewport(0, 0, half_render_width, half_render_height);
+
+	if (m_MainCamera)
+		m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
+	else
+		fprintf(stderr, "WARNING: MainCamera is null\n");
+
+	if (m_VoxelizeCamera)
+		m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
+	else
+		fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+	m_DeferredShadingQuad->Render(RenderPass::kDeferredIndirectDiffuse);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+
+void World::ComputeFinalCompositionPass()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
+
+	if (m_MainCamera)
+		m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
+	else
+		fprintf(stderr, "WARNING: MainCamera is null\n");
+
+	if (m_VoxelizeCamera)
+		m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
+	else
+		fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
+
+	//render quad
+	m_DeferredShadingQuad->Render(RenderPass::kDeferredFinalComposition);
 }
 
 void World::RenderUIText()
@@ -315,54 +366,108 @@ void World::Start()
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_FullRenderWidth, m_FullRenderHeight);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_GDepthRBO);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        fprintf(stderr, "G-Buffer incomplete\n");
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        exit(1);
-    }
+#if _DEBUG
+	{
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		assert(status == GL_FRAMEBUFFER_COMPLETE);
+	}
+#endif
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	
+	//half indirect diffuse buffer
+	glGenFramebuffers(1, &m_IndirectDiffuseFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_IndirectDiffuseFBO);
 
-    ShaderProgram* ds_shading_shader = new ShaderProgram();
-    ds_shading_shader->AddVertShader("src/shaders/ds_vct_grid_vert.glsl");
-    ds_shading_shader->AddFragShader("src/shaders/ds_vct_grid_frag.glsl");
-    ds_shading_shader->LinkProgram();
-    RegisterShader(ds_shading_shader);
+	const uint32_t half_render_width = m_FullRenderWidth / 2;
+	const uint32_t half_render_height = m_FullRenderHeight / 2;
+	glGenTextures(1, &m_IndirectDiffuseHalfBuffer);
+	glBindTexture(GL_TEXTURE_2D, m_IndirectDiffuseHalfBuffer);
+	//RGB 32 FLOAT HERE, we need high resolution for indirect diffuse color
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, half_render_width, half_render_height, 0, GL_RGB, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_IndirectDiffuseHalfBuffer, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+#if _DEBUG
+	{
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		assert(status == GL_FRAMEBUFFER_COMPLETE);
+	}
+#endif
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	ShaderProgram* ds_indirect_diffuse_shader = new ShaderProgram();
+	ds_indirect_diffuse_shader->AddVertShader("src/shaders/ds_shading_vert.glsl");
+	ds_indirect_diffuse_shader->AddFragShader("src/shaders/ds_indirect_diffuse_frag.glsl");
+	ds_indirect_diffuse_shader->LinkProgram();
+	RegisterShader(ds_indirect_diffuse_shader);
+
+	ShaderProgram* ds_final_composition = new ShaderProgram();
+	ds_final_composition->AddVertShader("src/shaders/ds_shading_vert.glsl");
+	ds_final_composition->AddFragShader("src/shaders/ds_final_composition_frag.glsl");
+	ds_final_composition->LinkProgram();
+	RegisterShader(ds_final_composition);
 
     Model* quad = new Model(Model::Primitive::kQuad);
     RegisterModel(quad);
 
     m_DeferredShadingQuad = new ModelRenderer(quad);
-    m_DeferredShadingQuad->SetRenderPass(RenderPass::kDeferredShading);
+    m_DeferredShadingQuad->SetRenderPass(RenderPass::kDeferredIndirectDiffuse | RenderPass::kDeferredFinalComposition);
     m_DeferredShadingQuad->MoveTo({ 0.0f, 0.0f, 0.0f });
     m_DeferredShadingQuad->ScaleTo({ 2.0f, 2.0f, 1.0f });
 
-    Material* mat_deferred_shading = new Material();
-    mat_deferred_shading->SetShader(ds_shading_shader);
-    mat_deferred_shading->SetFloatParam("VoxelDim", static_cast<float>(m_VoxelizeController->GetVoxelDim()));
-    mat_deferred_shading->SetFloatParam("VoxelScale", m_VoxelizeController->GetVoxelScale());
-    mat_deferred_shading->AddTexture2dDirect(m_GPositionAndSpecPower, "GPositionAndSpecPower");
-    mat_deferred_shading->AddTexture2dDirect(m_GNormalAndTangent, "GNormalAndTangent");
-    mat_deferred_shading->AddTexture2dDirect(m_GAlbedoAndSpecIntensity, "GAlbedoAndSpecIntensity");
-    mat_deferred_shading->AddTexture(m_VoxelizeController->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
-    char sampler_name[30];
-    for (uint32_t i = 0; i < 6; i++)
-    {
-    	memset(sampler_name, 0, 30);
-    	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
-        mat_deferred_shading->AddTexture(m_VoxelizeController->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
-    }
-    for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
-    {
-    	memset(sampler_name, 0, 30);
-    	sprintf(sampler_name, "TexDirShadow[%u]", i);
-        mat_deferred_shading->AddTexture2dDirect(m_VoxelizeController->GetDirectionalDepthMap(i), sampler_name);
-    }
-    RegisterMaterial(mat_deferred_shading);
+	{
+		Material* mat_ds_indirect_diffuse = new Material();
+		mat_ds_indirect_diffuse->SetShader(ds_indirect_diffuse_shader);
+		mat_ds_indirect_diffuse->SetFloatParam("VoxelDim", static_cast<float>(m_VoxelizeController->GetVoxelDim()));
+		mat_ds_indirect_diffuse->SetFloatParam("VoxelScale", m_VoxelizeController->GetVoxelScale());
+		mat_ds_indirect_diffuse->AddTexture2dDirect(m_GPositionAndSpecPower, "GPositionAndSpecPower");
+		mat_ds_indirect_diffuse->AddTexture2dDirect(m_GNormalAndTangent, "GNormalAndTangent");
+		mat_ds_indirect_diffuse->AddTexture2dDirect(m_GAlbedoAndSpecIntensity, "GAlbedoAndSpecIntensity");
+		mat_ds_indirect_diffuse->AddTexture(m_VoxelizeController->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+		char sampler_name[30];
+		for (uint32_t i = 0; i < 6; i++)
+		{
+			memset(sampler_name, 0, 30);
+			sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+			mat_ds_indirect_diffuse->AddTexture(m_VoxelizeController->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+		}
+		RegisterMaterial(mat_ds_indirect_diffuse);
 
-    m_DeferredShadingQuad->AddMaterial(RenderPass::kDeferredShading, mat_deferred_shading);
+		m_DeferredShadingQuad->AddMaterial(RenderPass::kDeferredIndirectDiffuse, mat_ds_indirect_diffuse);
+	}
+
+	{
+		Material* mat_ds_final_composition = new Material();
+		mat_ds_final_composition->SetShader(ds_final_composition);
+		mat_ds_final_composition->SetFloatParam("VoxelDim", static_cast<float>(m_VoxelizeController->GetVoxelDim()));
+		mat_ds_final_composition->SetFloatParam("VoxelScale", m_VoxelizeController->GetVoxelScale());
+		mat_ds_final_composition->AddTexture2dDirect(m_GPositionAndSpecPower, "GPositionAndSpecPower");
+		mat_ds_final_composition->AddTexture2dDirect(m_GNormalAndTangent, "GNormalAndTangent");
+		mat_ds_final_composition->AddTexture2dDirect(m_GAlbedoAndSpecIntensity, "GAlbedoAndSpecIntensity");
+		mat_ds_final_composition->AddTexture2dDirect(m_IndirectDiffuseHalfBuffer, "BufIndirectDiffuse");
+		mat_ds_final_composition->AddTexture(m_VoxelizeController->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
+		char sampler_name[30];
+		for (uint32_t i = 0; i < 6; i++)
+		{
+			memset(sampler_name, 0, 30);
+			sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
+			mat_ds_final_composition->AddTexture(m_VoxelizeController->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
+		}
+		for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
+		{
+			memset(sampler_name, 0, 30);
+			sprintf(sampler_name, "TexDirShadow[%u]", i);
+			mat_ds_final_composition->AddTexture2dDirect(m_VoxelizeController->GetDirectionalDepthMap(i), sampler_name);
+		}
+		RegisterMaterial(mat_ds_final_composition);
+
+		m_DeferredShadingQuad->AddMaterial(RenderPass::kDeferredFinalComposition, mat_ds_final_composition);
+	}
+
 
     m_TextManager.Init();
 
@@ -437,8 +542,9 @@ void World::MainLoop()
     //}
 
     ComputeGeometryPass();
-    ComputeShadingPass();
-    
+    ComputeIndirectDiffusePass();
+	ComputeFinalCompositionPass();
+
     if (m_RenderPassSwitch[1])
     {
         /*--------- pass 3: regular render to frame buffer displays ---------*/
@@ -796,6 +902,18 @@ void World::Destroy()
         glDeleteTextures(1, &m_GPositionAndSpecPower);
         m_GPositionAndSpecPower = 0;
     }
+
+	if (m_IndirectDiffuseHalfBuffer)
+	{
+		glDeleteTextures(1, &m_IndirectDiffuseHalfBuffer);
+		m_IndirectDiffuseHalfBuffer = 0;
+	}
+
+	if (m_IndirectDiffuseFBO)
+	{
+		glDeleteFramebuffers(1, &m_IndirectDiffuseFBO);
+		m_IndirectDiffuseFBO = 0;
+	}
 
     if (m_GBufferFBO)
     {

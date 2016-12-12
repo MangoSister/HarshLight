@@ -81,10 +81,12 @@
     <None Include="src\shaders\diffuse_vert.glsl" />
     <None Include="src\shaders\display_cubemap_frag.glsl" />
     <None Include="src\shaders\display_cubemap_vert.glsl" />
+    <None Include="src\shaders\ds_final_composition_frag.glsl" />
     <None Include="src\shaders\ds_geometry_pass_frag.glsl" />
     <None Include="src\shaders\ds_geometry_pass_vert.glsl" />
+    <None Include="src\shaders\ds_indirect_diffuse_frag.glsl" />
     <None Include="src\shaders\ds_vct_grid_frag.glsl" />
-    <None Include="src\shaders\ds_vct_grid_vert.glsl" />
+    <None Include="src\shaders\ds_shading_vert.glsl" />
     <None Include="src\shaders\font_frag.glsl" />
     <None Include="src\shaders\font_vert.glsl" />
     <None Include="src\shaders\framebuffer_color_frag.glsl" />

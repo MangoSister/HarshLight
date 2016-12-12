@@ -16,9 +16,10 @@ namespace RenderPass
         kDirLightInjection = 0x02,
         kPointLightInjection = 0x04,
         kGeometry = 0x08,
-        kDeferredShading = 0x10,
-		kPost = 0x20,
-        kCount = 6,
+        kDeferredIndirectDiffuse = 0x10,
+		kDeferredFinalComposition = 0x20,
+		kPost = 0x40,
+        kCount = 7,
     };
 }
 
@@ -51,8 +52,8 @@ protected:
 	std::vector<Material*> m_VoxelizeMaterials;
 	std::vector<Material*> m_DirLightInjectionMaterials;
     std::vector<Material*> m_PointLightInjectionMaterials;
-    std::vector<Material*> m_Materials;	
-    std::vector<Material*> m_DeferredShadingMaterials;
+    std::vector<Material*> m_GeometryPassMaterial;	
+	std::vector<Material*> m_DeferredIndirectDiffuseMaterial;
+    std::vector<Material*> m_DeferredFinalComposition;
 	std::vector<Material*> m_PostMaterials;
-
 };

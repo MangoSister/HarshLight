@@ -41,10 +41,13 @@ void ModelRenderer::Render(RenderPassFlag pass)
             m_Model->Render(m_Transform, m_PointLightInjectionMaterials); break;
     case RenderPass::kGeometry:
         if(m_RenderPassFlag & pass) 
-            m_Model->Render(m_Transform, m_Materials); break;
-    case RenderPass::kDeferredShading:
-        if (m_RenderPassFlag & pass)
-            m_Model->Render(m_Transform, m_DeferredShadingMaterials); break;
+            m_Model->Render(m_Transform, m_GeometryPassMaterial); break;
+	case RenderPass::kDeferredIndirectDiffuse:
+		if (m_RenderPassFlag & pass)
+			m_Model->Render(m_Transform, m_DeferredIndirectDiffuseMaterial); break;
+	case RenderPass::kDeferredFinalComposition:
+		if (m_RenderPassFlag & pass)
+			m_Model->Render(m_Transform, m_DeferredFinalComposition); break;
     case RenderPass::kPost:
         if(m_RenderPassFlag & pass) 
             m_Model->Render(m_Transform, m_PostMaterials); break;
@@ -68,10 +71,13 @@ void ModelRenderer::Render(RenderPassFlag pass, const glm::vec3 & center, float 
             m_Model->Render(m_Transform, m_PointLightInjectionMaterials, center, radius); break;
     case RenderPass::kGeometry:
         if (m_RenderPassFlag & pass)
-            m_Model->Render(m_Transform, m_Materials, center, radius); break;
-    case RenderPass::kDeferredShading:
+            m_Model->Render(m_Transform, m_GeometryPassMaterial, center, radius); break;
+    case RenderPass::kDeferredIndirectDiffuse:
         if (m_RenderPassFlag & pass)
-            m_Model->Render(m_Transform, m_Materials, center, radius); break;
+            m_Model->Render(m_Transform, m_DeferredIndirectDiffuseMaterial, center, radius); break;
+	case RenderPass::kDeferredFinalComposition:
+		if (m_RenderPassFlag & pass)
+			m_Model->Render(m_Transform, m_DeferredFinalComposition, center, radius); break;
     case RenderPass::kPost:
         if (m_RenderPassFlag & pass)
             m_Model->Render(m_Transform, m_PostMaterials, center, radius); break;
@@ -91,8 +97,9 @@ void ModelRenderer::AddMaterial(RenderPassFlag pass, Material* material)
     case RenderPass::kVoxelize: m_VoxelizeMaterials.push_back(material); break;
 	case RenderPass::kDirLightInjection: m_DirLightInjectionMaterials.push_back(material); break;
     case RenderPass::kPointLightInjection:m_PointLightInjectionMaterials.push_back(material); break;
-    case RenderPass::kGeometry: m_Materials.push_back(material); break;
-    case RenderPass::kDeferredShading: m_DeferredShadingMaterials.push_back(material); break;
+    case RenderPass::kGeometry: m_GeometryPassMaterial.push_back(material); break;
+    case RenderPass::kDeferredIndirectDiffuse: m_DeferredIndirectDiffuseMaterial.push_back(material); break;
+	case RenderPass::kDeferredFinalComposition: m_DeferredFinalComposition.push_back(material); break;
     case RenderPass::kPost: m_PostMaterials.push_back(material); break;
     default:case RenderPass::kNone:
         break;
@@ -106,8 +113,9 @@ const std::vector<Material*>& ModelRenderer::GetMaterial(RenderPassFlag pass) co
     case RenderPass::kVoxelize: return m_VoxelizeMaterials;
 	case RenderPass::kDirLightInjection: return m_DirLightInjectionMaterials;
     case RenderPass::kPointLightInjection: return m_PointLightInjectionMaterials;
-    case RenderPass::kGeometry:default: return m_Materials;
-    case RenderPass::kDeferredShading: return m_DeferredShadingMaterials;
+    case RenderPass::kGeometry:default: return m_GeometryPassMaterial;
+    case RenderPass::kDeferredIndirectDiffuse: return m_DeferredIndirectDiffuseMaterial;
+	case RenderPass::kDeferredFinalComposition: return m_DeferredFinalComposition;
     case RenderPass::kPost: return m_PostMaterials;
     }
 }

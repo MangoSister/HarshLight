@@ -25,7 +25,7 @@ ComputeShaderProgram::~ComputeShaderProgram()
 
 void ComputeShaderProgram::AddShader(const char* path)
 {
-    FILE* file = std::fopen(path, "r");
+    FILE* file = std::fopen(path, "rb");
     if (!file)
     {
         fprintf(stderr, "ERROR: fail to open compute shader file: %s\n", path);
