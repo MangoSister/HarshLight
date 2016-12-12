@@ -5,6 +5,7 @@
 #include "VoxelizeController.h"
 #include "ModelRenderer.h"
 #include "FrameBufferDisplay.h"
+#include "LightSwitch.h"
 #include "Util.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -12,8 +13,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 const char* APP_NAME = "HarshLight";
-const uint32_t DEFAULT_WINDOW_WIDTH = 1280;
-const uint32_t DEFAULT_WINDOW_HEIGHT = 720;
+const uint32_t DEFAULT_RENDER_WIDTH = 1280;
+const uint32_t DEFAULT_RENDER_HEIGHT = 720;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
@@ -24,6 +25,9 @@ int main(int argc, char* argv[])
 	char* scene_path = nullptr;
 	uint8_t debug_mode = 0;
 	float mouse_sensitivity = 0.01f;
+	uint32_t full_render_width = DEFAULT_RENDER_WIDTH;
+	uint32_t full_render_height = DEFAULT_RENDER_HEIGHT;
+
 	for (int32_t i = argc - 2; i >= 0; i -= 2)
 	{
 		if (strcmp(argv[i], "-i") == 0)
@@ -40,14 +44,36 @@ int main(int argc, char* argv[])
 			debug_mode = 1;
 		else if (strcmp(argv[i], "-m") == 0)
 			mouse_sensitivity = static_cast<float>(atof(argv[i + 1]));
+		else if (strcmp(argv[i], "-r") == 0)
+		{
+			if (strcmp(argv[i + 1], "720p") == 0)
+			{
+				//default res
+				full_render_width = DEFAULT_RENDER_WIDTH;
+				full_render_height = DEFAULT_RENDER_HEIGHT;
+			}
+			else if (strcmp(argv[i + 1], "1080p") == 0)
+			{
+				//high res
+				full_render_width = 1920;
+				full_render_height = 1080;
+			}
+			else if (strcmp(argv[i + 1], "1440p") == 0)
+			{
+				//very high res
+				full_render_width = 2560;
+				full_render_height = 1440;
+			}
+		}
 	}
 
 	if (!scene_path)
 	{
 		printf("usage:\n");
 		printf("-i <scene file name>\n");
-		printf("-g <debug mode on/off> \n");
-		printf("-m <mouse sensitivity> \n");
+		printf("-g <debug mode on/off>\n");
+		printf("-m <mouse sensitivity>\n");
+		printf("-r <resolution (720p/1080p/1440p)>\n");
 		exit(0);
 	}
 
@@ -69,7 +95,7 @@ int main(int argc, char* argv[])
 
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, APP_NAME, NULL, NULL);
+    window = glfwCreateWindow(full_render_width, full_render_height, APP_NAME, NULL, NULL);
     if (!window)
     {
 		fprintf(stderr, "Failed to create window\n");
@@ -113,21 +139,9 @@ int main(int argc, char* argv[])
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    World::GetInst().SetWindow(window, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-	uint32_t fill = 0;
-	World::GetInst().m_DefaultBlackTex = new Texture2d(16, 16, fill);
-	World::GetInst().RegisterTexture2d("DEFAULT_BLACK", World::GetInst().m_DefaultBlackTex);
-	fill = 0xFFFFFFFF;
-	World::GetInst().m_DefaultWhiteTex = new Texture2d(16, 16, fill);
-	World::GetInst().RegisterTexture2d("DEFAULT_WHITE", World::GetInst().m_DefaultWhiteTex);
-	fill = 0xFF808080;
-	World::GetInst().m_DefaultGrayTex = new Texture2d(16, 16, fill);
-	World::GetInst().RegisterTexture2d("DEFAULT_GRAY", World::GetInst().m_DefaultGrayTex);
-	fill = 0x00FF8080;
-	World::GetInst().m_DefaultNormalTex = new Texture2d(16, 16, fill);
-	World::GetInst().RegisterTexture2d("DEFAULT_NORMAL", World::GetInst().m_DefaultNormalTex);
-    //CreateCRTestScene();    
+       
+
+	World::GetInst().SetWindow(window, full_render_width, full_render_height);
 	CreateWorld(scene_path, mouse_sensitivity);
 
     World::GetInst().Start();
@@ -236,7 +250,10 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     const float max_extent = std::max(voxelize_extent.x, std::max(voxelize_extent.y, voxelize_extent.z));
 	const float voxel_scale = max_extent * 2.0f / static_cast<float>(voxel_dim);
 
-    const float aspect = (float)DEFAULT_WINDOW_WIDTH / (float)DEFAULT_WINDOW_HEIGHT;
+	uint32_t w, h;
+	World::GetInst().GetFullRenderSize(w, h);
+
+    const float aspect = (float)w / (float)h;
     {
         Actor* voxelize_cam_actor = new Actor();
 		
@@ -287,6 +304,19 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     }
 
     World::GetInst().SetMouseSensitivity(mouse_sensitivity);
+
+	uint32_t fill = 0;
+	World::GetInst().m_DefaultBlackTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_BLACK", World::GetInst().m_DefaultBlackTex);
+	fill = 0xFFFFFFFF;
+	World::GetInst().m_DefaultWhiteTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_WHITE", World::GetInst().m_DefaultWhiteTex);
+	fill = 0xFF808080;
+	World::GetInst().m_DefaultGrayTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_GRAY", World::GetInst().m_DefaultGrayTex);
+	fill = 0x00FF8080;
+	World::GetInst().m_DefaultNormalTex = new Texture2d(16, 16, fill);
+	World::GetInst().RegisterTexture2d("DEFAULT_NORMAL", World::GetInst().m_DefaultNormalTex);
 
     /* --------------  Scene  ----------- */
     //hardcode test world...:p
@@ -409,6 +439,10 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     //point_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_cube_display);
     //sceneActor->AddRenderer(point_light_depth_display);
 
+	/* -------------- Util ----------- */
+	LightSwitch* light_switch = new LightSwitch();
+	sceneActor->AddComponent(light_switch);
+
     World::GetInst().RegisterActor(sceneActor);
 
     /* --------------  Lights  ----------- */
@@ -416,7 +450,9 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     light_manager.SetAmbient(glm::vec3(0.15f, 0.15f, 0.15f)); 
     //light_manager.AddDirLight(DirLight(glm::vec3(0.424f, -0.8f, 0.424f), glm::vec4(0.8f, 0.77f, 0.55f, 1.2f)));
     light_manager.AddDirLight(DirLight(glm::vec3(0.2f, -0.9f, 0.1f), glm::vec4(0.8f, 0.77f, 0.55f, 1.5f)));
+	light_manager.UseDirLight(0);
     light_manager.AddPointLight(PointLight(glm::vec3(0.0f, 50.0f, -200.0f), glm::vec4(0.0f, 1.0f, 1.0f, 10.0f)));
+	light_manager.UsePointLight(0);
     light_manager.SetPointLightAtten(glm::vec3(1.0f, 0.01f, 0.01f));
 
     /* --------------  Frame Buffer Display  ----------- */
@@ -437,6 +473,8 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     voxelViewDisplay->AddMaterial(RenderPass::kPost, quad_mat);
 
     World::GetInst().RegisterActor(frameDisplayActor);
+
+	
 
     printf("Loading scene ended\n");
 }

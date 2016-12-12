@@ -68,7 +68,7 @@ public:
 
     LightManager& GetLightManager();
 
-	const void GetViewportSize(uint32_t& width, uint32_t& height) const;
+	const void GetFullRenderSize(uint32_t& width, uint32_t& height) const;
 
     void SetWindow(GLFWwindow* window, uint32_t width, uint32_t height);
 	
@@ -102,6 +102,7 @@ private:
 
     void ComputeGeometryPass();
     void ComputeShadingPass();
+	void RenderUIText();
 
 	/*----------------  Resources --------------*/
 	ModelList m_Models;
@@ -124,6 +125,7 @@ private:
 
 	std::chrono::time_point<std::chrono::system_clock> m_LastTime;
 	std::chrono::time_point<std::chrono::system_clock> m_CurrTime;
+	float m_CurrDeltaTime;
 
 	uint32_t m_FullRenderWidth;
 	uint32_t m_FullRenderHeight;
@@ -137,5 +139,5 @@ private:
     GLuint m_GNormalAndTangent = 0; //RGBA 16F HERE 
     GLuint m_GAlbedoAndSpecIntensity = 0; //RGBA 8 HERE
     GLuint m_GDepthRBO = 0;
-    
+	GLuint m_IndirectDiffuseHalfTex;
 };

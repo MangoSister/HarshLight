@@ -81,13 +81,20 @@ vec3 ComputeDirLightBlinnPhong(in DirLight light, in vec3 view_dir, in vec3 norm
 	return vec3(diffuse_intensity + spec_intensity) * light.color.xyz * light.color.w;
 }
 
-float ComputeDirLightShadow(in uint idx, in vec3 position)
+float ComputeDirLightShadow(in uint idx, in vec3 position, in ivec2 jitter)
 {
 	vec4 shadow_coord = DirLights[idx].lightProjMtx * DirLights[idx].lightMtx * vec4(position, 1.0);
 	shadow_coord = shadow_coord * 0.5 + 0.5;
 	shadow_coord.z *= SHADOW_BIAS;
 	
-	return textureProj(TexDirShadow[idx], shadow_coord);
+	//return textureProj(TexDirShadow[idx], shadow_coord);
+
+	float sum = 0;	
+	sum += textureProjOffset(TexDirShadow[idx], shadow_coord, ivec2(-1, -1) + jitter);
+	sum += textureProjOffset(TexDirShadow[idx], shadow_coord, ivec2(-1, 1) + jitter);
+	sum += textureProjOffset(TexDirShadow[idx], shadow_coord, ivec2(1, 1) + jitter);
+	sum += textureProjOffset(TexDirShadow[idx], shadow_coord, ivec2(1, -1) + jitter);
+	return sum * 0.25;
 }
 
 vec3 ComputePointLightBlinnPhong(in PointLight light, in vec3 position, in vec3 view_dir, in vec3 normal, in float spec_scale, in float shininess)
@@ -186,10 +193,10 @@ void main()
 	vec3 bitangent = cross(normal, tangent);
 
 	vec3 view_dir = normalize(CamWorldPos.xyz - position);
-
+	ivec2 jitter = ivec2(mod(floor(gl_FragCoord.xy), 2.0));
 	/* ----------------- Direct Lighting --------------------- */
 	for(uint i = 0; i < ActiveDirLights; i++)
-		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i], view_dir, normal, spec_scale, shininess) * ComputeDirLightShadow(i, position);
+		fragColor.xyz += ComputeDirLightBlinnPhong(DirLights[i], view_dir, normal, spec_scale, shininess) * ComputeDirLightShadow(i, position, jitter);
 	
 	for(uint i = 0; i < ActivePointLights; i++)
 		fragColor.xyz += ComputePointLightBlinnPhong(PointLights[i], position, view_dir, normal, spec_scale, shininess);	

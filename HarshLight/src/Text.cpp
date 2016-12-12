@@ -101,7 +101,7 @@ void TextManager::Init()
     m_FontShader.LinkProgram();
 
     uint32_t w, h;
-    World::GetInst().GetViewportSize(w, h);
+    World::GetInst().GetFullRenderSize(w, h);
     m_ProjMtx = glm::ortho(0.0f, static_cast<float>(w), 0.0f, static_cast<float>(h));
     GLint loc = glGetUniformLocation(m_FontShader.GetProgram(), "ProjMtx");
     glProgramUniformMatrix4fv(m_FontShader.GetProgram(), loc, 1, false, glm::value_ptr(m_ProjMtx));

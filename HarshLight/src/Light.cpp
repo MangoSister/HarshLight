@@ -61,6 +61,9 @@ void PointLight::GomputeCubeLightMtx(float near, float far, glm::mat4x4 light_mt
 
 LightManager::LightManager() : m_LightUBuffer(0)
 {
+	m_ActiveDirLightsCount = 0;
+	m_ActivePointLightsCount = 0;
+
 	glGenBuffers(1, &m_LightUBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, m_LightUBuffer);
 	glBufferData(GL_UNIFORM_BUFFER, GetLightUBufferSize(), nullptr, GL_STATIC_DRAW);
@@ -113,11 +116,11 @@ void LightManager::UpdateLight(UniformBufferBinding binding)
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::vec4), glm::value_ptr(glm::vec4(m_PointLightAtten, 0.0f)));
     offset += sizeof(glm::vec4);
 
-    uint32_t dir_light_num = static_cast<uint32_t>(m_DirLights.size());
+    uint32_t dir_light_num = static_cast<uint32_t>(m_ActiveDirLightsCount);
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(uint32_t), &dir_light_num);
     offset += sizeof(uint32_t);
 
-    uint32_t pt_light_num = static_cast<uint32_t>(m_PointLights.size());
+    uint32_t pt_light_num = static_cast<uint32_t>(m_ActivePointLightsCount);
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(uint32_t), &pt_light_num);
     offset += sizeof(uint32_t);
 
@@ -131,14 +134,20 @@ void LightManager::SetAmbient(const glm::vec3& ambient)
 
 void LightManager::AddDirLight(const DirLight& light)
 {
-    if (m_DirLights.size() < s_DirLightMaxNum)
-        m_DirLights.push_back(light);
+	if (m_DirLights.size() < s_DirLightMaxNum)
+	{
+		m_DirLights.push_back(light);
+		m_DirLightsUsage.push_back(false);
+	}
 }
 
 void LightManager::AddPointLight(const PointLight& light)
 {
-    if (m_PointLights.size() < s_PointLightMaxNum)
-        m_PointLights.push_back(light);
+	if (m_PointLights.size() < s_PointLightMaxNum)
+	{
+		m_PointLights.push_back(light);
+		m_PointLightsUsage.push_back(false);
+	}
 }
 
 const glm::vec3& LightManager::GetAmbient() const
@@ -164,6 +173,15 @@ DirLight& LightManager::GetDirLight(uint32_t idx)
     return m_DirLights[idx];
 }
 
+uint8_t LightManager::GetDirLightUsage(uint32_t idx) const
+{
+#ifdef _DEBUG
+	assert(idx >= 0 && idx < m_DirLights.size());
+#endif
+
+	return m_DirLightsUsage[idx];
+}
+
 const PointLight& LightManager::GetPointLight(uint32_t idx) const
 {
 #ifdef _DEBUG
@@ -180,6 +198,25 @@ PointLight& LightManager::GetPointLight(uint32_t idx)
 #endif
 
     return m_PointLights[idx];
+}
+
+uint8_t LightManager::GetPointLightUsage(uint32_t idx) const
+{
+#ifdef _DEBUG
+	assert(idx >= 0 && idx < m_PointLights.size());
+#endif
+
+	return m_PointLightsUsage[idx];
+}
+
+uint32_t LightManager::GetActiveDirLightCount() const
+{
+	return m_ActiveDirLightsCount;
+}
+
+uint32_t LightManager::GetActivePointLightCount() const
+{
+	return m_ActivePointLightsCount;
 }
 
 uint32_t LightManager::GetDirLightCount() const
@@ -199,6 +236,10 @@ void LightManager::DeleteDirLight(uint32_t idx)
 #endif
 
     m_DirLights.erase(m_DirLights.begin() + idx);
+	if (m_DirLightsUsage[idx])
+		m_ActiveDirLightsCount--;
+	m_DirLightsUsage.erase(m_DirLightsUsage.begin() + idx);
+	
 }
 
 void LightManager::DeletePointLight(uint32_t idx)
@@ -208,6 +249,60 @@ void LightManager::DeletePointLight(uint32_t idx)
 #endif
 
     m_PointLights.erase(m_PointLights.begin() + idx);
+	if (m_PointLightsUsage[idx])
+		m_ActivePointLightsCount--;
+	m_PointLightsUsage.erase(m_PointLightsUsage.begin() + idx);
+}
+
+void LightManager::UseDirLight(uint32_t idx)
+{
+#ifdef _DEBUG
+	assert(idx >= 0 && idx < m_DirLights.size());
+#endif
+
+	if (!m_DirLightsUsage[idx])
+	{
+		m_DirLightsUsage[idx] = true;
+		m_ActiveDirLightsCount++;
+	}
+}
+
+void LightManager::StopUseDirLight(uint32_t idx)
+{
+#ifdef _DEBUG
+	assert(idx >= 0 && idx < m_DirLights.size());
+#endif
+	if (m_DirLightsUsage[idx])
+	{
+		m_DirLightsUsage[idx] = false;
+		m_ActiveDirLightsCount--;
+	}
+}
+
+void LightManager::UsePointLight(uint32_t idx)
+{
+#ifdef _DEBUG
+	assert(idx >= 0 && idx < m_PointLights.size());
+#endif
+
+	if (!m_PointLightsUsage[idx])
+	{
+		m_PointLightsUsage[idx] = true;
+		m_ActivePointLightsCount++;
+	}
+}
+
+void LightManager::StopPointLight(uint32_t idx)
+{
+#ifdef _DEBUG
+	assert(idx >= 0 && idx < m_PointLights.size());
+#endif
+
+	if (m_PointLightsUsage[idx])
+	{
+		m_PointLightsUsage[idx] = false;
+		m_ActivePointLightsCount--;
+	}
 }
 
 const glm::vec3 & LightManager::GetPointLightAtten() const

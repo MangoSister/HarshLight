@@ -25,6 +25,7 @@
     <ClCompile Include="src\ComputeShaderProgram.cpp" />
     <ClCompile Include="src\FrameBufferDisplay.cpp" />
     <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\LightSwitch.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
@@ -44,6 +45,7 @@
     <ClInclude Include="src\ComputeShaderProgram.h" />
     <ClInclude Include="src\FrameBufferDisplay.h" />
     <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\LightSwitch.h" />
     <ClInclude Include="src\ShaderProgram.h" />
     <ClInclude Include="src\Text.h" />
     <ClInclude Include="src\Texture.h" />

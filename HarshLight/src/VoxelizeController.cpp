@@ -336,7 +336,7 @@ void VoxelizeController::DispatchVoxelization()
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glDepthMask(GL_TRUE);
 	uint32_t vw, vh;
-	World::GetInst().GetViewportSize(vw, vh);
+	World::GetInst().GetFullRenderSize(vw, vh);
 	glViewport(0, 0, vw, vh);
 
 }
@@ -360,7 +360,7 @@ void VoxelizeController::DispatchDirLightInjection()
 
 
 
-	for (uint32_t i = 0; i < light_manager.GetDirLightCount(); i++)
+	for (uint32_t i = 0; i < light_manager.GetActiveDirLightCount(); i++)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DirectionalDepthMap[i], 0);
@@ -458,7 +458,7 @@ void VoxelizeController::DispatchDirLightInjection()
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glDepthMask(GL_TRUE);
     uint32_t vw, vh;
-    World::GetInst().GetViewportSize(vw, vh);
+    World::GetInst().GetFullRenderSize(vw, vh);
 	glViewport(0, 0, vw, vh);
 }
 
@@ -477,7 +477,7 @@ void VoxelizeController::DispatchPointLightInjection()
     glDepthMask(GL_TRUE);
     glViewport(0, 0, m_PointLightInjectionRes, m_PointLightInjectionRes);
 
-    for (uint32_t i = 0; i < light_manager.GetPointLightCount(); i++)
+    for (uint32_t i = 0; i < light_manager.GetActivePointLightCount(); i++)
     {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_DepthFBO);
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_CubeDepthMap[i], 0);
@@ -601,7 +601,7 @@ void VoxelizeController::DispatchPointLightInjection()
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthMask(GL_TRUE);
     uint32_t vw, vh;
-    World::GetInst().GetViewportSize(vw, vh);
+    World::GetInst().GetFullRenderSize(vw, vh);
     glViewport(0, 0, vw, vh);
 }
 

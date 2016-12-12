@@ -97,6 +97,31 @@ void World::ComputeShadingPass()
     //render quad
 }
 
+void World::RenderUIText()
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	static char char_buf[100];
+
+	memset(char_buf, 0, 100);
+	sprintf(char_buf, "Free Move: W/S/A/D/Q/E and Mouse");
+	m_TextManager.RenderText(std::string(char_buf), 25.0f, 120.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+
+	memset(char_buf, 0, 100);
+	sprintf(char_buf, "Rotate Main Light: I/J/K/L");
+	m_TextManager.RenderText(std::string(char_buf), 25.0f, 90.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+
+	memset(char_buf, 0, 100);
+	sprintf(char_buf, "Toggle Secondary Light: F");
+	m_TextManager.RenderText(std::string(char_buf), 25.0f, 60.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+
+	memset(char_buf, 0, 100);
+	sprintf(char_buf, "FPS: %.2f", 1.0f / m_CurrDeltaTime); 	//fps: 1 / elapsed
+	m_TextManager.RenderText(std::string(char_buf), 25.0f, 30.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+}
+
 void World::SetWindow(GLFWwindow* window, uint32_t width, uint32_t height)
 {
     m_Window = window;
@@ -245,7 +270,7 @@ LightManager & World::GetLightManager()
     return m_LightManager;
 }
 
-const void World::GetViewportSize(uint32_t & width, uint32_t & height) const
+const void World::GetFullRenderSize(uint32_t & width, uint32_t & height) const
 {
 	width = m_FullRenderWidth;
 	height = m_FullRenderHeight;
@@ -297,6 +322,8 @@ void World::Start()
         exit(1);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	
 
     ShaderProgram* ds_shading_shader = new ShaderProgram();
     ds_shading_shader->AddVertShader("src/shaders/ds_vct_grid_vert.glsl");
@@ -364,8 +391,7 @@ void World::Start()
 void World::MainLoop()
 {
 	m_CurrTime = std::chrono::system_clock::now();
-	float elapsed = static_cast<float>((std::chrono::duration<double>(m_CurrTime - m_LastTime)).count());
-	//fps: 1 / elapsed
+	m_CurrDeltaTime = static_cast<float>((std::chrono::duration<double>(m_CurrTime - m_LastTime)).count());
 	m_LastTime = m_CurrTime;
 
 	m_LightManager.UpdateLight(UniformBufferBinding::kLight);
@@ -373,7 +399,7 @@ void World::MainLoop()
     for (Component* comp : m_Components)
     {
         assert(comp != nullptr);
-        comp->Update(elapsed);
+        comp->Update(m_CurrDeltaTime);
     }
 	/*--------- pass 1: light injection ---------*/
 	//m_VoxelizeController->DispatchLightInjection();
@@ -453,14 +479,7 @@ void World::MainLoop()
         }
     }
     
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    static char fps_counter[100];
-    memset(fps_counter, 0, 100);
-    sprintf(fps_counter, "FPS: %.2f", 1.0f / elapsed);
-    m_TextManager.RenderText(std::string(fps_counter), 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+	RenderUIText();
 
     //maintain 3-status key map
     for (auto& it : m_KeyStatusMap)
