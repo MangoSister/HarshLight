@@ -511,9 +511,7 @@ void World::MainLoop()
 	//is executed in its Update() function
 
     if (GetKey(GLFW_KEY_Z) == GLFW_PRESS)
-        m_RenderPassSwitch[0] = !m_RenderPassSwitch[0];
-    if (GetKey(GLFW_KEY_X) == GLFW_PRESS)
-        m_RenderPassSwitch[1] = !m_RenderPassSwitch[1];
+        m_ToggleUI = !m_ToggleUI;
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
@@ -523,70 +521,15 @@ void World::MainLoop()
 	glEnable(GL_CULL_FACE);
     glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
 
-    /*--------- pass 2: regular render to default frame buffer ---------*/
-    //if (m_RenderPassSwitch[0])
-    //{
-    //    if (m_MainCamera)
-    //        m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
-    //    else
-    //        fprintf(stderr, "WARNING: MainCamera is null\n");
-    //    
-    //    //reconstruct voxelize space
-    //    if (m_VoxelizeCamera)
-    //        m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
-    //    else
-    //        fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
-
-    //    for (ModelRenderer* renderer : m_Renderers)
-    //        renderer->Render(RenderPass::kGeometry);
-    //}
-
     ComputeGeometryPass();
     ComputeIndirectDiffusePass();
 	ComputeFinalCompositionPass();
 
-    if (m_RenderPassSwitch[1])
+    if (m_ToggleUI)
     {
-        /*--------- pass 3: regular render to frame buffer displays ---------*/
-        if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
-        else
-            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
-
-        //reconstruct voxelize space
-        if (m_VoxelizeCamera)
-            m_VoxelizeCamera->UpdateCamMtx(UniformBufferBinding::kVoxelSpaceReconstruct);
-        else
-            fprintf(stderr, "WARNING: VoxelizeCamera is null\n");
-
-        for (FrameBufferDisplay* display : m_FrameBufferDisplays)
-        {
-            assert(display != nullptr);
-            display->StartRenderToFrameBuffer();
-            for (ModelRenderer* renderer : m_Renderers)
-                renderer->Render(RenderPass::kGeometry);
-        }
-
-        /*--------- pass 4: render frame buffer displays as overlay ---------*/
-        if (m_MainCamera)
-            m_MainCamera->UpdateCamMtx(UniformBufferBinding::kMainCam);
-        else
-            fprintf(stderr, "WARNING: MainCamera is null\n");
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glViewport(0, 0, m_FullRenderWidth, m_FullRenderHeight);
-        for(ModelRenderer* renderer : m_Renderers)
-        {
-            assert(renderer != nullptr);
-            renderer->Render(RenderPass::kPost);
-        }
+        RenderUIText();
     }
-    
-	RenderUIText();
-
+ 
     //maintain 3-status key map
     for (auto& it : m_KeyStatusMap)
     {

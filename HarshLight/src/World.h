@@ -133,7 +133,7 @@ private:
 	uint32_t m_FullRenderHeight;
 	float m_MouseSensitivity;
 
-    uint8_t m_RenderPassSwitch[2] = { 1, 0 };
+    uint8_t m_ToggleUI;
 
     /*----------------  G-buffer --------------*/
     GLuint m_GBufferFBO = 0;
