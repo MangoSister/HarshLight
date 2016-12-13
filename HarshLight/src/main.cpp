@@ -18,7 +18,7 @@ const uint32_t DEFAULT_RENDER_HEIGHT = 720;
 const uint32_t GL_VER_MAJOR = 4;
 const uint32_t GL_VER_MINOR = 5;
 
-void CreateWorld(const char* scene_path, float mouse_sensitivity);
+void CreateWorld(const char* scene_path, float mouse_sensitivity, uint32_t voxel_dim);
 
 int main(int argc, char* argv[])
 {
@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 	float mouse_sensitivity = 0.01f;
 	uint32_t full_render_width = DEFAULT_RENDER_WIDTH;
 	uint32_t full_render_height = DEFAULT_RENDER_HEIGHT;
+	uint32_t voxel_dim = 256;
 
 	for (int32_t i = argc - 2; i >= 0; i -= 2)
 	{
@@ -65,6 +66,21 @@ int main(int argc, char* argv[])
 				full_render_height = 1440;
 			}
 		}
+		else if (strcmp(argv[i], "-d") == 0)
+		{
+			if (strcmp(argv[i + 1], "512") == 0)
+			{
+				voxel_dim = 512;
+			}
+			else if (strcmp(argv[i + 1], "256") == 0)
+			{
+				voxel_dim = 256;
+			}
+			else if (strcmp(argv[i + 1], "128") == 0)
+			{
+				voxel_dim = 128;
+			}
+		}
 	}
 
 	if (!scene_path)
@@ -91,8 +107,10 @@ int main(int argc, char* argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	if (debug_mode)
+	{
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-
+		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+	}
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(full_render_width, full_render_height, APP_NAME, NULL, NULL);
@@ -142,7 +160,7 @@ int main(int argc, char* argv[])
        
 
 	World::GetInst().SetWindow(window, full_render_width, full_render_height);
-	CreateWorld(scene_path, mouse_sensitivity);
+	CreateWorld(scene_path, mouse_sensitivity, voxel_dim);
 
     World::GetInst().Start();
 
@@ -172,7 +190,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void CreateWorld(const char* scene_path, float mouse_sensitivity)
+void CreateWorld(const char* scene_path, float mouse_sensitivity, uint32_t voxel_dim)
 {
     /* --------------  Shaders  ----------- */
 
@@ -243,7 +261,6 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
     printf("Loading scene started\n");
 
     /* --------------  Cameras  ----------- */
-    const uint32_t voxel_dim = 256;
 	const uint32_t light_injection_res = 1024;
     const glm::vec3 voxelize_center(0.0f, 300.0f, 0.0f);
     const glm::vec3 voxelize_extent(1000.0f, 450.0f, 600.0f);
@@ -294,7 +311,7 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity)
         printf("max pitch angle: 89 degree\n");
         printf("---------------------------\n");
         Camera* cam = new Camera(fovY, aspect, near, far);
-        cam->MoveTo(glm::vec3(0.0f, 0.0f, 0.0f));
+        cam->MoveTo(glm::vec3(0.0f, 10.0f, 0.0f));
         cam->LookAtDir(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         cam->SetFreeMoveSpeed(move_speed);
 
