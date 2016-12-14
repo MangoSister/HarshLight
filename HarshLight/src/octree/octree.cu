@@ -37,6 +37,18 @@ queue:
 leavesidx, treeidx, level,
  */
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+
+ 
 __device__ int
 cudaCombine(int a, int b, int c, int d) {
     return ((a & 0xFF) << 24) + ((b & 0xFF) << 16)
@@ -51,9 +63,11 @@ cudaFindLeavesThreads(int* colors, int* normals, int* leaves, int* p, int dim) {
     int x = threadIdx.x;
     int y = blockIdx.x % blockDim.x;
     int z = blockIdx.x / blockDim.x;
+    printf("leaves: %d %d %d\n", x, y, z);
 
     int element;
     element = colors[x * dim * dim + y * dim + z];
+    printf("idx: %d\tele: %d\n", x * dim * dim + y * dim + z, element);
     //     	surf3Dread(&element, colors, x * sizeof(uint32_t), y, z);
     if (element & 0xFF) {
         int idx = atomicAdd(p, 1) * leave_size;
@@ -90,53 +104,61 @@ __device__ void
 cudaAddToTree(int leave_idx, int* leaves,
         int tree_idx, int* tree, int level, int* ptrTree,
         int* queue, int* ptrQueue) {
-
-    int* tree_element = &tree[tree_idx * block_size];
-
-    // is leaves
-    if (level == 1) {
-        cudaSetLeave(tree_idx, tree_element, &leaves[leave_idx * leave_size]);
-        tree_element[idx_info] += 2;
-        return ;
-    }
-    // has child finish processing
-    if (tree_element[idx_child] && (tree_element[idx_info] & 1) == 0) {		
-        int* leave_element = &leaves[leave_idx * leave_size];
+	int* tree_element = &tree[tree_idx * block_size];
+	int* leave_element = &leaves[leave_idx * leave_size];
+	printf("add leave_idx = %d(%d,%d,%d) to tree_idx = %d, level = %d, ptrTree = %d\n",
+            leave_idx, 
+            (leave_element[2] & 0xFF000000) >> 24, (leave_element[2] & 0xFF0000) >> 16, (leave_element[2] & 0x00FF00) >> 8,
+            tree_idx, level, *ptrTree);
+	
+	if (level == 1) {
+        printf("A");
+        cudaSetLeave(tree_idx, tree_element, leave_element);
+        printf("B");
+        tree_element[idx_info] += 2;	
+        printf("C");
+		return ;
+	}
+	
+	if (tree_element[idx_child] != 0 && (tree_element[idx_info] & 1) == 0) {
         int new_level = level >> 1;
         bool x = ((leave_element[2] & 0xFF000000) >> 24) & new_level;
         bool y = ((leave_element[2] & 0x00FF0000) >> 16) & new_level;
         bool z = ((leave_element[2] & 0x0000FF00) >>  8) & new_level;
         int new_idx = tree_element[idx_child] + x * 4 + y * 2 + z;
-        cudaAddToTree(leave_idx, leaves, new_idx, tree, new_level, ptrTree, queue, ptrQueue);
-    } else {
-        // try to process
-        bool processing = atomicOr(&tree_element[idx_info], 1) & 1;
-        if (processing) {
+		printf("0 new_idx = %d, ptrTree = %d\n", new_idx, *ptrTree);
+        cudaAddToTree(leave_idx, leaves, new_idx, tree, new_level, ptrTree, queue, ptrQueue);	
+	} else {
+		int processing = atomicOr(&tree_element[idx_info], 1) & 1;
+		if (processing) {
             int ptr = atomicAdd(ptrQueue, 1);
             queue[ptr * 3] = leave_idx;
             queue[ptr * 3 + 1] = tree_idx;
             queue[ptr * 3 + 2] = level;
-        } else {
-            // process
-            int idx = atomicAdd(ptrTree, 8) + 1;
-            tree_element[idx_child] = idx;
-            for (int i = 0; i < 8; ++i) {
-                tree[(idx + i) * block_size + idx_father] = tree_idx;
-            }
-            tree[idx * block_size + idx_info] += 4;
 
-            // finish processing
-            atomicAnd(&tree_element[idx_info], 0xFFFFFFFE);
+//			printf("addqueue, ptrTree = %d\n", *ptrTree);
+		} else {
+			int idx = atomicAdd(ptrTree, 8) + 1;
+            printf("new ptrTree = %d, end = %d\n", idx, *ptrTree);
+			
+			tree_element[idx_child] = idx;
+			for (int i = 0; i < 8; ++i) {
+				tree[(idx + i) * block_size + idx_father] = tree_idx;
+			}
+			tree[idx * block_size + idx_info] += 4;
+			
+			atomicAnd(&tree_element[idx_info], 0xFFFFFFFE);
 
-            int* leave_element = &leaves[leave_idx * leave_size];
-            int new_level = level >> 1;
-            bool x = ((leave_element[2] & 0xFF000000) >> 24) & new_level;
-            bool y = ((leave_element[2] & 0x00FF0000) >> 16) & new_level;
-            bool z = ((leave_element[2] & 0x0000FF00) >>  8) & new_level;
-            int new_idx = tree_element[idx_child] + x * 4 + y * 2 + z;
-            cudaAddToTree(leave_idx, leaves, new_idx, tree, new_level, ptrTree, queue, ptrQueue);
-        }
-    }
+			int* leave_element = &leaves[leave_idx * leave_size];
+			int new_level = level >> 1;
+			int x = ((leave_element[2] & 0xFF000000) >> 24) & new_level;
+			int y = ((leave_element[2] & 0x00FF0000) >> 16) & new_level;
+		    int z = ((leave_element[2] & 0x0000FF00) >>  8) & new_level;
+			int new_idx = tree_element[idx_child] + x * 4 + y * 2 + z;
+			printf("1 new_idx = %d, ptrTree = %d\n", new_idx, *ptrTree);
+			cudaAddToTree(leave_idx, leaves, new_idx, tree, new_level, ptrTree, queue, ptrQueue);
+		}
+	}
 }
 
 __global__ void
@@ -151,6 +173,7 @@ __global__ void
 cudaBuildTreeFromQueue(int* leaves, int num_leaves, int* tree, int* ptrTree, int* queue, int* ptrQueue, int rangeL, int rangeR, int dim) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x + rangeL;
     if (idx < rangeR) {
+        printf("from queue %d\n", idx);
         int* queue_element = &queue[idx * leave_size];
         cudaAddToTree(queue_element[0], leaves, queue_element[1], tree, queue_element[2], ptrTree, queue, ptrQueue);
     }
@@ -162,21 +185,34 @@ void cudaBuildTree(int* leaves, int num_leaves, int* queue, int* tree, int dim, 
 
     int fr, la, total = dim * dim * dim;
     int threadsPerBlock = dim, blocks = (num_leaves - 1 + threadsPerBlock) / threadsPerBlock;
-    cudaBuildTreeFromLeaves<<<blocks, threadsPerBlock>>>(leaves, num_leaves, tree, ptrTree, queue, ptrQueue, dim);
 
+    cudaBuildTreeFromLeaves<<<blocks, threadsPerBlock>>>(leaves, num_leaves, tree, ptrTree, queue, ptrQueue, dim);
+    printf("finish build from leaves\n");
+ 
     fr = 0;
     cudaMemcpy(&la, ptrQueue, sizeof(int), cudaMemcpyDeviceToHost);
     while (la > fr) {
+        printf("fr = %d, la = %d\n", fr, la);
+        int st = fr, en = la;
         if (la >= total) {
+            fr = 0;
             cudaMemset(ptrQueue, 0, sizeof(int));
+        } else {
+            fr = la;
         }
 
-        blocks = (la - fr - 1 + threadsPerBlock) / threadsPerBlock;
-        cudaBuildTreeFromQueue<<<blocks, threadsPerBlock>>>(leaves, num_leaves, tree, ptrTree, queue, ptrQueue, fr, la, dim);
-
-        fr = la >= total ? 0:la;
+        blocks = (en - st - 1 + threadsPerBlock) / threadsPerBlock;
+        cudaBuildTreeFromQueue<<<blocks, threadsPerBlock>>>(leaves, num_leaves, tree, ptrTree, queue, ptrQueue, st, en, dim);
+        
+		gpuErrchk( cudaPeekAtLastError() );
+		gpuErrchk( cudaDeviceSynchronize() );
+		
+        printf("test0\n");
         cudaMemcpy(&la, ptrQueue, sizeof(int), cudaMemcpyDeviceToHost);
+        printf("test2 fr = %d, la = %d\n", fr, la);
     }
+    printf("AAA");
+    printf("tree size = %d\n\n", *ptrTree);
 }
 
 /*****************************************************************************/
@@ -275,16 +311,18 @@ cudaCombineFromQueueThread(int* tree, int rangeL, int rangeR, int* queue, int* p
     }
 }
 
-void cudaCombine(int* tree, int* leaves, int num_leaves, int* queue, int* ptrQueue) {
+void cudaCombineTree(int* tree, int* leaves, int num_leaves, int* queue, int* ptrQueue) {
     int threadsPerBlock = 256;
     int blocks = (num_leaves - 1 + threadsPerBlock) / threadsPerBlock;
     cudaMemset(ptrQueue, 0, sizeof(int));
+    printf("Hello\n");
 
     int st = 0, en;
     cudaCombineFromLeavesThread<<<blocks, threadsPerBlock>>>(tree, leaves, num_leaves, queue, ptrQueue);
 
     cudaMemcpy(&en, ptrQueue, sizeof(int), cudaMemcpyDeviceToHost);
     while (en > st) {
+        printf("st = %d, en = %d\n",  st, en);
         blocks = (en - st - 1 + threadsPerBlock) / threadsPerBlock;
         cudaCombineFromQueueThread<<<blocks, threadsPerBlock>>>(tree, st, en, queue, ptrQueue);
 
@@ -303,9 +341,11 @@ int cudaBuildTreeOverall(int* colors, int* normals, int* leaves, int* tree, int*
     cudaMemset(tree, 0, sizeof(int) * memory_size * block_size);
 
     int num_leaves = cudaFindLeaves(colors, normals, leaves, ptr0, dim);
+    printf("finish find leaves");
     cudaBuildTree(leaves, num_leaves, queue, tree, dim, ptr0, ptr1);
+    printf("finish build tree");
 
-    cudaCombine(tree, leaves, num_leaves, queue, ptr0);
+//    cudaCombineTree(tree, leaves, num_leaves, queue, ptr0);
 
     cudaFree(ptr0);
     cudaFree(ptr1);
@@ -314,7 +354,7 @@ int cudaBuildTreeOverall(int* colors, int* normals, int* leaves, int* tree, int*
 }
 
 // build tree for test
-void cudaBuildMalloc(int* colors, int* normals, int voxel_dim, int* res) {
+void cudaBuildMalloc(unsigned int* colors, int* normals, int voxel_dim, int* res) {
     int *gpu_colors, *gpu_normals, *gpu_tmp, *gpu_res, *gpu_queue;
 
     int total = voxel_dim * voxel_dim * voxel_dim;
@@ -324,9 +364,10 @@ void cudaBuildMalloc(int* colors, int* normals, int voxel_dim, int* res) {
     cudaMemcpy(gpu_normals, normals, sizeof(int) * total, cudaMemcpyHostToDevice);
     cudaMalloc(&gpu_tmp, sizeof(int) * memory_size * 6);
     cudaMalloc(&gpu_res, sizeof(int) * memory_size * block_size);
-    cudaMalloc(&gpu_queue, sizeof(int) * total);
+    cudaMalloc(&gpu_queue, sizeof(int) * total * 6);
 
     int len = cudaBuildTreeOverall(gpu_colors, gpu_normals, gpu_tmp, gpu_res, gpu_queue, voxel_dim);
+    cudaMemcpy(res, gpu_res, sizeof(int) * len * 2 * block_size, cudaMemcpyDeviceToHost);
     printf("len = %d\n", len);
 }
 
