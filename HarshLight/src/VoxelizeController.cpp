@@ -621,18 +621,6 @@ void VoxelizeController::MipmapRadiance()
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    //GLint p[3];
-    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, p);
-    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, p + 1);
-    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, p + 2);
-
-    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, p);
-    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, p + 1);
-    //glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, p + 2);
-
-    //glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, p);
-
-
 	uint32_t level_count = 1;
 	uint32_t dim = m_VoxelDim / 2;
 	while (dim >>= 1) ++level_count;

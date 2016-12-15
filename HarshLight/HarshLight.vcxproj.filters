@@ -116,9 +116,6 @@
     <ClInclude Include="src\Texture.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\VoxelInvert.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\Light.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -220,9 +217,6 @@
     <None Include="src\shaders\dirlight_injection_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
-    <None Include="src\shaders\light_clear_comp.glsl">
-      <Filter>src\shaders</Filter>
-    </None>
     <None Include="src\shaders\anisotropic_mipmap_start_comp.glsl">
       <Filter>src\shaders</Filter>
     </None>
@@ -271,10 +265,5 @@
     <None Include="src\shaders\ds_final_composition_frag.glsl">
       <Filter>src\shaders</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="src\VoxelInvert.cu">
-      <Filter>src</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>

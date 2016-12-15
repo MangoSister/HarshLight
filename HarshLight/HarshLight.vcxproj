@@ -54,7 +54,6 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\ModelRenderer.h" />
     <ClInclude Include="src\Material.h" />
-    <ClInclude Include="src\VoxelInvert.h" />
     <ClInclude Include="src\VoxelizeController.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
@@ -92,7 +91,6 @@
     <None Include="src\shaders\framebuffer_color_frag.glsl" />
     <None Include="src\shaders\framebuffer_color_vert.glsl" />
     <None Include="src\shaders\dirlight_injection_comp.glsl" />
-    <None Include="src\shaders\light_clear_comp.glsl" />
     <None Include="src\shaders\local_illum_frag.glsl" />
     <None Include="src\shaders\local_illum_vert.glsl" />
     <None Include="src\shaders\pointlight_injection_comp.glsl" />
@@ -105,9 +103,6 @@
     <None Include="src\shaders\voxelize_vert.glsl" />
     <None Include="src\shaders\voxel_visualize_frag.glsl" />
     <None Include="src\shaders\voxel_visualize_vert.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="src\VoxelInvert.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E4640478-0BB1-4DA8-845C-290A22D36B23}</ProjectGuid>
@@ -196,7 +191,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
-copy "$(ProjectDir)\bin\*.dll" "$(OutDir)"</Command>
+copy "$(ProjectDir)\bin\*.dll" "$(OutDir)"
+xcopy /E /Y /I "$(ProjectDir)\src\shaders\*.*" "$(OutDir)\src\shaders\"
+xcopy /E /Y /I "$(ProjectDir)\scenes\*.*" "$(OutDir)\scenes\"
+</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
@@ -244,7 +242,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
-copy "$(ProjectDir)\bin\*.dll" "$(OutDir)"</Command>
+copy "$(ProjectDir)\bin\*.dll" "$(OutDir)"
+xcopy /E /Y /I "$(ProjectDir)\src\shaders\*.*" "$(OutDir)\src\shaders\"
+xcopy /E /Y /I "$(ProjectDir)\scenes\*.*" "$(OutDir)\scenes\"
+</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>

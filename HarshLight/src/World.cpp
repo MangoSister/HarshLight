@@ -5,7 +5,7 @@
 #include <cuda_gl_interop.h>
 #include <device_launch_parameters.h>
 
-#include "VoxelInvert.h"
+//#include "VoxelInvert.h"
 
 void World::MouseCallback(GLFWwindow * window, double xpos, double ypos)
 {

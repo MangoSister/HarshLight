@@ -90,6 +90,7 @@ int main(int argc, char* argv[])
 		printf("-g <debug mode on/off>\n");
 		printf("-m <mouse sensitivity>\n");
 		printf("-r <resolution (720p/1080p/1440p)>\n");
+		printf("-d <voxelization dimension (128/256/512)>\n");
 		exit(0);
 	}
 
@@ -381,48 +382,6 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity, uint32_t voxel
 
         {
             Material* mat_voxel_visual = new Material(*mat_voxelize);
-           
-			//mat_voxel_visual->DeleteAllTextures();	
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelAlbedo), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelAlbedo, 0);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelNormal), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal], TexUsage::kImageReadOnly, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelNormal, 0);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelRadiance], TexUsage::kRegularTexture, BINDING_POINT_START_VOXEL_IMG + VoxelChannel::TexVoxelRadiance, 0);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(0), "TexRadianceMipmap", TexUsage::kImageReadOnly, 4, 0);
-			//mat_voxel_visual->SetShader(voxel_visualize_shader);
-            
-
-			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
-			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
-			//mat_voxel_visual->SetShader(local_illum_shader);
-   //         mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
-			//char name[30];
-			//for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
-			//{
-			//	memset(name, 0, 30);
-			//	sprintf(name, "TexDirShadow[%u]", i);
-			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), name);
-			//}
-
-			//mat_voxel_visual->SetShader(vct_shader);
-			//mat_voxel_visual->SetFloatParam("VoxelDim", static_cast<float>(voxel_dim));
-			//mat_voxel_visual->SetFloatParam("VoxelScale", voxel_scale);
-			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
-			//mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelNormal]);
-			//mat_voxel_visual->AddTexture(voxel_ctrl->GetVoxelizeTex(VoxelChannel::TexVoxelRadiance), "ImgRadianceLeaf", TexUsage::kRegularTexture, 0, 0);
-			//mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
-			//char sampler_name[30];	
-			//for (uint32_t i = 0; i < 6; i++)
-			//{
-			//	memset(sampler_name, 0, 30);
-			//	sprintf(sampler_name, "ImgRadianceInterior[%d]", i);
-			//	mat_voxel_visual->AddTexture(voxel_ctrl->GetAnisoRadianceMipmap(i), sampler_name, TexUsage::kRegularTexture, 0, 0);
-			//}
-			//for (uint32_t i = 0; i < LightManager::s_DirLightMaxNum; i++)
-			//{
-			//	memset(sampler_name, 0, 30);
-			//	sprintf(sampler_name, "TexDirShadow[%u]", i);
-			//	mat_voxel_visual->AddTexture2dDirect(voxel_ctrl->GetDirectionalDepthMap(i), sampler_name);
-			//}
-
             mat_voxel_visual->SetShader(ds_geometry_shader);
             mat_voxel_visual->SetFloatParam("Shininess", 10.0f);
             mat_voxel_visual->DeleteTexture(VoxelizeController::s_VoxelChannelNames[VoxelChannel::TexVoxelAlbedo]);
@@ -435,26 +394,6 @@ void CreateWorld(const char* scene_path, float mouse_sensitivity, uint32_t voxel
     }
 
     Model* quad = new Model(Model::Primitive::kQuad);
-    //ModelRenderer* dir_light_depth_display = new ModelRenderer(quad);
-    //dir_light_depth_display->SetRenderPass(RenderPass::kPost);
-    //dir_light_depth_display->MoveTo({ -0.7f, 0.5f, 0.0f });
-    //dir_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
-    //Material* mat_depth_display = new Material();
-    //mat_depth_display->SetShader(depth_display_shader);
-    //mat_depth_display->AddTexture2dDirect(World::GetInst().m_VoxelizeController->GetDirectionalDepthMap(0), "TexDepth");
-    //dir_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_display);
-    //sceneActor->AddRenderer(dir_light_depth_display);
-
-    //ModelRenderer* point_light_depth_display = new ModelRenderer(quad);
-    //point_light_depth_display->SetRenderPass(RenderPass::kPost);
-    //point_light_depth_display->MoveTo({ 0.7f, -0.5f, 0.0f });
-    //point_light_depth_display->ScaleTo({ 1 / aspect, 1.0f, 1.0f });
-    //Material* mat_depth_cube_display = new Material();
-    //mat_depth_cube_display->SetShader(depth_display_cube_shader);
-    //mat_depth_cube_display->AddTextureCubeDirect(World::GetInst().m_VoxelizeController->GetCubeDepthMap(0), "TexCube");
-    //mat_depth_cube_display->SetI32Param("Face", 5);
-    //point_light_depth_display->AddMaterial(RenderPass::kPost, mat_depth_cube_display);
-    //sceneActor->AddRenderer(point_light_depth_display);
 
 	/* -------------- Util ----------- */
 	LightSwitch* light_switch = new LightSwitch();
