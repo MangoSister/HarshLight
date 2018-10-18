@@ -1,6 +1,5 @@
 # HarshLight
-15618 Fall 2016 Course Project: Real-time global illumination based on voxel cone tracing
-The project is developed under Visual Studio 2015 Nvidia Nsight edition. The reason why we used Nsight is that we exploited the possibility of implementing certain stages of the method on CUDA instead of GLSL, and we also would like to keep this possibility in future development. Therefore so far the project needs to be compiled by nvcc (though it is entirely ok to build it by any c++ compiler if you clean up the CUDA header references).
+Real-time global illumination based on voxel cone tracing.
 
 HarshLight\src folder includes all the Cpp source code as well as GLSL shaders.
 HarshLight\include includes all the headers of third-party libraries.
